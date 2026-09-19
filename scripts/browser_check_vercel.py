@@ -60,6 +60,11 @@ def main() -> None:
         if page.evaluate("document.scrollingElement.scrollWidth > innerWidth + 2"):
             raise AssertionError("La página desborda horizontalmente en móvil")
         page.screenshot(path=str(output / "17_tailwind_movil_claro.png"), full_page=True)
+        page.get_by_role("button", name="Cambiar tema").click()
+        page.get_by_role("menuitem", name="Oscuro").click()
+        expect(page.locator("html")).to_have_class("dark")
+        page.wait_for_timeout(300)
+        page.screenshot(path=str(output / "18_tailwind_movil_oscuro.png"), full_page=True)
         browser.close()
     print("Vercel: interfaz, cálculo, pasos y viewport móvil verificados")
 
