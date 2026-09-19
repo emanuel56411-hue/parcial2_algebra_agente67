@@ -33,6 +33,7 @@
 | PDF técnico | `docs/informe_tecnico.pdf` y script generador | Artículo en dos columnas con anexos; confirmar plantilla formal IEEE/ACM institucional |
 | Desarrollo manual | Cada operación y matriz del 6×6 en anexos | Desarrollo reproducible; no sustituye una entrega manuscrita si se exige |
 | Bitácora | `docs/logs/`, pruebas automatizadas | Generada con ejecuciones reales |
+| Capturas de la web | `scripts/browser_check.py` | Pendientes de iniciar la web y ejecutar el navegador; aún no se afirma una validación visual |
 | Conclusiones cuantitativas | `docs/interpretacion_operaciones.md` | Implementado |
 
 No se atribuye una calificación: la evaluación corresponde al docente.

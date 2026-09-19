@@ -111,6 +111,8 @@ python scripts/build_deliverables.py
 
 Las pruebas comprueban soluciones conocidas, determinantes por una definición independiente, identidades de la inversa, familias paramétricas, reproducción de cada operación de fila, pivoteo, entradas inválidas y recorridos de los formularios web. La automatización de GitHub ejecuta las pruebas al recibir cambios.
 
+La comprobación visual es un paso separado de AppTest. Con el servidor ya iniciado y Playwright instalado, `python scripts/browser_check.py` prueba la página y guarda capturas en `docs/screenshots/`. Se puede indicar `--browser /ruta/al/ejecutable` para usar un Chromium o Brave instalado. Las capturas solo se generan al ejecutar esa comprobación; no se incluyen imágenes simuladas como evidencia.
+
 ## Arquitectura
 
 ```text
