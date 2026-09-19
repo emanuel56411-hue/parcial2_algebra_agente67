@@ -3,6 +3,11 @@
   "buildCommand": "npm --prefix web ci && npm --prefix web run build",
   "outputDirectory": "web/dist",
   "cleanUrls": true,
+  "functions": {
+    "api/solve.py": {
+      "includeFiles": "web/dist/**"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",

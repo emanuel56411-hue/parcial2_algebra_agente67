@@ -8,7 +8,6 @@ from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from agent import InputError
 from ai_tutor import (
     DEFAULT_MODEL,
     INSTRUCTIONS,
@@ -18,7 +17,6 @@ from ai_tutor import (
     TutorError,
     build_context,
 )
-from api._http import JsonHandler
 
 _counts = defaultdict(int)
 _counts_lock = Lock()
@@ -120,23 +118,3 @@ def ask_tutor_serverless(report, payload: dict, client_id: str) -> dict:
         "incomplete": result.get("status") == "incomplete",
         "request_id": request_id,
     }
-
-
-class handler(JsonHandler):
-    def do_POST(self) -> None:
-        try:
-            payload = self._read_json()
-            # Importación local para mantener independientes las dos funciones.
-            from api.solve import analyze_payload
-
-            report = analyze_payload(payload)
-            forwarded = self.headers.get("X-Forwarded-For", "")
-            client_id = forwarded.split(",", 1)[0].strip() or self.client_address[0]
-            result = ask_tutor_serverless(report, payload, client_id)
-        except (InputError, TutorError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
-            self._send_json(400, {"error": str(exc) or "Solicitud no válida."})
-            return
-        except Exception:
-            self._send_json(500, {"error": "No se pudo completar el análisis. Inténtalo de nuevo."})
-            return
-        self._send_json(200, result)

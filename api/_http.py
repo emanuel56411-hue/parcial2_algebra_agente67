@@ -9,11 +9,11 @@ MAX_REQUEST_BYTES = 100_000
 
 
 class JsonHandler(BaseHTTPRequestHandler):
-    def _send_bytes(self, status: int, body: bytes, content_type: str) -> None:
+    def _send_bytes(self, status: int, body: bytes, content_type: str, cache: str = "no-store") -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         self.wfile.write(body)
