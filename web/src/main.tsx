@@ -1,12 +1,9 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
+import App from "@/app"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "./index.css"
-
-function App() {
-  return <main className="min-h-svh bg-background text-foreground" />
-}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
