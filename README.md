@@ -4,6 +4,8 @@
 
 Autores: Henry Modesto Portillo Quintanilla (`PQ100126`), David Ernesto Quijada Vásquez (`QV100226`) y Josue Emanuel Cruz Fernandez (`CF100126`).
 
+Universidad Francisco Gavidia · Docente: Exides Gamaliel Claros Velasquez · Grupo: `01 EO8` · Entrega: 23 de septiembre de 2026.
+
 Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems y sistemas personalizados de **1 × 1 a 12 × 12**. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
 
 > **Hallazgo en la guía:** el vector esperado `(15,20,25,10,15,20)` requiere `B=(185,200,280,150,245,195)`. Las disponibilidades originales son `(155,160,225,140,215,175)` y producen una solución distinta con `x1<0`. La aplicación conserva ambos escenarios y no sustituye datos para forzar la respuesta.
@@ -134,7 +136,7 @@ Para los casos invertibles de TechChip, `det(A)=-83`. Los tres métodos coincide
 - [Guía para un piloto empresarial](docs/piloto_empresarial.md).
 - [Ejemplos de entrada](examples/).
 
-Los anexos son desarrollos algebraicos computados y verificables a mano. No se presentan como trabajo manuscrito independiente. Antes de entregar: completar identificación académica, revisar la discrepancia con el docente y confirmar si pide resolución manuscrita o una plantilla IEEE/ACM específica.
+Los anexos son desarrollos algebraicos computados y verificables a mano. No se presentan como trabajo manuscrito independiente. Antes de entregar: revisar la discrepancia con el docente y confirmar si pide resolución manuscrita o una variante IEEE/ACM específica.
 
 ## Verificación reproducible
 

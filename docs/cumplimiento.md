@@ -64,4 +64,4 @@ La respuesta correcta para B original es `(-105,345,2430,1170,1130,2010)/83`. El
 
 **Optimización.** AX=B solo resuelve el balance. Sin una función objetivo y datos de costos/beneficios no puede justificarse un óptimo empresarial. El producto evita esa afirmación.
 
-**Presentación académica.** El informe se genera con la clase `IEEEtran` en modalidad `conference`, cuerpo a dos columnas y apéndices completos. Incluye los tres autores y carnés proporcionados. Aún deben confirmarse docente, grupo, universidad, fecha institucional y si la institución exige una variante propia de IEEE/ACM.
+**Presentación académica.** El informe se genera con la clase `IEEEtran` en modalidad `conference`, cuerpo a dos columnas y apéndices completos. Incluye logotipo y nombre de la Universidad Francisco Gavidia, los tres autores y carnés, el docente Exides Gamaliel Claros Velasquez, el grupo `01 EO8` y la fecha de entrega del 23 de septiembre de 2026. Solo queda confirmar si la institución exige una variante propia de IEEE/ACM o una portada separada.

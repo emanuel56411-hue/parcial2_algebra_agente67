@@ -127,7 +127,7 @@ def build_ieee(reports):
 \usepackage[T1]{{fontenc}}
 \usepackage[spanish,es-nodecimaldot]{{babel}}
 \usepackage{{amsmath,amssymb,array,booktabs,graphicx,hyperref,xcolor}}
-\graphicspath{{{{screenshots/}}{{docs/screenshots/}}}}
+\graphicspath{{{{screenshots/}}{{docs/screenshots/}}{{assets/}}{{docs/assets/}}}}
 \hypersetup{{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}}
 \title{{Agente explicable para el balance matricial exacto de recursos en TechChip Systems S.A.}}
 \author{{
@@ -136,7 +136,12 @@ def build_ieee(reports):
 Henry Modesto Portillo Quintanilla & David Ernesto Quijada Vásquez & Josue Emanuel Cruz Fernandez\\
 PQ100126 & QV100226 & CF100126
 \end{{tabular}}}}
-\IEEEauthorblockA{{Ingeniería en Inteligencia Artificial y Telecomunicaciones}}
+\IEEEauthorblockA{{
+\includegraphics[width=0.30\textwidth]{{ufg_logo.png}}\\[3pt]
+Universidad Francisco Gavidia\\
+Ingeniería en Inteligencia Artificial y Telecomunicaciones\\
+Docente: Exides Gamaliel Claros Velasquez \quad Grupo: 01 EO8 \quad Entrega: 23 de septiembre de 2026
+}}
 }}
 \begin{{document}}
 \maketitle
@@ -263,9 +268,17 @@ pdflatex informe_tecnico_ieee.tex
 
 La segunda ejecución actualiza referencias y numeración. Se requiere una distribución TeX que incluya `IEEEtran`, `babel`, `amsmath`, `booktabs`, `graphicx`, `hyperref` y fuentes T1.
 
+## Identificación institucional incorporada
+
+| Campo | Dato |
+|---|---|
+| Universidad | Universidad Francisco Gavidia |
+| Docente | Exides Gamaliel Claros Velasquez |
+| Grupo | 01 EO8 |
+| Fecha de entrega | 23 de septiembre de 2026 |
+
 ## Datos por verificar antes de entregar
 
-- Los autores y carnés ya están incorporados. Faltan docente, grupo, universidad y fecha institucional.
 - Si la institución exige una variante específica de IEEE/ACM o portada separada.
 - Confirmación docente de cuál vector B debe considerarse oficial.
 - Confirmación de que los coeficientes son consumos por mil módulos, no por módulo individual.

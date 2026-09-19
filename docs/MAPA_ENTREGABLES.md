@@ -20,9 +20,17 @@ pdflatex informe_tecnico_ieee.tex
 
 La segunda ejecución actualiza referencias y numeración. Se requiere una distribución TeX que incluya `IEEEtran`, `babel`, `amsmath`, `booktabs`, `graphicx`, `hyperref` y fuentes T1.
 
+## Identificación institucional incorporada
+
+| Campo | Dato |
+|---|---|
+| Universidad | Universidad Francisco Gavidia |
+| Docente | Exides Gamaliel Claros Velasquez |
+| Grupo | 01 EO8 |
+| Fecha de entrega | 23 de septiembre de 2026 |
+
 ## Datos por verificar antes de entregar
 
-- Los autores y carnés ya están incorporados. Faltan docente, grupo, universidad y fecha institucional.
 - Si la institución exige una variante específica de IEEE/ACM o portada separada.
 - Confirmación docente de cuál vector B debe considerarse oficial.
 - Confirmación de que los coeficientes son consumos por mil módulos, no por módulo individual.
