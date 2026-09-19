@@ -43,7 +43,7 @@ No se atribuye una calificación: la evaluación corresponde al docente.
 
 Se incorporaron un chat sobre el sistema resuelto y una explicación del paso seleccionado mediante la API Responses. El motor de cálculo exacto permanece independiente. La clave se configura como secreto del servidor; las llamadas solo ocurren por una acción explícita, con contexto e historial limitados y cuota compartida de 50 solicitudes por día UTC en esta instalación.
 
-La batería incluye las **40 pruebas previas** más pruebas específicas para Vercel: resolución exacta, diagnóstico singular, rechazo de solicitudes inválidas y Tutor IA con contexto recalculado y clave ausente del cuerpo. Las pruebas simuladas de OpenAI cubren aislamiento de conversaciones, conservación de resultados ante errores y control concurrente de la cuota. La comprobación de navegador cubre cálculo, elección de método, procedimiento, Tutor IA y viewport móvil.
+La batería incluye **44 pruebas** en total, incluidas las pruebas específicas para Vercel: resolución exacta, diagnóstico singular, rechazo de solicitudes inválidas y Tutor IA con contexto recalculado y clave ausente del cuerpo. Las pruebas simuladas de OpenAI cubren aislamiento de conversaciones, conservación de resultados ante errores y control concurrente de la cuota. La comprobación de navegador cubre cálculo, elección de método, procedimiento, Tutor IA y viewport móvil.
 
 ## Inconsistencias que requieren aclaración académica
 
