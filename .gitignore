@@ -8,3 +8,7 @@ __pycache__/
 .env
 .env.*
 *.log
+
+# Enlaces locales creados por Streamlit hacia el entorno virtual.
+/.agents/skills/developing-with-streamlit
+/.claude/skills/developing-with-streamlit
