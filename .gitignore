@@ -14,3 +14,5 @@ __pycache__/
 /.claude/skills/developing-with-streamlit
 /.tutor/
 .vercel
+web/node_modules/
+web/dist/
