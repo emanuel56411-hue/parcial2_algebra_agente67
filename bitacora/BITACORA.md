@@ -498,3 +498,4 @@ Salida completa: [`infinite.json`](infinite.json).
 - Procedimiento completo en Vercel: [`docs/screenshots/09_vercel_procedimiento.png`](../docs/screenshots/09_vercel_procedimiento.png)
 - Tutor IA en Vercel: [`docs/screenshots/10_vercel_tutor.png`](../docs/screenshots/10_vercel_tutor.png)
 - Vista móvil en Vercel: [`docs/screenshots/11_vercel_movil.png`](../docs/screenshots/11_vercel_movil.png)
+- Entregables públicos en Vercel: [`docs/screenshots/12_vercel_entregables.png`](../docs/screenshots/12_vercel_entregables.png)
