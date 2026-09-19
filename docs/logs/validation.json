@@ -1,0 +1,85 @@
+{
+  "all_passed": true,
+  "guide_note": "La guía contiene una inconsistencia: el vector esperado (15, 20, 25, 10, 15, 20) requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original (155, 160, 225, 140, 215, 175). Ambos casos se conservan por separado.",
+  "scenarios": {
+    "original": {
+      "passed": true,
+      "status": "unique",
+      "determinant": "-83",
+      "rank_A": 6,
+      "rank_augmented": 6,
+      "solution": [
+        "-105/83",
+        "345/83",
+        "2430/83",
+        "1170/83",
+        "1130/83",
+        "2010/83"
+      ],
+      "error_max": "0"
+    },
+    "compatible": {
+      "passed": true,
+      "status": "unique",
+      "determinant": "-83",
+      "rank_A": 6,
+      "rank_augmented": 6,
+      "solution": [
+        "15",
+        "20",
+        "25",
+        "10",
+        "15",
+        "20"
+      ],
+      "error_max": "0"
+    },
+    "scarcity": {
+      "passed": true,
+      "status": "unique",
+      "determinant": "-83",
+      "rank_A": 6,
+      "rank_augmented": 6,
+      "solution": [
+        "-26355/83",
+        "-6780/83",
+        "18555/83",
+        "3170/83",
+        "3505/83",
+        "6510/83"
+      ],
+      "error_max": "0"
+    },
+    "singular": {
+      "passed": true,
+      "status": "inconsistent",
+      "determinant": "0",
+      "rank_A": 5,
+      "rank_augmented": 6,
+      "solution": null,
+      "error_max": null
+    },
+    "infinite": {
+      "passed": true,
+      "status": "infinite",
+      "determinant": "0",
+      "rank_A": 5,
+      "rank_augmented": 5,
+      "solution": null,
+      "error_max": null
+    },
+    "example": {
+      "passed": true,
+      "status": "unique",
+      "determinant": "-1",
+      "rank_A": 3,
+      "rank_augmented": 3,
+      "solution": [
+        "2",
+        "3",
+        "-1"
+      ],
+      "error_max": "0"
+    }
+  }
+}

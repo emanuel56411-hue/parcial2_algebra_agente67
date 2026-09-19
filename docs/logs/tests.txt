@@ -1,0 +1,40 @@
+test_all_scenarios_clear_stale_results (test_app.AppTests.test_all_scenarios_clear_stale_results) ... 2026-09-19 00:20:38.722 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_custom_dimension (test_app.AppTests.test_custom_dimension) ... 2026-09-19 00:20:40.159 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_editor_changes_are_applied (test_app.AppTests.test_editor_changes_are_applied) ... 2026-09-19 00:20:40.460 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-09-19 00:20:40.655 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_guide_and_validation_pages (test_app.AppTests.test_guide_and_validation_pages) ... 2026-09-19 00:20:40.711 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_json_invalid_input_removes_old_result (test_app.AppTests.test_json_invalid_input_removes_old_result) ... 2026-09-19 00:20:41.033 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_original_and_method_navigation (test_app.AppTests.test_original_and_method_navigation) ... 2026-09-19 00:20:41.260 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_bad_json (test_solver.InputTests.test_bad_json) ... ok
+test_exact_json_decimals_and_column_B (test_solver.InputTests.test_exact_json_decimals_and_column_B) ... ok
+test_long_valid_decimal_survives_validation_roundtrip (test_solver.InputTests.test_long_valid_decimal_survives_validation_roundtrip) ... ok
+test_reject_invalid_data (test_solver.InputTests.test_reject_invalid_data) ... ok
+test_cli_console_input (test_solver.InterfaceTests.test_cli_console_input) ... ok
+test_cli_json_stdin_and_invalid_status (test_solver.InterfaceTests.test_cli_json_stdin_and_invalid_status) ... ok
+test_exports_include_trace_and_escape_html (test_solver.InterfaceTests.test_exports_include_trace_and_escape_html) ... ok
+test_battery (test_solver.SolverTests.test_battery) ... ok
+test_determinant_matches_definition (test_solver.SolverTests.test_determinant_matches_definition) ... ok
+test_expected_vector_is_separate_scenario (test_solver.SolverTests.test_expected_vector_is_separate_scenario) ... ok
+test_generated_known_solutions_all_sizes (test_solver.SolverTests.test_generated_known_solutions_all_sizes) ... ok
+test_infinite_family (test_solver.SolverTests.test_infinite_family) ... ok
+test_input_is_not_mutated (test_solver.SolverTests.test_input_is_not_mutated) ... ok
+test_negative_generic_solution_is_valid (test_solver.SolverTests.test_negative_generic_solution_is_valid) ... ok
+test_original_data_are_not_replaced (test_solver.SolverTests.test_original_data_are_not_replaced) ... ok
+test_partial_pivot_and_sign_of_determinant (test_solver.SolverTests.test_partial_pivot_and_sign_of_determinant) ... ok
+test_production_rejects_negative_resources (test_solver.SolverTests.test_production_rejects_negative_resources) ... ok
+test_replay_every_row_operation (test_solver.SolverTests.test_replay_every_row_operation) ... ok
+test_scarcity (test_solver.SolverTests.test_scarcity) ... ok
+test_singular_inconsistent (test_solver.SolverTests.test_singular_inconsistent) ... ok
+test_small_nonzero_determinant_is_not_singular (test_solver.SolverTests.test_small_nonzero_determinant_is_not_singular) ... ok
+test_zero_matrix_and_free_leading_columns (test_solver.SolverTests.test_zero_matrix_and_free_leading_columns) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 3.627s
+
+OK

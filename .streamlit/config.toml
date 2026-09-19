@@ -1,0 +1,36 @@
+# Adaptado del tema shadcn incluido en la guía de Streamlit.
+[theme]
+base = "light"
+primaryColor = "#087968"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F7F5"
+textColor = "#183632"
+borderColor = "#DCE7E2"
+showWidgetBorder = true
+showSidebarBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+font = "sans-serif"
+codeFont = "monospace"
+baseFontSize = 15
+headingFontSizes = ["38px", "28px", "21px", "18px", "16px", "14px"]
+headingFontWeights = [700, 600, 600, 600, 600, 600]
+codeBackgroundColor = "#F3F7F5"
+codeTextColor = "#183632"
+linkColor = "#087968"
+dataframeHeaderBackgroundColor = "#EAF2EE"
+dataframeBorderColor = "#DCE7E2"
+chartCategoricalColors = ["#087968", "#E7A34D", "#557FA4", "#B34D55", "#879F60", "#786694"]
+
+[theme.sidebar]
+backgroundColor = "#F3F7F5"
+secondaryBackgroundColor = "#E6EFEA"
+textColor = "#183632"
+primaryColor = "#087968"
+borderColor = "#DCE7E2"
+
+[browser]
+gatherUsageStats = false
+
+[server]
+maxUploadSize = 1
