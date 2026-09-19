@@ -48,7 +48,17 @@ La calculadora funciona localmente y no requiere cuentas ni claves de API. El mo
 
 ## Desplegar en Vercel
 
-La raíz del repositorio contiene `vercel.json`, la interfaz en `web/` y las funciones Python en `api/`. Esta variante usa Bootstrap 5 como base responsive y una capa visual propia; conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos completos, la verificación, las exportaciones y el Tutor IA. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
+La raíz del repositorio contiene `vercel.json`, la interfaz en `web/` y las funciones Python en `api/`. La interfaz publicada usa **Vite + React + TypeScript + Tailwind CSS + shadcn/ui**; conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos completos, la verificación, las exportaciones y el Tutor IA. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
+
+Para trabajar solo en la interfaz:
+
+```bash
+npm --prefix web ci
+npm --prefix web run dev
+npm --prefix web run build
+```
+
+`npm run dev` sirve el frontend; para probar también las funciones Python usa `npx vercel dev` desde la raíz.
 
 ```bash
 npx vercel dev       # vista previa local
@@ -56,9 +66,9 @@ npx vercel           # despliegue de prueba
 npx vercel --prod    # producción
 ```
 
-También puedes importar el repositorio de GitHub desde el panel de Vercel; no requiere Build Command ni Output Directory. Para activar el tutor, configura `OPENAI_API_KEY` como secreto de producción. Opcionalmente define `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless usa la biblioteca estándar.
+También puedes importar el repositorio de GitHub desde el panel de Vercel. `vercel.json` instala y compila `web/` y publica `web/dist`; no hace falta repetir esa configuración en el panel. Para activar el tutor, configura `OPENAI_API_KEY` como secreto de producción. Opcionalmente define `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless usa la biblioteca estándar.
 
-Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebSocket persistente. Por eso la versión alojada usa HTML/CSS/JavaScript y una función Python por solicitud. El Tutor IA de Vercel vuelve a ejecutar el sistema en el servidor antes de construir el contexto; la respuesta generativa nunca tiene autoridad sobre los números exactos.
+Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebSocket persistente. Por eso la versión alojada usa una aplicación React estática y una función Python por solicitud. El Tutor IA de Vercel vuelve a ejecutar el sistema en el servidor antes de construir el contexto; la respuesta generativa nunca tiene autoridad sobre los números exactos.
 
 ## Tutor IA opcional con OpenAI
 
@@ -147,6 +157,9 @@ Los anexos son desarrollos algebraicos computados y verificables a mano. No se p
 python -m unittest discover -s tests -p test_solver.py -v
 # Núcleo y recorridos Streamlit, después de instalar requirements.txt:
 python -m unittest discover -s tests -v
+# Frontend React: tipos, compilación y optimización de producción:
+npm --prefix web ci
+npm --prefix web run build
 # Regenerar el PDF y los demás entregables:
 python -m pip install -r requirements-dev.txt
 python scripts/build_deliverables.py
@@ -166,7 +179,7 @@ scenarios.py              Datos originales y variantes independientes
 reporting.py              Formato de matrices, guías y exportaciones
 main.py                   Consola, JSON y batería de escenarios
 app.py                    Interfaz Streamlit
-web/                      Interfaz responsive para Vercel
+web/                      React/TypeScript, Tailwind y componentes shadcn/ui
 api/solve.py              API Python serverless para Vercel
 api/tutor.py              Tutor IA serverless mediante Responses API
 ai_tutor.py               Contexto matemático, API Responses y cuota diaria
