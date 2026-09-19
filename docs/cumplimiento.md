@@ -64,4 +64,4 @@ La respuesta correcta para B original es `(-105,345,2430,1170,1130,2010)/83`. El
 
 **Optimización.** AX=B solo resuelve el balance. Sin una función objetivo y datos de costos/beneficios no puede justificarse un óptimo empresarial. El producto evita esa afirmación.
 
-**Presentación académica.** El informe generado usa una composición de artículo a dos columnas inspirada en IEEE. No usa la plantilla oficial de una conferencia. Si el docente exige una plantilla exacta, se debe adaptar el documento; también faltan los datos personales de portada que el usuario no proporcionó. No se inventaron esos datos.
+**Presentación académica.** El informe se genera con la clase `IEEEtran` en modalidad `conference`, cuerpo a dos columnas y apéndices completos. Incluye los tres autores y carnés proporcionados. Aún deben confirmarse docente, grupo, universidad, fecha institucional y si la institución exige una variante propia de IEEE/ACM.

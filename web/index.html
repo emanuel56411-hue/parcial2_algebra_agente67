@@ -21,6 +21,7 @@
       <a href="#workspace">Calculadora</a>
       <a href="#methods">Métodos</a>
       <a href="#evidence">Evidencia</a>
+      <a href="#deliverables">Entregables</a>
     </nav>
     <span class="status-dot"><i></i> Cálculo exacto</span>
   </header>
@@ -158,6 +159,7 @@
         <h3>Comparte un análisis reproducible</h3>
         <p>Descarga los datos y resultados exactos, o imprime esta página como PDF desde tu navegador.</p>
         <div class="export-actions"><button class="button primary" id="download-result">Descargar resultado JSON</button><button class="button ghost" id="download-input">Descargar datos de entrada</button><button class="button ghost" id="print-result">Imprimir / guardar PDF</button></div>
+        <p class="academic-link"><a href="https://raw.githubusercontent.com/emanuel56411-hue/parcial2_algebra_agente67/main/docs/informe_tecnico_ieee.pdf" target="_blank" rel="noreferrer">Descargar informe técnico IEEE del proyecto ↗</a></p>
       </div>
     </section>
 
@@ -167,6 +169,15 @@
         <article><span>01</span><h3>Eliminación de Gauss</h3><p>Lleva el sistema a forma triangular y despeja desde la última ecuación mediante sustitución hacia atrás.</p><code>[A|B] → [U|C]</code></article>
         <article><span>02</span><h3>Gauss-Jordan</h3><p>Normaliza cada pivote y elimina arriba y abajo hasta leer la solución directamente.</p><code>[A|B] → [I|X]</code></article>
         <article><span>03</span><h3>Matriz inversa</h3><p>Construye A⁻¹ con operaciones elementales y calcula el producto exacto A⁻¹B.</p><code>[A|I] → [I|A⁻¹]</code></article>
+      </div>
+    </section>
+
+    <section class="deliverables" id="deliverables" aria-labelledby="deliverables-title">
+      <div class="section-heading"><div><p class="eyebrow">DOCUMENTACIÓN AUDITABLE</p><h2 id="deliverables-title">Entregables del análisis</h2></div><p>Documentación generada desde las mismas ejecuciones exactas que utiliza la aplicación.</p></div>
+      <div class="deliverable-grid">
+        <a href="https://raw.githubusercontent.com/emanuel56411-hue/parcial2_algebra_agente67/main/docs/informe_tecnico_ieee.pdf" target="_blank" rel="noreferrer"><span>PDF · IEEEtran</span><h3>Informe técnico</h3><p>Modelado, tres métodos, arquitectura, validación y anexos completos.</p><b>Descargar ↗</b></a>
+        <a href="https://github.com/emanuel56411-hue/parcial2_algebra_agente67/blob/main/bitacora/BITACORA.md" target="_blank" rel="noreferrer"><span>MARKDOWN + JSON</span><h3>Bitácora de pruebas</h3><p>Entradas y salidas literales de los escenarios normales y extremos.</p><b>Consultar ↗</b></a>
+        <a href="https://github.com/emanuel56411-hue/parcial2_algebra_agente67/blob/main/docs/interpretacion_operaciones.md" target="_blank" rel="noreferrer"><span>INFORME EJECUTIVO</span><h3>Interpretación operacional</h3><p>Consumos, factibilidad, singularidad y recomendaciones gerenciales.</p><b>Consultar ↗</b></a>
       </div>
     </section>
 

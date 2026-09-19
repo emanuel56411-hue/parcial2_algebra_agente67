@@ -35,6 +35,14 @@ def main() -> None:
         expect(page.get_by_role("heading", name="Consulta el análisis con IA")).to_be_visible()
         page.locator("#tab-tutor").scroll_into_view_if_needed()
         page.screenshot(path=str(output / "10_vercel_tutor.png"), full_page=False)
+        deliverables = page.get_by_role("heading", name="Entregables del análisis")
+        expect(deliverables).to_be_visible()
+        page.locator("#deliverables").scroll_into_view_if_needed()
+        expect(page.get_by_role("link", name="Informe técnico")).to_have_attribute(
+            "href",
+            "https://raw.githubusercontent.com/emanuel56411-hue/parcial2_algebra_agente67/main/docs/informe_tecnico_ieee.pdf",
+        )
+        page.screenshot(path=str(output / "12_vercel_entregables.png"), full_page=False)
         page.set_viewport_size({"width": 390, "height": 844})
         page.evaluate("window.scrollTo(0, 0)")
         if page.evaluate("document.documentElement.scrollWidth > innerWidth + 2"):

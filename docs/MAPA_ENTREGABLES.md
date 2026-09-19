@@ -22,7 +22,7 @@ La segunda ejecución actualiza referencias y numeración. Se requiere una distr
 
 ## Datos por verificar antes de entregar
 
-- Nombre completo, carné, docente, grupo, universidad y fecha institucional.
+- Los autores y carnés ya están incorporados. Faltan docente, grupo, universidad y fecha institucional.
 - Si la institución exige una variante específica de IEEE/ACM o portada separada.
 - Confirmación docente de cuál vector B debe considerarse oficial.
 - Confirmación de que los coeficientes son consumos por mil módulos, no por módulo individual.

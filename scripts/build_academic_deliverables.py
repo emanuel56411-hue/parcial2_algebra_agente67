@@ -122,15 +122,22 @@ def build_ieee(reports):
     variable_rows = "\n".join(rf"$x_{i}$ & {tex_escape(name)} & miles de módulos por turno \\" for i, name in enumerate(PRODUCTS, 1))
     constraint_rows = "\n".join(rf"$R_{i}$ & {tex_escape(name)} & {tex_escape(unit)} & {b} \\" for i, (name, unit, b) in enumerate(zip(RESOURCES, UNITS, base["B"]), 1))
     comparison_rows = "\n".join(rf"$x_{i}$ & {base['methods']['gauss']['solution'][i-1]} & {base['methods']['gauss_jordan']['solution'][i-1]} & {base['methods']['inverse']['solution'][i-1]} \\" for i in range(1, 7))
-    substitutions = "\n\n".join(tex_escape(v) + r"\\" for v in base["substitution"])
     tex = rf"""\documentclass[conference]{{IEEEtran}}
 \usepackage[utf8]{{inputenc}}
 \usepackage[T1]{{fontenc}}
 \usepackage[spanish,es-nodecimaldot]{{babel}}
 \usepackage{{amsmath,amssymb,array,booktabs,graphicx,hyperref,xcolor}}
+\graphicspath{{{{screenshots/}}{{docs/screenshots/}}}}
 \hypersetup{{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}}
 \title{{Agente explicable para el balance matricial exacto de recursos en TechChip Systems S.A.}}
-\author{{\IEEEauthorblockN{{Nombre del estudiante (completar)}}\IEEEauthorblockA{{Ingeniería en Inteligencia Artificial y Telecomunicaciones\\Álgebra Lineal --- Parcial 2}}}}
+\author{{
+\IEEEauthorblockN{{\small
+\begin{{tabular}}{{ccc}}
+Henry Modesto Portillo Quintanilla & David Ernesto Quijada Vásquez & Josue Emanuel Cruz Fernandez\\
+PQ100126 & QV100226 & CF100126
+\end{{tabular}}}}
+\IEEEauthorblockA{{Ingeniería en Inteligencia Artificial y Telecomunicaciones}}
+}}
 \begin{{document}}
 \maketitle
 \begin{{abstract}}
@@ -155,8 +162,8 @@ Las operaciones elementales son reversibles y conservan el conjunto solución. S
 \section{{Discrepancia de datos}}
 La multiplicación exacta del vector solicitado por la guía produce
 \[
-A\begin{{bmatrix}}15&20&25&10&15&20\end{{bmatrix}}^T
-=\begin{{bmatrix}}185&200&280&150&245&195\end{{bmatrix}}^T.
+\resizebox{{0.97\linewidth}}{{!}}{{\(A\begin{{bmatrix}}15&20&25&10&15&20\end{{bmatrix}}^T
+=\begin{{bmatrix}}185&200&280&150&245&195\end{{bmatrix}}^T\)}}.
 \]
 No coincide con el $B$ impreso, cuya diferencia es $(30,40,55,10,30,20)^T$. Para ese $B$, el agente obtiene
 \[
@@ -168,8 +175,13 @@ El valor $x_1=-105/83$ hace inviable el balance empresarial bajo $X\ge0$, aunque
 \subsection{{Eliminación de Gauss}}
 El algoritmo selecciona el mayor pivote absoluto disponible, intercambia filas cuando procede y aplica $F_i\leftarrow F_i+kF_j$ bajo cada pivote. La forma triangular obtenida es
 {matrix_tex(gauss_final, 6)}
-La sustitución hacia atrás registrada es:\\
-\scriptsize {substitutions}\normalsize
+La sustitución hacia atrás, desarrollada íntegramente en el Apéndice A, produce en orden
+\[
+\begin{{aligned}}
+x_6&=20,\quad x_5=15,\quad x_4=10,\\
+x_3&=25,\quad x_2=20,\quad x_1=15.
+\end{{aligned}}
+\]
 
 \subsection{{Gauss--Jordan}}
 Cada pivote se divide por sí mismo y se eliminan las entradas inferiores y superiores. La ejecución termina en
@@ -186,7 +198,7 @@ Los seis residuos son cero y $E_{{\max}}=0<10^{{-6}}$.
 
 \section{{Arquitectura del agente}}
 El flujo funcional es:
-\begin{{center}}\fbox{{Entrada JSON/consola/web}} $\rightarrow$ \fbox{{Validación exacta}} $\rightarrow$ \fbox{{Diagnóstico}}\\$\downarrow$\\\fbox{{Gauss / Gauss--Jordan / Inversa}} $\rightarrow$ \fbox{{Verificación $AX=B$}} $\rightarrow$ \fbox{{Explicación}}\end{{center}}
+\begin{{center}}\begin{{tabular}}{{c}}\fbox{{Entrada JSON / consola / web}}\\$\downarrow$\\\fbox{{Validación dimensional y racional}}\\$\downarrow$\\\fbox{{Determinante, rangos y diagnóstico}}\\$\downarrow$\\\fbox{{Gauss / Gauss--Jordan / inversa}}\\$\downarrow$\\\fbox{{Verificación $AX=B$ e interpretación}}\end{{tabular}}\end{{center}}
 \texttt{{agent.py}} contiene validación, pivoteo, rangos y las clases de análisis; \texttt{{main.py}} expone la CLI; \texttt{{api/solve.py}} ofrece la función serverless; la interfaz permite escoger el método principal y conserva los otros como validación cruzada. El Tutor IA recibe únicamente contexto matemático recalculado por el servidor; nunca sustituye al motor exacto. La clave se conserva como variable de entorno del servidor y las respuestas se solicitan con almacenamiento desactivado \cite{{openai}}.
 
 \section{{Pruebas de validación}}
@@ -197,6 +209,15 @@ Resina $B_3=100$&$-83$&$6/6$&$(-26355,-6780,18555,3170,3505,6510)/83$&Única, no
 $F_6=2F_1$, $B_6=175$&$0$&$5/6$&No existe&Incompatible\\
 $F_6=2F_1$, $B_6=310$&$0$&$5/5$&Familia con $x_6$ libre&Infinitas\\\bottomrule\end{{tabular}}\end{{table*}}
 En escasez, $x_1=-26355/83$ y $x_2=-6780/83$ prueban que no puede agotarse cada recurso con producciones no negativas. En el caso singular incompatible, la primera fila exige $2B_1=310$ mientras la sexta conserva 175. Al corregir también $B_6=310$, una ecuación es redundante y aparece una familia cuyo particular es $(-105/16,345/16,105/4,165/16,115/4,0)^T$.
+Los registros literales completos se conservan en \texttt{{bitacora/*.json}} y su índice auditable en \texttt{{bitacora/BITACORA.md}}. La Fig.~\ref{{fig:evidencia}} muestra evidencia de la ejecución web del caso compatible y del procedimiento completo.
+
+\begin{{figure}}[!t]
+\centering
+\includegraphics[width=\linewidth]{{02_plan_compatible.png}}\\[2pt]
+\includegraphics[width=\linewidth]{{09_vercel_procedimiento.png}}
+\caption{{Evidencia de ejecución: solución compatible y traza completa publicada en Vercel.}}
+\label{{fig:evidencia}}
+\end{{figure}}
 
 \section{{Conclusiones}}
 La coincidencia exacta de tres algoritmos y el residuo nulo validan el caso compatible. La discrepancia de la guía es de datos, no del método: el vector esperado requiere otro $B$. El B original y la escasez producen soluciones algebraicas con componentes negativas y, por tanto, planes inviables bajo $X\ge0$. La singularidad distingue recursos redundantes de restricciones contradictorias. Para uso industrial se recomienda validar unidades, permitir holguras mediante desigualdades cuando corresponda e incorporar costos y demanda antes de hablar de optimización.
@@ -244,7 +265,7 @@ La segunda ejecución actualiza referencias y numeración. Se requiere una distr
 
 ## Datos por verificar antes de entregar
 
-- Nombre completo, carné, docente, grupo, universidad y fecha institucional.
+- Los autores y carnés ya están incorporados. Faltan docente, grupo, universidad y fecha institucional.
 - Si la institución exige una variante específica de IEEE/ACM o portada separada.
 - Confirmación docente de cuál vector B debe considerarse oficial.
 - Confirmación de que los coeficientes son consumos por mil módulos, no por módulo individual.

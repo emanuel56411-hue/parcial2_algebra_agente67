@@ -2,6 +2,8 @@
 
 **Resuelve sistemas lineales. Entiende cada operación. Sustenta cada decisión.**
 
+Autores: Henry Modesto Portillo Quintanilla (`PQ100126`), David Ernesto Quijada Vásquez (`QV100226`) y Josue Emanuel Cruz Fernandez (`CF100126`).
+
 Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems y sistemas personalizados de **1 × 1 a 12 × 12**. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
 
 > **Hallazgo en la guía:** el vector esperado `(15,20,25,10,15,20)` requiere `B=(185,200,280,150,245,195)`. Las disponibilidades originales son `(155,160,225,140,215,175)` y producen una solución distinta con `x1<0`. La aplicación conserva ambos escenarios y no sustituye datos para forzar la respuesta.
