@@ -2,7 +2,7 @@
 
 **Resuelve sistemas lineales. Entiende cada operación. Sustenta cada decisión.**
 
-Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems y sistemas personalizados de **1 × 1 a 12 × 12**.
+Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems y sistemas personalizados de **1 × 1 a 12 × 12**. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
 
 > **Hallazgo en la guía:** el vector esperado `(15,20,25,10,15,20)` requiere `B=(185,200,280,150,245,195)`. Las disponibilidades originales son `(155,160,225,140,215,175)` y producen una solución distinta con `x1<0`. La aplicación conserva ambos escenarios y no sustituye datos para forzar la respuesta.
 
@@ -38,6 +38,20 @@ venv/bin/python -m streamlit run app.py
 ```
 
 La calculadora funciona localmente y no requiere cuentas ni claves de API. El motor es un agente determinista basado en reglas; sus operaciones son verificables. El **Tutor IA es opcional**: solo envía datos a OpenAI cuando pulsas su botón o envías una pregunta. La tipografía usa fuentes locales/sistema.
+
+## Desplegar en Vercel
+
+La raíz del repositorio contiene `vercel.json`, la interfaz estática en `web/` y la función Python `api/solve.py`. Esta variante conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos, la verificación y las exportaciones. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
+
+```bash
+npx vercel dev       # vista previa local
+npx vercel           # despliegue de prueba
+npx vercel --prod    # producción
+```
+
+También puedes importar el repositorio de GitHub desde el panel de Vercel; no requiere Build Command, Output Directory ni variables de entorno. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless solo usa la biblioteca estándar.
+
+Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebSocket persistente. Por eso la versión alojada usa HTML/CSS/JavaScript y una función Python por solicitud. El Tutor IA permanece en la versión Streamlit local: su cuota actual usa SQLite y no debe publicarse en un sistema de archivos efímero sin sustituirla por un almacén persistente.
 
 ## Tutor IA opcional con OpenAI
 
@@ -132,7 +146,7 @@ python scripts/build_deliverables.py
 
 Las pruebas comprueban soluciones conocidas, determinantes por una definición independiente, identidades de la inversa, familias paramétricas, reproducción de cada operación de fila, pivoteo, entradas inválidas y recorridos de los formularios web. La automatización de GitHub ejecuta las pruebas al recibir cambios.
 
-La comprobación visual es un paso separado de AppTest. Con el servidor ya iniciado y Playwright instalado, `python scripts/browser_check.py` prueba la página y guarda capturas en `docs/screenshots/`. Se puede indicar `--browser /ruta/al/ejecutable` para usar un Chromium o Brave instalado. Se incluyen **8 capturas reales** y el resultado de **7 comprobaciones aprobadas** en `docs/logs/browser.json`, incluida la interfaz del tutor sin realizar llamadas a OpenAI.
+La comprobación visual es un paso separado de AppTest. Con el servidor ya iniciado y Playwright instalado, `python scripts/browser_check.py` prueba la página y guarda capturas en `docs/screenshots/`. Se puede indicar `--browser /ruta/al/ejecutable` para usar un Chromium o Brave instalado. Se incluyen capturas reales y el resultado de **7 comprobaciones aprobadas** en `docs/logs/browser.json`, incluida la interfaz del tutor sin realizar llamadas a OpenAI.
 
 ## Arquitectura
 
@@ -142,6 +156,8 @@ scenarios.py              Datos originales y variantes independientes
 reporting.py              Formato de matrices, guías y exportaciones
 main.py                   Consola, JSON y batería de escenarios
 app.py                    Interfaz Streamlit
+web/                      Interfaz responsive para Vercel
+api/solve.py              API Python serverless para Vercel
 ai_tutor.py               Contexto matemático, API Responses y cuota diaria
 tutor_ui.py               Chat y explicación opcional de pasos
 scripts/build_deliverables.py  Ejemplos, bitácora y documento técnico

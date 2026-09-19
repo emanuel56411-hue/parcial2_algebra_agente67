@@ -1,0 +1,167 @@
+"use strict";
+
+const A_BASE = [[2,1,3,1,2,1],[1,3,2,2,1,2],[3,2,4,1,3,2],[1,1,1,4,2,1],[2,1,2,1,5,3],[1,2,1,2,1,4]];
+const B_GUIDE = [155,160,225,140,215,175];
+const scenarios = {
+  original:{title:"TechChip · datos originales",note:"Disponibilidades transcritas de la guía, sin correcciones ocultas.",A:A_BASE,B:B_GUIDE,production:true},
+  compatible:{title:"TechChip · vector esperado",note:"Variante didáctica con B = A·X esperado; no es la disponibilidad original de la guía.",A:A_BASE,B:[185,200,280,150,245,195],production:true},
+  scarcity:{title:"Escasez · resina a 100 kg",note:"Parte de B original y modifica únicamente B₃ = 100.",A:A_BASE,B:[155,160,100,140,215,175],production:true},
+  singular:{title:"Singular · sin solución",note:"F₆ = 2F₁, conservando B₆ = 175; aparece una contradicción.",A:[...A_BASE.slice(0,5),A_BASE[0].map(v=>2*v)],B:B_GUIDE,production:true},
+  infinite:{title:"Singular · infinitas soluciones",note:"F₆ = 2F₁ y B₆ = 2B₁; una variable queda libre.",A:[...A_BASE.slice(0,5),A_BASE[0].map(v=>2*v)],B:[155,160,225,140,215,310],production:true},
+  example:{title:"Ejemplo guiado · 3 × 3",note:"Sistema pequeño con solución X = (2, 3, −1).",A:[[2,1,-1],[-3,-1,2],[-2,1,2]],B:[8,-11,-3],production:false}
+};
+const labels={unique:"Solución única",infinite:"Infinitas soluciones",inconsistent:"Sin solución"};
+const methodLabels={diagnosis:"Diagnóstico",gauss:"Eliminación de Gauss",gauss_jordan:"Gauss-Jordan",inverse:"Matriz inversa"};
+const $=selector=>document.querySelector(selector);
+let currentInput=null,currentReport=null,currentStep=0,currentSteps=[];
+
+function clone(value){return JSON.parse(JSON.stringify(value));}
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c]);}
+function numeric(value){const [a,b="1"]=String(value).split("/");return Number(a)/Number(b);}
+function decimal(value){const n=numeric(value);if(!Number.isFinite(n))return "—";if(n!==0&&(Math.abs(n)>=1e9||Math.abs(n)<1e-5))return n.toExponential(5);return n.toLocaleString("es-SV",{maximumFractionDigits:6});}
+
+function init(){
+  const select=$("#scenario");
+  Object.entries(scenarios).forEach(([key,item])=>select.add(new Option(item.title,key)));
+  select.value="original";
+  select.addEventListener("change",loadScenario);
+  $("#source").addEventListener("change",changeSource);
+  $("#dimension").addEventListener("change",loadCustom);
+  $("#solve").addEventListener("click",solve);
+  $("#new-analysis").addEventListener("click",()=>$("#workspace").scrollIntoView());
+  $("#method").addEventListener("change",()=>loadMethod($("#method").value));
+  $("#prev-step").addEventListener("click",()=>showStep(currentStep-1));
+  $("#next-step").addEventListener("click",()=>showStep(currentStep+1));
+  $("#step-range").addEventListener("input",event=>showStep(Number(event.target.value)-1));
+  document.querySelectorAll("[role=tab]").forEach(tab=>tab.addEventListener("click",()=>activateTab(tab.dataset.tab)));
+  $("#download-result").addEventListener("click",()=>download("resultado-techchip.json",currentReport));
+  $("#download-input").addEventListener("click",()=>download("sistema.json",{A:currentInput.A,B:currentInput.B}));
+  $("#print-result").addEventListener("click",()=>window.print());
+  loadScenario();
+}
+
+function loadScenario(){
+  const item=scenarios[$("#scenario").value];
+  $("#scenario-note").textContent=item.note;
+  $("#production").checked=item.production;
+  $("#production-row").classList.toggle("hidden",item.production);
+  $("#guide-warning").classList.toggle("hidden",$("#scenario").value==="example");
+  renderEditor(clone(item.A),clone(item.B));
+}
+
+function changeSource(){
+  const source=$("#source").value;
+  $("#scenario-field").classList.toggle("hidden",source!=="scenario");
+  $("#dimension-field").classList.toggle("hidden",source!=="custom");
+  $("#json-field").classList.toggle("hidden",source!=="json");
+  $("#guide-warning").classList.toggle("hidden",source!=="scenario"||$("#scenario").value==="example");
+  $("#production-row").classList.remove("hidden");
+  if(source==="scenario")loadScenario();
+  else if(source==="custom"){$("#production").checked=false;loadCustom();}
+  else{$("#production").checked=false;renderEditor([[2,1],[1,-1]],[5,1]);}
+}
+
+function loadCustom(){
+  const n=Math.max(1,Math.min(12,Number($("#dimension").value)||3));
+  $("#dimension").value=n;
+  renderEditor(Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0)),Array(n).fill(1));
+}
+
+function renderEditor(A,B){
+  const n=A.length,head=$("#matrix-editor thead"),body=$("#matrix-editor tbody");
+  head.replaceChildren();body.replaceChildren();
+  const hr=document.createElement("tr");hr.append(document.createElement("th"));
+  [...Array(n)].forEach((_,i)=>{const th=document.createElement("th");th.textContent=`x${i+1}`;hr.append(th);});
+  const bth=document.createElement("th");bth.textContent="B";hr.append(bth);head.append(hr);
+  A.forEach((row,i)=>{const tr=document.createElement("tr"),label=document.createElement("td");label.textContent=`F${i+1}`;tr.append(label);
+    [...row,B[i]].forEach((value,j)=>{const td=document.createElement("td"),input=document.createElement("input");input.value=value;input.dataset.row=i;input.dataset.col=j;input.setAttribute("aria-label",j===n?`B, fila ${i+1}`:`A, fila ${i+1}, columna ${j+1}`);td.append(input);tr.append(td);});body.append(tr);});
+  $("#size-badge").textContent=`${n} × ${n}`;
+}
+
+function editorData(){
+  const rows=[...document.querySelectorAll("#matrix-editor tbody tr")];
+  const A=[],B=[];
+  rows.forEach(row=>{const values=[...row.querySelectorAll("input")].map(input=>input.value.trim());A.push(values.slice(0,-1));B.push(values.at(-1));});
+  return {A,B};
+}
+
+async function solve(){
+  const button=$("#solve"),error=$("#error");error.classList.add("hidden");
+  try{
+    let data;
+    if($("#source").value==="json"){
+      try{data=JSON.parse($("#json-input").value);}catch(_){throw new Error("El texto no es JSON válido.");}
+      if(!data||!Array.isArray(data.A)||!Array.isArray(data.B))throw new Error("El JSON debe contener las matrices A y B.");
+    }else data=editorData();
+    data.production=$("#production").checked;
+    currentInput=clone(data);button.disabled=true;button.textContent="Analizando…";
+    const response=await fetch("/api/solve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+    const result=await response.json().catch(()=>({error:"La API no devolvió una respuesta válida."}));
+    if(!response.ok)throw new Error(result.error||"No se pudo resolver el sistema.");
+    currentReport=result;renderResults(result);$("#results").classList.remove("hidden");$("#results").scrollIntoView({behavior:"smooth"});
+  }catch(exc){error.textContent=exc.message;error.classList.remove("hidden");}
+  finally{button.disabled=false;button.innerHTML='Resolver sistema <span aria-hidden="true">→</span>';}
+}
+
+function renderResults(report){
+  $("#metric-status").textContent=labels[report.status]||report.status;
+  $("#metric-det").textContent=report.determinant;
+  $("#metric-ranks").textContent=`${report.rank_A} / ${report.rank_augmented}`;
+  $("#metric-error").textContent=report.max_error??"No aplica";
+  const interpretation=$("#interpretation");interpretation.textContent=report.interpretation[0]||"Análisis completado.";
+  interpretation.className="message"+(report.status==="inconsistent"?" error":report.solution&&report.production&&report.solution.some(v=>numeric(v)<0)?" warning":"");
+  renderSummary(report);renderProcedure(report);renderVerification(report);activateTab("summary");
+}
+
+function renderSummary(report){
+  const panel=$("#tab-summary");
+  if(report.solution){
+    const max=Math.max(...report.solution.map(v=>Math.abs(numeric(v))),1);
+    const rows=report.solution.map((v,i)=>`<tr><td>x${i+1}</td><td>${escapeHtml(v)}</td><td>${escapeHtml(decimal(v))}</td>${report.production?`<td>${numeric(v)<0?"No viable":"No negativa"}</td>`:""}</tr>`).join("");
+    const bars=report.solution.map((v,i)=>`<div class="value-row"><b>x${i+1}</b><div class="bar-track"><div class="bar ${numeric(v)<0?"negative":""}" style="width:${Math.max(2,Math.abs(numeric(v))/max*100)}%"></div></div><span>${escapeHtml(decimal(v))}</span></div>`).join("");
+    panel.innerHTML=`<div class="solution-layout"><div><h3>Solución por variable</h3><table class="data-table"><thead><tr><th>Variable</th><th>Exacto</th><th>Decimal ≈</th>${report.production?"<th>Factibilidad</th>":""}</tr></thead><tbody>${rows}</tbody></table></div><div><h3>Distribución de la solución</h3><div class="value-bars">${bars}</div></div></div>${interpretationList(report)}`;
+  }else if(report.particular){
+    const terms=report.nullspace.map((v,i)=>`t${i+1} · (${v.map(escapeHtml).join(", ")})`).join(" + ");
+    panel.innerHTML=`<h3>Familia de soluciones</h3><div class="family">X = (${report.particular.map(escapeHtml).join(", ")})${terms?" + "+terms:""}<br><small>t₁, t₂, … son parámetros reales libres.</small></div>${interpretationList(report)}`;
+  }else panel.innerHTML=`<h3>El sistema no tiene solución</h3>${interpretationList(report)}`;
+}
+
+function interpretationList(report){return report.interpretation.length>1?`<ul class="interpretation-list">${report.interpretation.slice(1).map(v=>`<li>${escapeHtml(v)}</li>`).join("")}</ul>`:"";}
+
+function renderProcedure(report){
+  const select=$("#method");select.replaceChildren();
+  const keys=["diagnosis",...Object.keys(report.methods)];keys.forEach(key=>select.add(new Option(methodLabels[key],key)));
+  loadMethod("diagnosis");
+}
+
+function loadMethod(key){
+  $("#method").value=key;currentSteps=key==="diagnosis"?currentReport.diagnostic_steps:currentReport.methods[key].steps;showStep(0);
+}
+
+function showStep(index){
+  if(!currentSteps.length)return;currentStep=Math.max(0,Math.min(currentSteps.length-1,index));const step=currentSteps[currentStep];
+  $("#step-counter").textContent=`${currentStep+1} / ${currentSteps.length}`;$("#step-label").textContent=`PASO ${String(currentStep+1).padStart(2,"0")}`;
+  $("#step-operation").textContent=step.operation;$("#step-explanation").textContent=step.explanation;$("#step-matrix").innerHTML=matrixHtml(step.matrix,step.split);
+  $("#step-range").max=currentSteps.length;$("#step-range").value=currentStep+1;$("#prev-step").disabled=currentStep===0;$("#next-step").disabled=currentStep===currentSteps.length-1;
+}
+
+function matrixHtml(matrix,split){return `<table class="rendered-matrix"><tbody>${matrix.map(row=>`<tr>${row.map((value,i)=>`<td class="${i===split?"split":""}">${escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;}
+
+function renderVerification(report){
+  const panel=$("#tab-verification");
+  if(report.solution){
+    const names=Object.values(report.methods);const rows=report.solution.map((_,i)=>`<tr><td>x${i+1}</td>${names.map(m=>`<td>${escapeHtml(m.solution[i])}</td>`).join("")}</tr>`).join("");
+    panel.innerHTML=`<div class="message verification-note">Los tres métodos coinciden exactamente. El error racional por componente es ${escapeHtml(report.max_error)}.</div><table class="method-table"><thead><tr><th>Variable</th>${names.map(m=>`<th>${escapeHtml(m.name)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table><h3>Sustitución directa</h3><div class="substitutions">${report.substitution.map(v=>`<code>${escapeHtml(v)}</code>`).join("")}</div>`;
+  }else panel.innerHTML=`<div class="message">det(A) = 0 · rango(A) = ${report.rank_A} · rango([A|B]) = ${report.rank_augmented}</div><p>${report.status==="inconsistent"?"Una fila de la forma 0 = c, con c ≠ 0, demuestra la incompatibilidad.":"La familia se verifica con A·Xₚ = B y A·v = 0 para cada dirección libre."}</p>`;
+}
+
+function activateTab(name){
+  document.querySelectorAll("[role=tab]").forEach(tab=>tab.setAttribute("aria-selected",String(tab.dataset.tab===name)));
+  document.querySelectorAll(".tab-panel").forEach(panel=>panel.classList.toggle("hidden",panel.id!==`tab-${name}`));
+}
+
+function download(filename,data){
+  if(!data)return;const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+document.addEventListener("DOMContentLoaded",init);
