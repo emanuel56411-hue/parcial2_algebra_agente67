@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Bot, LoaderCircle, Send, ShieldCheck, Sparkles } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -28,12 +28,13 @@ const suggestions = [
 ]
 
 export function TutorSheet({ open, onOpenChange, input, title, note, initialQuestion = "", stepContext }: Props) {
-  const [question, setQuestion] = useState(initialQuestion)
+  const questionSource = `${initialQuestion}:${stepContext?.method ?? "general"}:${stepContext?.stepIndex ?? -1}`
+  const [draft, setDraft] = useState({ source: questionSource, value: initialQuestion })
+  const question = draft.source === questionSource ? draft.value : initialQuestion
+  const setQuestion = (value: string) => setDraft({ source: questionSource, value })
   const [messages, setMessages] = useState<TutorMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-
-  useEffect(() => { if (initialQuestion) setQuestion(initialQuestion) }, [initialQuestion, stepContext])
 
   async function submit(raw: string) {
     const text = raw.trim()

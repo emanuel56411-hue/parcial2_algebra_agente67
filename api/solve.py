@@ -2,7 +2,6 @@
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler
 import json
-from pathlib import Path
 from urllib.parse import urlsplit
 
 from agent import InputError, TechChipAgent, validate_input
@@ -10,14 +9,6 @@ from ai_tutor import TutorError
 from api.tutor import ask_tutor_serverless
 
 MAX_REQUEST_BYTES = 100_000
-ROOT = Path(__file__).resolve().parents[1]
-STATIC_FILES = {
-    "/": (ROOT / "web/index.html", "text/html; charset=utf-8"),
-    "/web/index.html": (ROOT / "web/index.html", "text/html; charset=utf-8"),
-    "/web/styles.css": (ROOT / "web/styles.css", "text/css; charset=utf-8"),
-    "/web/app.js": (ROOT / "web/app.js", "text/javascript; charset=utf-8"),
-    "/assets/logo.svg": (ROOT / "assets/logo.svg", "image/svg+xml"),
-}
 
 
 def solve_payload(payload: object) -> dict:
@@ -63,18 +54,7 @@ class handler(BaseHTTPRequestHandler):
         if path == "/api/solve":
             self._send_json(200, {"ok": True, "service": "TechChip Matrix Studio", "format": "exact-rational-v1"})
             return
-        static = STATIC_FILES.get(path)
-        if static is None:
-            self._send_json(404, {"error": "Ruta no encontrada."})
-            return
-        file_path, content_type = static
-        try:
-            body = file_path.read_bytes()
-        except OSError:
-            self._send_json(500, {"error": "No se pudo cargar la interfaz."})
-            return
-        cache = "public, max-age=31536000, immutable" if path.endswith((".css", ".js", ".svg")) else "public, max-age=0, must-revalidate"
-        self._send_bytes(200, body, content_type, cache)
+        self._send_json(404, {"error": "Ruta no encontrada."})
 
     def do_POST(self) -> None:
         path = urlsplit(self.path).path

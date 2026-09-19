@@ -129,7 +129,11 @@
     }
   html {
     @apply scroll-smooth font-sans;
-    }
+    overflow-x: hidden;
+  }
+  body {
+    overflow-x: hidden;
+  }
 }
 
 @theme inline {

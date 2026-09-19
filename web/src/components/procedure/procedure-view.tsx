@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { ArrowLeft, ArrowRight, Bot, CheckCircle2 } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
@@ -69,7 +69,6 @@ export function ProcedureView({ report, preferredMethod, onExplain }: Props) {
   const [index, setIndex] = useState(0)
   const steps = method === "diagnosis" ? report.diagnostic_steps : report.methods[method].steps
 
-  useEffect(() => setIndex(0), [method])
   const step = steps[index]
   const previous = index > 0 ? steps[index - 1].matrix : undefined
 
@@ -78,8 +77,8 @@ export function ProcedureView({ report, preferredMethod, onExplain }: Props) {
       <div className="grid gap-3 rounded-xl border bg-card p-4 md:grid-cols-[minmax(15rem,1fr)_auto] md:items-end">
         <div className="space-y-2">
           <label className="text-xs font-semibold" htmlFor="procedure-method">Método de resolución</label>
-          <Select value={method} onValueChange={setMethod}>
-            <SelectTrigger id="procedure-method" className="w-full md:max-w-sm"><SelectValue /></SelectTrigger>
+          <Select value={method} onValueChange={(nextMethod) => { setMethod(nextMethod); setIndex(0) }}>
+            <SelectTrigger id="procedure-method" className="w-full md:max-w-sm" aria-label="Método del procedimiento"><SelectValue /></SelectTrigger>
             <SelectContent>{methods.map((key) => <SelectItem key={key} value={key}>{methodLabels[key]}</SelectItem>)}</SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">{methodGoals[method]}</p>
