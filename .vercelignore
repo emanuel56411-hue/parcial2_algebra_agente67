@@ -18,3 +18,4 @@ scenarios.py
 tutor_ui.py
 requirements.txt
 requirements-dev.txt
+pyproject.toml
