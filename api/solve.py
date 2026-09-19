@@ -6,6 +6,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from agent import InputError, TechChipAgent, validate_input
+from ai_tutor import TutorError
+from api.tutor import ask_tutor_serverless
 
 MAX_REQUEST_BYTES = 100_000
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +31,17 @@ def solve_payload(payload: object) -> dict:
         raise InputError("production debe ser verdadero o falso.")
     A, B = validate_input(payload["A"], payload["B"])
     return TechChipAgent().analyze(A, B, production=production).to_dict()
+
+
+def analyze_payload(payload: object):
+    """Reconstruye un Analysis confiable para el tutor desde A y B."""
+    if not isinstance(payload, dict) or "A" not in payload or "B" not in payload:
+        raise InputError('El tutor requiere {"A": [[...]], "B": [...]} del cálculo actual.')
+    production = payload.get("production", False)
+    if not isinstance(production, bool):
+        raise InputError("production debe ser verdadero o falso.")
+    A, B = validate_input(payload["A"], payload["B"])
+    return TechChipAgent().analyze(A, B, production=production)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -64,7 +77,8 @@ class handler(BaseHTTPRequestHandler):
         self._send_bytes(200, body, content_type, cache)
 
     def do_POST(self) -> None:
-        if urlsplit(self.path).path != "/api/solve":
+        path = urlsplit(self.path).path
+        if path not in ("/api/solve", "/api/tutor"):
             self._send_json(404, {"error": "Ruta no encontrada."})
             return
         try:
@@ -74,8 +88,14 @@ class handler(BaseHTTPRequestHandler):
                 raise InputError("La solicitud debe contener JSON y no superar 100 kB.")
             raw = self.rfile.read(length).decode("utf-8")
             payload = json.loads(raw, parse_float=Decimal)
-            result = solve_payload(payload)
-        except (InputError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
+            if path == "/api/solve":
+                result = solve_payload(payload)
+            else:
+                report = analyze_payload(payload)
+                forwarded = self.headers.get("X-Forwarded-For", "")
+                client_id = forwarded.split(",", 1)[0].strip() or self.client_address[0]
+                result = ask_tutor_serverless(report, payload, client_id)
+        except (InputError, TutorError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
             self._send_json(400, {"error": str(exc) or "Solicitud no válida."})
             return
         except Exception:

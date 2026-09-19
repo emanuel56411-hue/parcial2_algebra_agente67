@@ -11,6 +11,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Editar cualquier celda de A y B, pegar JSON o cargar un archivo.
 - Introducir enteros, decimales, notación científica y fracciones como `"2/3"`.
 - Comparar tres soluciones calculadas mediante algoritmos explícitos.
+- Elegir Gauss, Gauss-Jordan o matriz inversa como método principal antes de resolver; los demás quedan como verificación cruzada.
 - Recorrer pasos numerados con la operación de fila, su explicación y la matriz resultante; consultar todos los pasos en orden.
 - Ver el cálculo del determinante, rangos, sustitución hacia atrás, construcción de la inversa y producto `A⁻¹B`.
 - Diagnosticar solución única, incompatibilidad o una familia de soluciones con parámetros libres.
@@ -41,7 +42,7 @@ La calculadora funciona localmente y no requiere cuentas ni claves de API. El mo
 
 ## Desplegar en Vercel
 
-La raíz del repositorio contiene `vercel.json`, la interfaz estática en `web/` y la función Python `api/solve.py`. Esta variante conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos, la verificación y las exportaciones. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
+La raíz del repositorio contiene `vercel.json`, la interfaz en `web/` y las funciones Python en `api/`. Esta variante conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos completos, la verificación, las exportaciones y el Tutor IA. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
 
 ```bash
 npx vercel dev       # vista previa local
@@ -49,9 +50,9 @@ npx vercel           # despliegue de prueba
 npx vercel --prod    # producción
 ```
 
-También puedes importar el repositorio de GitHub desde el panel de Vercel; no requiere Build Command, Output Directory ni variables de entorno. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless solo usa la biblioteca estándar.
+También puedes importar el repositorio de GitHub desde el panel de Vercel; no requiere Build Command ni Output Directory. Para activar el tutor, configura `OPENAI_API_KEY` como secreto de producción. Opcionalmente define `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless usa la biblioteca estándar.
 
-Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebSocket persistente. Por eso la versión alojada usa HTML/CSS/JavaScript y una función Python por solicitud. El Tutor IA permanece en la versión Streamlit local: su cuota actual usa SQLite y no debe publicarse en un sistema de archivos efímero sin sustituirla por un almacén persistente.
+Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebSocket persistente. Por eso la versión alojada usa HTML/CSS/JavaScript y una función Python por solicitud. El Tutor IA de Vercel vuelve a ejecutar el sistema en el servidor antes de construir el contexto; la respuesta generativa nunca tiene autoridad sobre los números exactos.
 
 ## Tutor IA opcional con OpenAI
 
@@ -67,7 +68,7 @@ El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [
 
 Controles de consumo: preguntas de hasta 1500 caracteres, contexto matemático de hasta 24000 caracteres, respuestas de hasta 1000 tokens, historial limitado y ningún reintento automático. La interfaz muestra los tokens reportados por OpenAI. Resolver, cambiar de pestaña o navegar entre pasos no genera llamadas a la API.
 
-El límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. Los intentos fallidos también cuentan para evitar gastos por reintentos. Borrar el chat o cambiar de sistema no restablece la cuota. Si el contador no puede escribirse, se bloquea la consulta antes de contactar con OpenAI.
+En Streamlit, el límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. En Vercel existe además un límite preventivo por conexión e instancia, configurable con `OPENAI_DAILY_REQUEST_LIMIT`; por la naturaleza serverless no sustituye los límites y presupuesto del proyecto OpenAI.
 
 Este límite controla solicitudes en una instalación, **no es un presupuesto en dólares de la cuenta**: otras aplicaciones, réplicas o la pérdida del disco pueden alterar el consumo total. Revisa también los límites de tu proyecto OpenAI. El costo depende del modelo y los tokens; consulta sus [tarifas oficiales](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
 
@@ -123,9 +124,10 @@ Para los casos invertibles de TechChip, `det(A)=-83`. Los tres métodos coincide
 ## Entregables y documentación
 
 - [Auditoría de cumplimiento del parcial](docs/cumplimiento.md).
-- [Informe técnico PDF y desarrollo completo](docs/informe_tecnico.pdf): artículo de dos columnas y anexos, estilo académico inspirado en IEEE; revisar la plantilla exigida por el docente.
+- [Informe técnico IEEEtran en PDF](docs/informe_tecnico_ieee.pdf) y [fuente LaTeX](docs/informe_tecnico_ieee.tex): cuerpo a dos columnas y anexos completos con los tres métodos.
 - [Interpretación de operaciones](docs/interpretacion_operaciones.md).
-- [Bitácora de validación](docs/logs/validation.json) y [procedimiento original](docs/logs/original.md).
+- [Bitácora de validación](bitacora/BITACORA.md), con JSON completos de cada escenario.
+- [Mapa de entregables y rúbrica](docs/MAPA_ENTREGABLES.md).
 - [Gauss, Gauss-Jordan e inversa: fundamentos y fuentes](docs/metodos.md).
 - [Guía para un piloto empresarial](docs/piloto_empresarial.md).
 - [Ejemplos de entrada](examples/).
@@ -142,6 +144,8 @@ python -m unittest discover -s tests -v
 # Regenerar el PDF y los demás entregables:
 python -m pip install -r requirements-dev.txt
 python scripts/build_deliverables.py
+# Regenerar LaTeX/bitácora desde las ejecuciones guardadas:
+python scripts/build_academic_deliverables.py
 ```
 
 Las pruebas comprueban soluciones conocidas, determinantes por una definición independiente, identidades de la inversa, familias paramétricas, reproducción de cada operación de fila, pivoteo, entradas inválidas y recorridos de los formularios web. La automatización de GitHub ejecuta las pruebas al recibir cambios.
@@ -158,9 +162,12 @@ main.py                   Consola, JSON y batería de escenarios
 app.py                    Interfaz Streamlit
 web/                      Interfaz responsive para Vercel
 api/solve.py              API Python serverless para Vercel
+api/tutor.py              Tutor IA serverless mediante Responses API
 ai_tutor.py               Contexto matemático, API Responses y cuota diaria
 tutor_ui.py               Chat y explicación opcional de pasos
 scripts/build_deliverables.py  Ejemplos, bitácora y documento técnico
+scripts/build_academic_deliverables.py  IEEEtran y entregables de la rúbrica
+bitacora/                 Ejecuciones completas y bitácora académica
 examples/                 Entradas reutilizables
 tests/                    Pruebas de resultados y recorridos de interfaz
 ```

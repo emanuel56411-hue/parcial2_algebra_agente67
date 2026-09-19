@@ -30,11 +30,11 @@
 | Escasez B3=100 | Desde B original; dos variables negativas | Implementado |
 | F6=2F1 | Casos incompatible e indeterminado | Implementado |
 | Portabilidad | Núcleo sin dependencias; web instalable por pip | Implementado; pruebas locales en Python 3.14 |
-| PDF técnico | `docs/informe_tecnico.pdf` y script generador | Artículo en dos columnas con anexos; confirmar plantilla formal IEEE/ACM institucional |
+| PDF técnico | `docs/informe_tecnico_ieee.tex` y `.pdf` | Clase oficial `IEEEtran`, cuerpo a dos columnas y 109 estados completos en anexos |
 | Desarrollo manual | Cada operación y matriz del 6×6 en anexos | Desarrollo reproducible; no sustituye una entrega manuscrita si se exige |
-| Bitácora | `docs/logs/`, pruebas automatizadas | Generada con ejecuciones reales |
+| Bitácora | `bitacora/BITACORA.md` y JSON por escenario | Generada con ejecuciones reales; entrada, salida, diagnóstico y comparación |
 | Capturas de la web | `scripts/browser_check.py`, `docs/screenshots/`, `docs/logs/browser.json` | 7 comprobaciones de navegador aprobadas; capturas reales conservadas en el repositorio |
-| Hosting en Vercel | `web/`, `api/solve.py`, `vercel.json`, `.vercelignore` | Interfaz responsive y API serverless implementadas; despliegue reproducible |
+| Hosting en Vercel | `web/`, `api/`, `vercel.json`, `.vercelignore` | Interfaz responsive, selector de método, procedimiento completo y Tutor IA serverless |
 | Conclusiones cuantitativas | `docs/interpretacion_operaciones.md` | Implementado |
 
 No se atribuye una calificación: la evaluación corresponde al docente.
@@ -43,7 +43,7 @@ No se atribuye una calificación: la evaluación corresponde al docente.
 
 Se incorporaron un chat sobre el sistema resuelto y una explicación del paso seleccionado mediante la API Responses. El motor de cálculo exacto permanece independiente. La clave se configura como secreto del servidor; las llamadas solo ocurren por una acción explícita, con contexto e historial limitados y cuota compartida de 50 solicitudes por día UTC en esta instalación.
 
-La batería actual incluye las **40 pruebas previas** más pruebas específicas para la API de Vercel: resolución exacta, diagnóstico singular y rechazo de solicitudes inválidas. Las pruebas simuladas de OpenAI cubren aislamiento de conversaciones, conservación de resultados ante errores y control concurrente de la cuota. Las **7 comprobaciones del navegador** incluyen la presencia del tutor y navegación por procedimientos, sin enviar consultas a OpenAI. La validación con una clave real está pendiente; no se afirma haber probado acceso, saldo ni respuestas reales del proveedor.
+La batería incluye las **40 pruebas previas** más pruebas específicas para Vercel: resolución exacta, diagnóstico singular, rechazo de solicitudes inválidas y Tutor IA con contexto recalculado y clave ausente del cuerpo. Las pruebas simuladas de OpenAI cubren aislamiento de conversaciones, conservación de resultados ante errores y control concurrente de la cuota. La comprobación de navegador cubre cálculo, elección de método, procedimiento, Tutor IA y viewport móvil.
 
 ## Inconsistencias que requieren aclaración académica
 

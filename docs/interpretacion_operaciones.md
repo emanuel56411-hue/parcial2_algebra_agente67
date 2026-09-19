@@ -1,71 +1,49 @@
-# Interpretación de operaciones — TechChip Systems
+# Informe de interpretación de operaciones
 
-La guía contiene una inconsistencia: el vector esperado (15, 20, 25, 10, 15, 20) requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original (155, 160, 225, 140, 215, 175). Ambos casos se conservan por separado.
+## Resumen ejecutivo
 
-## TechChip · datos originales
+Con el vector compatible **X = (15, 20, 25, 10, 15, 20)** miles de módulos, el modelo de igualdades consume exactamente **B = (185, 200, 280, 150, 245, 195)**. No queda capacidad ociosa dentro de este escenario matemático. Esta conclusión no aplica al B impreso en la guía, cuya solución exige `x1 = -105/83`.
 
-Plan de producción inalcanzable por restricción de materias primas.
-La solución de AX = B exige cantidades negativas: x1 = -105/83 (≈ -1.265060).
-No se puede consumir exactamente el 100 % de todos los recursos con X ≥ 0. Esto no demuestra que sea imposible producir con capacidad ociosa.
-La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.
+## Producción por línea
 
-| Producto | Miles de módulos (exacto) | Aproximación |
-|---|---:|---:|
-| AI-Edge 1 | -105/83 | -1.265060 |
-| AI-Server Pro | 345/83 | 4.156627 |
-| AI-Autonomous Car | 2430/83 | 29.277108 |
-| AI-IoT LowPower | 1170/83 | 14.096386 |
-| AI-Robotics Heavy | 1130/83 | 13.614458 |
-| AI-Medical Vision | 2010/83 | 24.216867 |
+| Línea | Producción por turno |
+|---|---:|
+| AI-Edge 1 | 15 mil módulos |
+| AI-Server Pro | 20 mil módulos |
+| AI-Autonomous Car | 25 mil módulos |
+| AI-IoT LowPower | 10 mil módulos |
+| AI-Robotics Heavy | 15 mil módulos |
+| AI-Medical Vision | 20 mil módulos |
 
-E = (0, 0, 0, 0, 0, 0); error máximo = 0.
+Producción total: **105 mil módulos por turno**.
 
-## TechChip · vector esperado
+## Aporte de cada línea al consumo de recursos
 
-Plan factible para el modelo continuo: todas las cantidades son no negativas y AX = B consume el 100 % de cada disponibilidad.
-X se expresa en miles de unidades; X·1000 se informa como cantidad continua, sin redondear a unidades enteras.
-La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.
+Cada celda es el producto exacto `aᵢⱼxⱼ`. La suma horizontal reproduce la disponibilidad del recurso.
 
-| Producto | Miles de módulos (exacto) | Aproximación |
-|---|---:|---:|
-| AI-Edge 1 | 15 | 15.000000 |
-| AI-Server Pro | 20 | 20.000000 |
-| AI-Autonomous Car | 25 | 25.000000 |
-| AI-IoT LowPower | 10 | 10.000000 |
-| AI-Robotics Heavy | 15 | 15.000000 |
-| AI-Medical Vision | 20 | 20.000000 |
+| Recurso | x1 | x2 | x3 | x4 | x5 | x6 | Total / disponible | Unidad |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| Litografía EUV | 30 | 20 | 75 | 10 | 30 | 20 | 185 / 185 | horas-máquina |
+| Pruebas ATE | 15 | 60 | 50 | 20 | 15 | 40 | 200 / 200 | horas-máquina |
+| Resina de encapsulado | 45 | 40 | 100 | 10 | 45 | 40 | 280 / 280 | kg |
+| Sustrato de silicio | 15 | 20 | 25 | 40 | 30 | 20 | 150 / 150 | m² |
+| Energía láser | 30 | 20 | 50 | 10 | 75 | 60 | 245 / 245 | MWh |
+| Inspección óptica | 15 | 40 | 25 | 20 | 15 | 80 | 195 / 195 | horas-hombre |
 
-E = (0, 0, 0, 0, 0, 0); error máximo = 0.
+En los seis recursos se verifica `consumo = disponibilidad`; por tanto, el uso es del **100 %** y la holgura es exactamente **0**. Esto describe el caso compatible y no constituye por sí solo una optimización económica.
 
-## Escasez · resina a 100 kg
+## Escasez de resina
 
-Plan de producción inalcanzable por restricción de materias primas.
-La solución de AX = B exige cantidades negativas: x1 = -26355/83 (≈ -317.530120); x2 = -6780/83 (≈ -81.686747).
-No se puede consumir exactamente el 100 % de todos los recursos con X ≥ 0. Esto no demuestra que sea imposible producir con capacidad ociosa.
-La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.
+Al sustituir únicamente `B3=225` por `B3=100`, el agente obtiene `X = (-26355/83, -6780/83, 18555/83, 3170/83, 3505/83, 6510/83)`. Las producciones `x1=-26355/83` y `x2=-6780/83` son negativas. Por tanto, no existe un plan físicamente realizable con `X≥0` que agote simultáneamente todas las capacidades bajo `AX=B`. El error algebraico continúa siendo cero: el problema es de factibilidad empresarial, no de cálculo.
 
-| Producto | Miles de módulos (exacto) | Aproximación |
-|---|---:|---:|
-| AI-Edge 1 | -26355/83 | -317.530120 |
-| AI-Server Pro | -6780/83 | -81.686747 |
-| AI-Autonomous Car | 18555/83 | 223.554217 |
-| AI-IoT LowPower | 3170/83 | 38.192771 |
-| AI-Robotics Heavy | 3505/83 | 42.228916 |
-| AI-Medical Vision | 6510/83 | 78.433735 |
+## Dependencia y contradicción
 
-E = (0, 0, 0, 0, 0, 0); error máximo = 0.
+Si `F6=2F1` pero se conserva `B6=175`, la sexta ecuación exige simultáneamente `2B1=310` y `B6=175`: `rango(A)=5`, `rango([A|B])=6` y no existe solución. Si también se establece `B6=310`, ambos rangos son 5 y aparece una familia con una variable libre. Operacionalmente, una restricción redundante no aporta información nueva; una restricción proporcional con disponibilidad incompatible revela datos o políticas contradictorias.
 
-## Singular · sin solución
+## Recomendaciones
 
-Las restricciones se contradicen: no existe un vector X que cumpla todas las igualdades.
-Revisa las ecuaciones dependientes y sus disponibilidades antes de proponer un plan.
-
-## Singular · infinitas soluciones
-
-Hay 1 variable(s) libre(s): los datos no determinan una solución única.
-La familia X = Xₚ + t₁v₁ + … describe todas las soluciones reales; hacen falta restricciones independientes para reducir la ambigüedad.
-La viabilidad de esta familia bajo X ≥ 0 requiere un análisis adicional; no se declara un plan de producción viable.
-
-## Decisión recomendada
-
-Aclarar con el docente o propietario de los datos cuál disponibilidad es válida. En un contexto industrial, si se permiten capacidades ociosas, modelar AX ≤ B con X ≥ 0 e incorporar demanda y una función objetivo. No sustituir producciones negativas por cero: se perderían las igualdades. Las cantidades continuas en miles tampoco garantizan una solución en unidades enteras.
+1. Validar con la fuente del caso si el B oficial es `(155,160,225,140,215,175)` o el compatible `(185,200,280,150,245,195)`.
+2. No redondear ni reemplazar producciones negativas por cero: se destruiría `AX=B`.
+3. Si se permite capacidad ociosa, reformular como `AX≤B`, `X≥0` e incorporar demanda.
+4. Para hablar de un plan óptimo, añadir costos, márgenes o tiempos como función objetivo; el sistema actual determina balance, no optimalidad.
+5. Auditar filas proporcionales antes de planificar para distinguir redundancia válida de datos contradictorios.

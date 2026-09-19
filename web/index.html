@@ -29,8 +29,8 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero-copy">
         <p class="eyebrow">ÁLGEBRA LINEAL · PROCEDIMIENTO VERIFICABLE</p>
-        <h1 id="hero-title">No solo llegues al resultado.<br><em>Entiende cómo.</em></h1>
-        <p class="hero-lead">Resuelve sistemas lineales, compara tres métodos y revisa cada operación de fila con fracciones exactas.</p>
+        <h1 id="hero-title">Decisiones operativas con<br><em>evidencia matemática.</em></h1>
+        <p class="hero-lead">Analiza balances de capacidad, compara tres métodos exactos y conserva una traza verificable de cada operación.</p>
         <div class="hero-actions">
           <a class="button primary" href="#workspace">Resolver un sistema <span aria-hidden="true">↓</span></a>
           <a class="button ghost" href="#methods">Explorar métodos</a>
@@ -76,6 +76,15 @@
             <select id="scenario"></select>
             <p class="field-help" id="scenario-note"></p>
           </div>
+          <div class="field">
+            <label for="preferred-method">Método principal</label>
+            <select id="preferred-method">
+              <option value="gauss">Eliminación de Gauss</option>
+              <option value="gauss_jordan">Gauss-Jordan</option>
+              <option value="inverse">Matriz inversa</option>
+            </select>
+            <p class="field-help">Se mostrará completo. Los otros dos se calculan para comprobar la coincidencia.</p>
+          </div>
           <div class="field hidden" id="dimension-field">
             <label for="dimension">Dimensión cuadrada</label>
             <input id="dimension" type="number" min="1" max="12" value="3">
@@ -114,23 +123,37 @@
         <button role="tab" aria-selected="true" data-tab="summary">Resumen</button>
         <button role="tab" aria-selected="false" data-tab="procedure">Procedimiento</button>
         <button role="tab" aria-selected="false" data-tab="verification">Verificación</button>
+        <button role="tab" aria-selected="false" data-tab="tutor">Tutor IA</button>
         <button role="tab" aria-selected="false" data-tab="export">Exportar</button>
       </div>
       <div class="tab-panel" id="tab-summary" role="tabpanel"></div>
       <div class="tab-panel hidden" id="tab-procedure" role="tabpanel">
         <div class="procedure-toolbar">
           <label>Método <select id="method"></select></label>
+          <div class="procedure-view"><button class="view-option active" id="step-view" type="button">Paso a paso</button><button class="view-option" id="all-view" type="button">Procedimiento completo</button></div>
           <span id="step-counter"></span>
         </div>
-        <article class="step-card">
+        <article class="step-card" id="single-step">
           <p class="eyebrow" id="step-label"></p>
           <h3 id="step-operation"></h3>
           <p id="step-explanation"></p>
           <div class="matrix-scroll" id="step-matrix"></div>
         </article>
         <div class="step-actions"><button class="button ghost" id="prev-step">← Anterior</button><input id="step-range" type="range" min="1" value="1" aria-label="Seleccionar paso"><button class="button ghost" id="next-step">Siguiente →</button></div>
+        <button class="ai-step-button" id="explain-step" type="button"><span aria-hidden="true">✦</span> Explicar este paso con el Tutor IA</button>
+        <div class="all-steps hidden" id="all-steps"></div>
       </div>
       <div class="tab-panel hidden" id="tab-verification" role="tabpanel"></div>
+      <div class="tab-panel hidden" id="tab-tutor" role="tabpanel">
+        <div class="tutor-layout">
+          <div class="tutor-intro"><p class="eyebrow">ASISTENTE CONTEXTUAL</p><h3>Consulta el análisis con IA</h3><p>El tutor recibe únicamente la matriz, el diagnóstico y la traza seleccionada. El cálculo racional de la aplicación sigue siendo la fuente de verdad.</p><div class="privacy-note">La consulta se procesa mediante OpenAI. No escribas datos personales ni secretos.</div></div>
+          <div class="chat-panel">
+            <div class="chat-messages" id="chat-messages"><div class="chat-empty"><strong>Preguntas sugeridas</strong><button type="button" data-question="¿Por qué este sistema tiene este diagnóstico?">¿Por qué aparece este diagnóstico?</button><button type="button" data-question="Explica la interpretación empresarial de la solución sin cambiar los resultados.">¿Qué significa para la planta?</button><button type="button" data-question="Compara los tres métodos y explica por qué deben coincidir.">¿Por qué coinciden los métodos?</button></div></div>
+            <form class="chat-form" id="chat-form"><label for="chat-input">Pregunta sobre el resultado actual</label><textarea id="chat-input" rows="3" maxlength="1500" placeholder="Ej.: ¿por qué una producción negativa hace inviable el plan?"></textarea><div><small>Máximo 1500 caracteres</small><button class="button primary" id="send-question" type="submit">Enviar pregunta</button></div></form>
+            <div class="message error hidden" id="tutor-error" role="alert"></div>
+          </div>
+        </div>
+      </div>
       <div class="tab-panel hidden" id="tab-export" role="tabpanel">
         <h3>Comparte un análisis reproducible</h3>
         <p>Descarga los datos y resultados exactos, o imprime esta página como PDF desde tu navegador.</p>

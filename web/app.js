@@ -13,7 +13,7 @@ const scenarios = {
 const labels={unique:"Solución única",infinite:"Infinitas soluciones",inconsistent:"Sin solución"};
 const methodLabels={diagnosis:"Diagnóstico",gauss:"Eliminación de Gauss",gauss_jordan:"Gauss-Jordan",inverse:"Matriz inversa"};
 const $=selector=>document.querySelector(selector);
-let currentInput=null,currentReport=null,currentStep=0,currentSteps=[];
+let currentInput=null,currentReport=null,currentStep=0,currentSteps=[],tutorHistory=[],stepContext=null;
 
 function clone(value){return JSON.parse(JSON.stringify(value));}
 function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c]);}
@@ -33,6 +33,11 @@ function init(){
   $("#prev-step").addEventListener("click",()=>showStep(currentStep-1));
   $("#next-step").addEventListener("click",()=>showStep(currentStep+1));
   $("#step-range").addEventListener("input",event=>showStep(Number(event.target.value)-1));
+  $("#step-view").addEventListener("click",()=>setProcedureView("single"));
+  $("#all-view").addEventListener("click",()=>setProcedureView("all"));
+  $("#explain-step").addEventListener("click",explainCurrentStep);
+  $("#chat-form").addEventListener("submit",event=>{event.preventDefault();sendTutorQuestion($("#chat-input").value);});
+  $("#chat-messages").addEventListener("click",event=>{if(event.target.dataset.question)sendTutorQuestion(event.target.dataset.question);});
   document.querySelectorAll("[role=tab]").forEach(tab=>tab.addEventListener("click",()=>activateTab(tab.dataset.tab)));
   $("#download-result").addEventListener("click",()=>download("resultado-techchip.json",currentReport));
   $("#download-input").addEventListener("click",()=>download("sistema.json",{A:currentInput.A,B:currentInput.B}));
@@ -98,7 +103,7 @@ async function solve(){
     const response=await fetch("/api/solve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
     const result=await response.json().catch(()=>({error:"La API no devolvió una respuesta válida."}));
     if(!response.ok)throw new Error(result.error||"No se pudo resolver el sistema.");
-    currentReport=result;renderResults(result);$("#results").classList.remove("hidden");$("#results").scrollIntoView({behavior:"smooth"});
+    currentReport=result;tutorHistory=[];stepContext=null;renderTutorMessages();renderResults(result);$("#results").classList.remove("hidden");$("#results").scrollIntoView({behavior:"smooth"});
   }catch(exc){error.textContent=exc.message;error.classList.remove("hidden");}
   finally{button.disabled=false;button.innerHTML='Resolver sistema <span aria-hidden="true">→</span>';}
 }
@@ -131,11 +136,13 @@ function interpretationList(report){return report.interpretation.length>1?`<ul c
 function renderProcedure(report){
   const select=$("#method");select.replaceChildren();
   const keys=["diagnosis",...Object.keys(report.methods)];keys.forEach(key=>select.add(new Option(methodLabels[key],key)));
-  loadMethod("diagnosis");
+  const preferred=$("#preferred-method").value;
+  loadMethod(report.methods[preferred]?preferred:"diagnosis");
+  setProcedureView("single");
 }
 
 function loadMethod(key){
-  $("#method").value=key;currentSteps=key==="diagnosis"?currentReport.diagnostic_steps:currentReport.methods[key].steps;showStep(0);
+  $("#method").value=key;currentSteps=key==="diagnosis"?currentReport.diagnostic_steps:currentReport.methods[key].steps;showStep(0);renderAllSteps();
 }
 
 function showStep(index){
@@ -146,6 +153,50 @@ function showStep(index){
 }
 
 function matrixHtml(matrix,split){return `<table class="rendered-matrix"><tbody>${matrix.map(row=>`<tr>${row.map((value,i)=>`<td class="${i===split?"split":""}">${escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;}
+
+function setProcedureView(view){
+  const all=view==="all";$("#single-step").classList.toggle("hidden",all);$(".step-actions").classList.toggle("hidden",all);$("#explain-step").classList.toggle("hidden",all);$("#all-steps").classList.toggle("hidden",!all);$("#step-view").classList.toggle("active",!all);$("#all-view").classList.toggle("active",all);$("#step-counter").textContent=all?`${currentSteps.length} pasos completos`:`${currentStep+1} / ${currentSteps.length}`;
+}
+
+function renderAllSteps(){
+  $("#all-steps").innerHTML=currentSteps.map((step,i)=>`<article class="all-step"><header><span>PASO ${String(i+1).padStart(2,"0")}</span><h3>${escapeHtml(step.operation)}</h3></header><p>${escapeHtml(step.explanation)}</p><div class="matrix-scroll">${matrixHtml(step.matrix,step.split)}</div></article>`).join("");
+}
+
+function currentTitle(){
+  if($("#source").value==="scenario")return scenarios[$("#scenario").value].title;
+  return $("#source").value==="json"?"Sistema importado":"Sistema personalizado";
+}
+
+function currentNote(){return $("#source").value==="scenario"?scenarios[$("#scenario").value].note:"Datos proporcionados por el usuario.";}
+
+function explainCurrentStep(){
+  stepContext={method:$("#method").value,step_index:currentStep};
+  activateTab("tutor");
+  sendTutorQuestion("Explica este paso completo: identifica la operación aplicada, justifica por qué conserva las soluciones y verifica cómo cambia cada entrada, incluido el bloque derecho.",true);
+}
+
+async function sendTutorQuestion(rawQuestion,useStep=false){
+  const question=String(rawQuestion||"").trim(),button=$("#send-question"),error=$("#tutor-error");
+  if(!currentReport||!currentInput)return;
+  if(!question||question.length>1500){error.textContent="Escribe una pregunta de 1 a 1500 caracteres.";error.classList.remove("hidden");return;}
+  error.classList.add("hidden");tutorHistory.push({role:"user",content:question});renderTutorMessages();$("#chat-input").value="";button.disabled=true;button.textContent="Consultando…";
+  const context=useStep?stepContext:null;
+  try{
+    const payload={...currentInput,question,history:tutorHistory.slice(0,-1).slice(-6),title:currentTitle(),note:currentNote()};
+    if(context){payload.method=context.method;payload.step_index=context.step_index;}
+    const response=await fetch("/api/tutor",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}),result=await response.json().catch(()=>({error:"El tutor no devolvió una respuesta válida."}));
+    if(!response.ok)throw new Error(result.error||"El Tutor IA no pudo responder.");
+    tutorHistory.push({role:"assistant",content:result.answer,meta:`${result.model} · ${result.input_tokens} entrada / ${result.output_tokens} salida`});
+    tutorHistory=tutorHistory.slice(-12);renderTutorMessages();
+  }catch(exc){tutorHistory.pop();renderTutorMessages();error.textContent=exc.message;error.classList.remove("hidden");}
+  finally{button.disabled=false;button.textContent="Enviar pregunta";stepContext=null;}
+}
+
+function renderTutorMessages(){
+  const box=$("#chat-messages");if(!box)return;
+  if(!tutorHistory.length){box.innerHTML='<div class="chat-empty"><strong>Preguntas sugeridas</strong><button type="button" data-question="¿Por qué este sistema tiene este diagnóstico?">¿Por qué aparece este diagnóstico?</button><button type="button" data-question="Explica la interpretación empresarial de la solución sin cambiar los resultados.">¿Qué significa para la planta?</button><button type="button" data-question="Compara los tres métodos y explica por qué deben coincidir.">¿Por qué coinciden los métodos?</button></div>';return;}
+  box.innerHTML=tutorHistory.map(message=>`<div class="chat-message ${message.role}">${escapeHtml(message.content)}${message.meta?`<small>${escapeHtml(message.meta)}</small>`:""}</div>`).join("");box.scrollTop=box.scrollHeight;
+}
 
 function renderVerification(report){
   const panel=$("#tab-verification");
