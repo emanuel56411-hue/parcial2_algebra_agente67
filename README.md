@@ -22,6 +22,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Separar solución matemática y factibilidad de producción; consultar el balance por recurso.
 - Descargar el procedimiento en Markdown, los datos/resultados en JSON y un informe HTML imprimible como PDF.
 - Consultar un tutor opcional de OpenAI sobre el resultado o pedir una explicación del paso seleccionado.
+- Alternar entre tema claro y oscuro; la preferencia queda guardada en el navegador.
 
 ## Iniciar la web
 

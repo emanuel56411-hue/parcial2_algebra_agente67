@@ -8,6 +8,17 @@
   <title>TechChip Matrix Studio</title>
   <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/web/styles.css">
+  <script>
+    (() => {
+      try {
+        const saved = localStorage.getItem("techchip-theme");
+        const preferred = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = saved === "dark" || saved === "light" ? saved : preferred;
+      } catch (_) {
+        document.documentElement.dataset.theme = "light";
+      }
+    })();
+  </script>
   <script src="/web/app.js" defer></script>
 </head>
 <body>
@@ -24,6 +35,9 @@
       <a href="#deliverables">Entregables</a>
     </nav>
     <span class="status-dot"><i></i> Cálculo exacto</span>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Activar modo oscuro" aria-pressed="false">
+      <span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Oscuro</span>
+    </button>
   </header>
 
   <main id="top">

@@ -15,12 +15,32 @@ const methodLabels={diagnosis:"Diagnóstico",gauss:"Eliminación de Gauss",gauss
 const $=selector=>document.querySelector(selector);
 let currentInput=null,currentReport=null,currentStep=0,currentSteps=[],tutorHistory=[],stepContext=null;
 
+function applyTheme(theme,persist=false){
+  const normalized=theme==="dark"?"dark":"light",dark=normalized==="dark";
+  document.documentElement.dataset.theme=normalized;
+  const toggle=$("#theme-toggle"),meta=document.querySelector('meta[name="theme-color"]');
+  if(toggle){
+    toggle.setAttribute("aria-pressed",String(dark));
+    toggle.setAttribute("aria-label",dark?"Activar modo claro":"Activar modo oscuro");
+    toggle.querySelector(".theme-icon").textContent=dark?"☀":"☾";
+    toggle.querySelector(".theme-label").textContent=dark?"Claro":"Oscuro";
+  }
+  if(meta)meta.content=dark?"#0b1614":"#123b35";
+  if(persist){try{localStorage.setItem("techchip-theme",normalized);}catch(_){} }
+}
+
+function initTheme(){
+  applyTheme(document.documentElement.dataset.theme||"light");
+  $("#theme-toggle").addEventListener("click",()=>applyTheme(document.documentElement.dataset.theme==="dark"?"light":"dark",true));
+}
+
 function clone(value){return JSON.parse(JSON.stringify(value));}
 function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c]);}
 function numeric(value){const [a,b="1"]=String(value).split("/");return Number(a)/Number(b);}
 function decimal(value){const n=numeric(value);if(!Number.isFinite(n))return "—";if(n!==0&&(Math.abs(n)>=1e9||Math.abs(n)<1e-5))return n.toExponential(5);return n.toLocaleString("es-SV",{maximumFractionDigits:6});}
 
 function init(){
+  initTheme();
   const select=$("#scenario");
   Object.entries(scenarios).forEach(([key,item])=>select.add(new Option(item.title,key)));
   select.value="original";
