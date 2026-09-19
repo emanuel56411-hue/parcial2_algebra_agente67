@@ -7,7 +7,8 @@
   <meta name="theme-color" content="#123b35">
   <title>TechChip Matrix Studio</title>
   <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/web/styles.css?v=20260919-theme">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="/web/styles.css?v=20260919-learning">
   <script>
     (() => {
       try {
@@ -19,7 +20,7 @@
       }
     })();
   </script>
-  <script src="/web/app.js?v=20260919-theme" defer></script>
+  <script src="/web/app.js?v=20260919-learning" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Saltar al contenido</a>
@@ -80,7 +81,7 @@
         <aside class="control-panel">
           <div class="field">
             <label for="source">Origen de los datos</label>
-            <select id="source">
+            <select class="form-select" id="source">
               <option value="scenario">Escenario preparado</option>
               <option value="custom">Matriz propia</option>
               <option value="json">Importar JSON</option>
@@ -88,12 +89,12 @@
           </div>
           <div class="field" id="scenario-field">
             <label for="scenario">Escenario</label>
-            <select id="scenario"></select>
+            <select class="form-select" id="scenario"></select>
             <p class="field-help" id="scenario-note"></p>
           </div>
           <div class="field">
             <label for="preferred-method">Método principal</label>
-            <select id="preferred-method">
+            <select class="form-select" id="preferred-method">
               <option value="gauss">Eliminación de Gauss</option>
               <option value="gauss_jordan">Gauss-Jordan</option>
               <option value="inverse">Matriz inversa</option>
@@ -102,11 +103,11 @@
           </div>
           <div class="field hidden" id="dimension-field">
             <label for="dimension">Dimensión cuadrada</label>
-            <input id="dimension" type="number" min="1" max="12" value="3">
+            <input class="form-control" id="dimension" type="number" min="1" max="12" value="3">
           </div>
           <div class="field hidden" id="json-field">
             <label for="json-input">Datos JSON</label>
-            <textarea id="json-input" rows="9" spellcheck="false">{"A":[[2,1],[1,-1]],"B":[5,1]}</textarea>
+            <textarea class="form-control" id="json-input" rows="9" spellcheck="false">{"A":[[2,1],[1,-1]],"B":[5,1]}</textarea>
             <p class="field-help">B puede ser un vector o una columna. Las fracciones se escriben como "2/3".</p>
           </div>
           <label class="check-row" id="production-row"><input id="production" type="checkbox" checked><span>Interpretar como producción <small>Exige X ≥ 0 para considerarlo viable</small></span></label>
@@ -143,19 +144,27 @@
       </div>
       <div class="tab-panel" id="tab-summary" role="tabpanel"></div>
       <div class="tab-panel hidden" id="tab-procedure" role="tabpanel">
+        <div class="learning-map" aria-label="Cómo leer el procedimiento">
+          <div><span>1 · Objetivo</span><strong id="procedure-goal">Transformar sin cambiar las soluciones</strong></div>
+          <div><span>2 · Regla</span><strong>La operación afecta toda la fila</strong></div>
+          <div><span>3 · Control</span><strong>Verificar al final con A·X − B</strong></div>
+        </div>
         <div class="procedure-toolbar">
-          <label>Método <select id="method"></select></label>
+          <label>Método <select class="form-select" id="method"></select></label>
           <div class="procedure-view"><button class="view-option active" id="step-view" type="button">Paso a paso</button><button class="view-option" id="all-view" type="button">Procedimiento completo</button></div>
           <span id="step-counter"></span>
         </div>
         <article class="step-card" id="single-step">
-          <p class="eyebrow" id="step-label"></p>
+          <div class="step-kicker"><p class="eyebrow" id="step-label"></p><span class="phase-badge" id="step-phase"></span></div>
           <h3 id="step-operation"></h3>
           <p id="step-explanation"></p>
+          <div class="step-reasoning" id="step-reasoning"></div>
           <div class="matrix-scroll" id="step-matrix"></div>
+          <div class="row-change hidden" id="row-change"></div>
         </article>
         <div class="step-actions"><button class="button ghost" id="prev-step">← Anterior</button><input id="step-range" type="range" min="1" value="1" aria-label="Seleccionar paso"><button class="button ghost" id="next-step">Siguiente →</button></div>
         <button class="ai-step-button" id="explain-step" type="button"><span aria-hidden="true">✦</span> Explicar este paso con el Tutor IA</button>
+        <div class="complete-toolbar hidden" id="complete-toolbar"><p>Cada tarjeta conserva la operación, su justificación y la matriz resultante.</p><div><button class="button ghost" id="expand-all" type="button">Expandir todo</button><button class="button ghost" id="collapse-all" type="button">Contraer matrices</button></div></div>
         <div class="all-steps hidden" id="all-steps"></div>
       </div>
       <div class="tab-panel hidden" id="tab-verification" role="tabpanel"></div>
@@ -178,11 +187,26 @@
     </section>
 
     <section class="methods" id="methods" aria-labelledby="methods-title">
-      <div class="section-heading"><div><p class="eyebrow">TRES CAMINOS, UNA RESPUESTA</p><h2 id="methods-title">Métodos que puedes defender</h2></div><p>Cada enfoque se ejecuta de manera independiente y conserva todas sus matrices intermedias.</p></div>
+      <div class="section-heading"><div><p class="eyebrow">TRES CAMINOS, UNA RESPUESTA</p><h2 id="methods-title">Métodos que puedes defender</h2></div><p>Cada recorrido parte de los datos originales, conserva sus matrices intermedias y se contrasta con los otros resultados.</p></div>
       <div class="method-grid">
         <article><span>01</span><h3>Eliminación de Gauss</h3><p>Lleva el sistema a forma triangular y despeja desde la última ecuación mediante sustitución hacia atrás.</p><code>[A|B] → [U|C]</code></article>
         <article><span>02</span><h3>Gauss-Jordan</h3><p>Normaliza cada pivote y elimina arriba y abajo hasta leer la solución directamente.</p><code>[A|B] → [I|X]</code></article>
         <article><span>03</span><h3>Matriz inversa</h3><p>Construye A⁻¹ con operaciones elementales y calcula el producto exacto A⁻¹B.</p><code>[A|I] → [I|A⁻¹]</code></article>
+      </div>
+      <div class="method-foundations">
+        <div><span>BASE NUMÉRICA</span><h3>Pivoteo parcial</h3><p>Antes de dividir, se busca el mayor valor absoluto disponible en la columna. Esto evita pivotes nulos y sigue la recomendación numérica de NIST.</p><a href="https://dlmf.nist.gov/3.2" target="_blank" rel="noreferrer">Consultar NIST DLMF ↗</a></div>
+        <div><span>EXACTITUD</span><h3>Fracciones racionales</h3><p>Enteros, decimales y fracciones se convierten a valores racionales. Las aproximaciones decimales son solo de lectura y nunca vuelven al cálculo.</p><a href="https://docs.python.org/3/library/fractions.html" target="_blank" rel="noreferrer">Documentación de Python ↗</a></div>
+        <div><span>CRITERIO DE PRUEBA</span><h3>Residual verificable</h3><p>Se calcula cada componente de |A·X − B|. En los casos exactos es 0, lo que satisface estrictamente el requisito E &lt; 10⁻⁶.</p><a href="#evidence">Ver evidencia ↓</a></div>
+      </div>
+    </section>
+
+    <section class="rubric" id="rubric" aria-labelledby="rubric-title">
+      <div class="section-heading"><div><p class="eyebrow">AUDITORÍA DE LA CONSIGNA</p><h2 id="rubric-title">Qué cumple y qué debe aclararse</h2></div><p>La aplicación no oculta la contradicción entre los datos de la guía y su vector esperado.</p></div>
+      <div class="rubric-grid">
+        <article class="compliance-card ok"><span>IMPLEMENTADO</span><h3>Los tres métodos</h3><p>Gauss con sustitución, Gauss-Jordan e inversa construida mediante [A|I], todos con operaciones visibles.</p></article>
+        <article class="compliance-card ok"><span>IMPLEMENTADO</span><h3>Cuatro pruebas extremas</h3><p>Caso base compatible, sustitución directa, escasez B₃=100 y degeneración F₆=2F₁.</p></article>
+        <article class="compliance-card alert"><span>ACLARAR CON EL DOCENTE</span><h3>B original ≠ B esperado</h3><p>El vector esperado requiere B=(185, 200, 280, 150, 245, 195). No resuelve las disponibilidades impresas.</p></article>
+        <article class="compliance-card alert"><span>ALCANCE MATEMÁTICO</span><h3>Balance no es optimización</h3><p>AX=B consume el 100 % de recursos, pero sin función objetivo no se puede afirmar que el plan sea óptimo.</p></article>
       </div>
     </section>
 
@@ -197,7 +221,7 @@
 
     <section class="evidence" id="evidence">
       <div><p class="eyebrow">CONTROL DE CALIDAD</p><h2>Evidencia antes que apariencia</h2><p>El motor usa aritmética racional, diagnostica sistemas singulares mediante rangos y verifica cada respuesta con A·X = B. No usa solucionadores numéricos de caja negra.</p></div>
-      <ul><li><strong>44</strong><span>pruebas automatizadas</span></li><li><strong>0</strong><span>redondeos en el cálculo</span></li><li><strong>3</strong><span>métodos independientes</span></li></ul>
+      <ul><li><strong>44</strong><span>pruebas automatizadas</span></li><li><strong>0</strong><span>redondeos en el cálculo</span></li><li><strong>3</strong><span>métodos contrastados</span></li></ul>
     </section>
   </main>
   <footer><span>TechChip Matrix Studio</span><p>Universidad Francisco Gavidia · Proyecto académico de álgebra lineal explicable</p><a href="https://github.com/emanuel56411-hue/parcial2_algebra_agente67" rel="noreferrer">Código fuente ↗</a></footer>

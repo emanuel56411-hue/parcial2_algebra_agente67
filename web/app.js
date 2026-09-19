@@ -55,6 +55,8 @@ function init(){
   $("#step-range").addEventListener("input",event=>showStep(Number(event.target.value)-1));
   $("#step-view").addEventListener("click",()=>setProcedureView("single"));
   $("#all-view").addEventListener("click",()=>setProcedureView("all"));
+  $("#expand-all").addEventListener("click",()=>document.querySelectorAll("#all-steps details").forEach(item=>item.open=true));
+  $("#collapse-all").addEventListener("click",()=>document.querySelectorAll("#all-steps details").forEach(item=>item.open=false));
   $("#explain-step").addEventListener("click",explainCurrentStep);
   $("#chat-form").addEventListener("submit",event=>{event.preventDefault();sendTutorQuestion($("#chat-input").value);});
   $("#chat-messages").addEventListener("click",event=>{if(event.target.dataset.question)sendTutorQuestion(event.target.dataset.question);});
@@ -162,24 +164,50 @@ function renderProcedure(report){
 }
 
 function loadMethod(key){
-  $("#method").value=key;currentSteps=key==="diagnosis"?currentReport.diagnostic_steps:currentReport.methods[key].steps;showStep(0);renderAllSteps();
+  const goals={diagnosis:"Decidir si existe una solución y si es única",gauss:"Construir U y resolver de abajo hacia arriba",gauss_jordan:"Convertir A en I para leer X directamente",inverse:"Construir A⁻¹ y calcular X = A⁻¹B"};
+  $("#method").value=key;$("#procedure-goal").textContent=goals[key];currentSteps=key==="diagnosis"?currentReport.diagnostic_steps:currentReport.methods[key].steps;showStep(0);renderAllSteps();
 }
+
+function stepPhase(step){
+  if(step.kind==="swap")return "ELECCIÓN DE PIVOTE";
+  if(step.kind==="scale")return "NORMALIZACIÓN";
+  if(step.kind==="add")return "ELIMINACIÓN";
+  if(step.kind==="substitution")return "SUSTITUCIÓN HACIA ATRÁS";
+  if(step.kind==="multiplication")return "PRODUCTO A⁻¹B";
+  if(step.operation.includes("det(A)"))return "DIAGNÓSTICO";
+  if(step.operation.includes("lectura")||step.operation.includes("inversa obtenida"))return "RESULTADO DEL MÉTODO";
+  return "PUNTO DE CONTROL";
+}
+
+function equivalenceReason(step){
+  const reasons={swap:"Mismas ecuaciones, solo cambia el orden.",scale:"Se multiplica por un factor no nulo; la operación puede deshacerse.",add:"Se suma un múltiplo de otra ecuación; la operación puede deshacerse.",substitution:"Se despeja una incógnita usando igualdades ya obtenidas.",multiplication:"Se aplica la identidad X = A⁻¹B componente por componente."};
+  return reasons[step.kind]||"La matriz se conserva como evidencia del estado alcanzado.";
+}
+
+function formatRow(row){return `[ ${row.map(escapeHtml).join("     ")} ]`;}
 
 function showStep(index){
   if(!currentSteps.length)return;currentStep=Math.max(0,Math.min(currentSteps.length-1,index));const step=currentSteps[currentStep];
   $("#step-counter").textContent=`${currentStep+1} / ${currentSteps.length}`;$("#step-label").textContent=`PASO ${String(currentStep+1).padStart(2,"0")}`;
-  $("#step-operation").textContent=step.operation;$("#step-explanation").textContent=step.explanation;$("#step-matrix").innerHTML=matrixHtml(step.matrix,step.split);
+  $("#step-phase").textContent=stepPhase(step);$("#step-operation").textContent=step.operation;$("#step-explanation").textContent=step.explanation;
+  $("#step-reasoning").innerHTML=`<span>POR QUÉ ES VÁLIDO</span><p>${escapeHtml(equivalenceReason(step))}</p>`;
+  const previous=currentStep?currentSteps[currentStep-1].matrix:null;
+  $("#step-matrix").innerHTML=matrixHtml(step.matrix,step.split,step,previous);
+  const change=$("#row-change");
+  if(previous&&Number.isInteger(step.target)&&previous[step.target]){
+    change.innerHTML=`<span>FILA AFECTADA F${step.target+1}</span><div><code><small>ANTES</small>${formatRow(previous[step.target])}</code><b aria-hidden="true">→</b><code><small>DESPUÉS</small>${formatRow(step.matrix[step.target])}</code></div>`;change.classList.remove("hidden");
+  }else{change.replaceChildren();change.classList.add("hidden");}
   $("#step-range").max=currentSteps.length;$("#step-range").value=currentStep+1;$("#prev-step").disabled=currentStep===0;$("#next-step").disabled=currentStep===currentSteps.length-1;
 }
 
-function matrixHtml(matrix,split){return `<table class="rendered-matrix"><tbody>${matrix.map(row=>`<tr>${row.map((value,i)=>`<td class="${i===split?"split":""}">${escapeHtml(value)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;}
+function matrixHtml(matrix,split,step=null,previous=null){return `<table class="rendered-matrix"><tbody>${matrix.map((row,rowIndex)=>`<tr class="${step&&rowIndex===step.target?"target-row":step&&rowIndex===step.source?"source-row":""}">${row.map((value,i)=>{const changed=previous&&previous[rowIndex]&&String(previous[rowIndex][i])!==String(value);return `<td class="${i===split?"split ":""}${changed?"changed-cell":""}">${escapeHtml(value)}</td>`;}).join("")}</tr>`).join("")}</tbody></table>`;}
 
 function setProcedureView(view){
-  const all=view==="all";$("#single-step").classList.toggle("hidden",all);$(".step-actions").classList.toggle("hidden",all);$("#explain-step").classList.toggle("hidden",all);$("#all-steps").classList.toggle("hidden",!all);$("#step-view").classList.toggle("active",!all);$("#all-view").classList.toggle("active",all);$("#step-counter").textContent=all?`${currentSteps.length} pasos completos`:`${currentStep+1} / ${currentSteps.length}`;
+  const all=view==="all";$("#single-step").classList.toggle("hidden",all);$(".step-actions").classList.toggle("hidden",all);$("#explain-step").classList.toggle("hidden",all);$("#complete-toolbar").classList.toggle("hidden",!all);$("#all-steps").classList.toggle("hidden",!all);$("#step-view").classList.toggle("active",!all);$("#all-view").classList.toggle("active",all);$("#step-counter").textContent=all?`${currentSteps.length} pasos documentados`:`${currentStep+1} / ${currentSteps.length}`;
 }
 
 function renderAllSteps(){
-  $("#all-steps").innerHTML=currentSteps.map((step,i)=>`<article class="all-step"><header><span>PASO ${String(i+1).padStart(2,"0")}</span><h3>${escapeHtml(step.operation)}</h3></header><p>${escapeHtml(step.explanation)}</p><div class="matrix-scroll">${matrixHtml(step.matrix,step.split)}</div></article>`).join("");
+  $("#all-steps").innerHTML=currentSteps.map((step,i)=>{const previous=i?currentSteps[i-1].matrix:null;return `<details class="all-step" ${i===0||i===currentSteps.length-1?"open":""}><summary><span>PASO ${String(i+1).padStart(2,"0")} · ${stepPhase(step)}</span><h3>${escapeHtml(step.operation)}</h3><i aria-hidden="true">+</i></summary><div class="all-step-content"><p>${escapeHtml(step.explanation)}</p><div class="inline-proof"><b>Por qué es válido:</b> ${escapeHtml(equivalenceReason(step))}</div><div class="matrix-scroll">${matrixHtml(step.matrix,step.split,step,previous)}</div></div></details>`;}).join("");
 }
 
 function currentTitle(){

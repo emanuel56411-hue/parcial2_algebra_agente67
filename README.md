@@ -17,6 +17,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Comparar tres soluciones calculadas mediante algoritmos explícitos.
 - Elegir Gauss, Gauss-Jordan o matriz inversa como método principal antes de resolver; los demás quedan como verificación cruzada.
 - Recorrer pasos numerados con la operación de fila, su explicación y la matriz resultante; consultar todos los pasos en orden.
+- Identificar en cada paso la fase algebraica, la razón por la que conserva soluciones, las celdas modificadas y la fila antes/después.
 - Ver el cálculo del determinante, rangos, sustitución hacia atrás, construcción de la inversa y producto `A⁻¹B`.
 - Diagnosticar solución única, incompatibilidad o una familia de soluciones con parámetros libres.
 - Separar solución matemática y factibilidad de producción; consultar el balance por recurso.
@@ -47,7 +48,7 @@ La calculadora funciona localmente y no requiere cuentas ni claves de API. El mo
 
 ## Desplegar en Vercel
 
-La raíz del repositorio contiene `vercel.json`, la interfaz en `web/` y las funciones Python en `api/`. Esta variante conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos completos, la verificación, las exportaciones y el Tutor IA. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
+La raíz del repositorio contiene `vercel.json`, la interfaz en `web/` y las funciones Python en `api/`. Esta variante usa Bootstrap 5 como base responsive y una capa visual propia; conserva los escenarios, matrices editables, diagnósticos, los tres procedimientos completos, la verificación, las exportaciones y el Tutor IA. Reutiliza `agent.py`, por lo que los resultados son los mismos que en Streamlit.
 
 ```bash
 npx vercel dev       # vista previa local

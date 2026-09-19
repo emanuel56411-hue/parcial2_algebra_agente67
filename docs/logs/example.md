@@ -42,9 +42,9 @@ Fila 3: (-2)·(2) + (1)·(3) + (2)·(-1) = -3; B3 = -3; |AX − B| = 0
 
 ## Procedimiento — Diagnóstico: determinante y rangos
 
-### Paso 1. Matriz inicial
+### Paso 1. Matriz aumentada inicial
 
-El bloque a la derecha también participa en cada operación de fila.
+Punto de partida: [A | B]. La barra separa los coeficientes del bloque derecho, pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.
 
 ```text
 [  2   1  -1  |    8 ]
@@ -54,7 +54,7 @@ El bloque a la derecha también participa en cada operación de fila.
 
 ### Paso 2. F1 ↔ F2
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
+Pivoteo parcial en la columna 1: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ -3  -1   2  |  -11 ]
@@ -64,7 +64,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
 
 ### Paso 3. F2 ← F2 + (2/3) · F1
 
-Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(2)/(-3) = 2/3; así, 2 + (2/3)·(-3) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ -3   -1    2  |  -11 ]
@@ -74,7 +74,7 @@ Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 4. F3 ← F3 + (-2/3) · F1
 
-Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(-2)/(-3) = -2/3; así, -2 + (-2/3)·(-3) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -84,7 +84,7 @@ Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 5. F2 ↔ F3
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
+Pivoteo parcial en la columna 2: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -94,7 +94,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
 
 ### Paso 6. F3 ← F3 + (-1/5) · F2
 
-Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/3)/(5/3) = -1/5; así, 1/3 + (-1/5)·(5/3) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -115,9 +115,9 @@ Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
 
 ## Procedimiento — Eliminación de Gauss
 
-### Paso 1. Matriz inicial
+### Paso 1. Matriz aumentada inicial
 
-El bloque a la derecha también participa en cada operación de fila.
+Punto de partida: [A | B]. La barra separa los coeficientes del bloque derecho, pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.
 
 ```text
 [  2   1  -1  |    8 ]
@@ -127,7 +127,7 @@ El bloque a la derecha también participa en cada operación de fila.
 
 ### Paso 2. F1 ↔ F2
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
+Pivoteo parcial en la columna 1: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ -3  -1   2  |  -11 ]
@@ -137,7 +137,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
 
 ### Paso 3. F2 ← F2 + (2/3) · F1
 
-Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(2)/(-3) = 2/3; así, 2 + (2/3)·(-3) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ -3   -1    2  |  -11 ]
@@ -147,7 +147,7 @@ Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 4. F3 ← F3 + (-2/3) · F1
 
-Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(-2)/(-3) = -2/3; así, -2 + (-2/3)·(-3) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -157,7 +157,7 @@ Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 5. F2 ↔ F3
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
+Pivoteo parcial en la columna 2: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -167,7 +167,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
 
 ### Paso 6. F3 ← F3 + (-1/5) · F2
 
-Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/3)/(5/3) = -1/5; así, 1/3 + (-1/5)·(5/3) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -187,7 +187,7 @@ Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 8. Matriz triangular superior U
 
-Se resuelve U·X = C desde la última fila hacia la primera.
+La eliminación terminó: debajo de cada pivote hay ceros. Ahora se resuelve U·X = C desde la última ecuación hacia la primera, porque cada fila solo depende de variables ya conocidas.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -197,7 +197,7 @@ Se resuelve U·X = C desde la última fila hacia la primera.
 
 ### Paso 9. x3 = (-1/5 − (0)) / (1/5) = -1
 
-Sustitución hacia atrás: se usan las incógnitas ya calculadas.
+En la fila 3 se pasan al lado derecho los términos ya conocidos y se divide entre el coeficiente de x3. El valor se conserva como fracción exacta.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -207,7 +207,7 @@ Sustitución hacia atrás: se usan las incógnitas ya calculadas.
 
 ### Paso 10. x2 = (13/3 − ((2/3)·(-1))) / (5/3) = 3
 
-Sustitución hacia atrás: se usan las incógnitas ya calculadas.
+En la fila 2 se pasan al lado derecho los términos ya conocidos y se divide entre el coeficiente de x2. El valor se conserva como fracción exacta.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -217,7 +217,7 @@ Sustitución hacia atrás: se usan las incógnitas ya calculadas.
 
 ### Paso 11. x1 = (-11 − ((-1)·(3) + (2)·(-1))) / (-3) = 2
 
-Sustitución hacia atrás: se usan las incógnitas ya calculadas.
+En la fila 1 se pasan al lado derecho los términos ya conocidos y se divide entre el coeficiente de x1. El valor se conserva como fracción exacta.
 
 ```text
 [ -3   -1    2  |   -11 ]
@@ -228,9 +228,9 @@ Sustitución hacia atrás: se usan las incógnitas ya calculadas.
 
 ## Procedimiento — Gauss-Jordan
 
-### Paso 1. Matriz inicial
+### Paso 1. Matriz aumentada inicial
 
-El bloque a la derecha también participa en cada operación de fila.
+Punto de partida: [A | B]. La barra separa los coeficientes del bloque derecho, pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.
 
 ```text
 [  2   1  -1  |    8 ]
@@ -240,7 +240,7 @@ El bloque a la derecha también participa en cada operación de fila.
 
 ### Paso 2. F1 ↔ F2
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
+Pivoteo parcial en la columna 1: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ -3  -1   2  |  -11 ]
@@ -250,7 +250,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
 
 ### Paso 3. F1 ← (-1/3) · F1
 
-Se convierte el pivote -3 en 1.
+Se divide toda la fila entre el pivote -3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
 
 ```text
 [  1  1/3  -2/3  |  11/3 ]
@@ -260,7 +260,7 @@ Se convierte el pivote -3 en 1.
 
 ### Paso 4. F2 ← F2 + (-2) · F1
 
-Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(2)/(1) = -2; así, 2 + (-2)·(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [  1  1/3  -2/3  |  11/3 ]
@@ -270,7 +270,7 @@ Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 5. F3 ← F3 + (2) · F1
 
-Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(-2)/(1) = 2; así, -2 + (2)·(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  1/3  -2/3  |  11/3 ]
@@ -280,7 +280,7 @@ Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 6. F2 ↔ F3
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
+Pivoteo parcial en la columna 2: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ 1  1/3  -2/3  |  11/3 ]
@@ -290,7 +290,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
 
 ### Paso 7. F2 ← (3/5) · F2
 
-Se convierte el pivote 5/3 en 1.
+Se divide toda la fila entre el pivote 5/3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
 
 ```text
 [ 1  1/3  -2/3  |  11/3 ]
@@ -300,7 +300,7 @@ Se convierte el pivote 5/3 en 1.
 
 ### Paso 8. F1 ← F1 + (-1/3) · F2
 
-Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/3)/(1) = -1/3; así, 1/3 + (-1/3)·(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1    0  -4/5  |  14/5 ]
@@ -310,7 +310,7 @@ Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 9. F3 ← F3 + (-1/3) · F2
 
-Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/3)/(1) = -1/3; así, 1/3 + (-1/3)·(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  0  -4/5  |  14/5 ]
@@ -320,7 +320,7 @@ Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 10. F3 ← (5) · F3
 
-Se convierte el pivote 1/5 en 1.
+Se divide toda la fila entre el pivote 1/5, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
 
 ```text
 [ 1  0  -4/5  |  14/5 ]
@@ -330,7 +330,7 @@ Se convierte el pivote 1/5 en 1.
 
 ### Paso 11. F1 ← F1 + (4/5) · F3
 
-Se anula la entrada -4/5 en la columna 3; se opera sobre la fila completa.
+El multiplicador es −(-4/5)/(1) = 4/5; así, -4/5 + (4/5)·(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  0    0  |     2 ]
@@ -340,7 +340,7 @@ Se anula la entrada -4/5 en la columna 3; se opera sobre la fila completa.
 
 ### Paso 12. F2 ← F2 + (-2/5) · F3
 
-Se anula la entrada 2/5 en la columna 3; se opera sobre la fila completa.
+El multiplicador es −(2/5)/(1) = -2/5; así, 2/5 + (-2/5)·(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  0  0  |   2 ]
@@ -348,9 +348,9 @@ Se anula la entrada 2/5 en la columna 3; se opera sobre la fila completa.
 [ 0  0  1  |  -1 ]
 ```
 
-### Paso 13. [I | X]: lectura de la solución
+### Paso 13. [I | X]: lectura directa de la solución
 
-Cada fila contiene una incógnita con coeficiente 1; la última columna es X.
+El bloque izquierdo es la identidad: la fila i representa 1·xᵢ = Xᵢ. Por eso la última columna se lee directamente, sin sustitución hacia atrás.
 
 ```text
 [ 1  0  0  |   2 ]
@@ -361,9 +361,9 @@ Cada fila contiene una incógnita con coeficiente 1; la última columna es X.
 
 ## Procedimiento — Matriz inversa
 
-### Paso 1. Matriz inicial
+### Paso 1. Matriz aumentada inicial
 
-El bloque a la derecha también participa en cada operación de fila.
+Punto de partida: [A | I]. La barra separa los coeficientes del bloque derecho, pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.
 
 ```text
 [  2   1  -1  |  1  0  0 ]
@@ -373,7 +373,7 @@ El bloque a la derecha también participa en cada operación de fila.
 
 ### Paso 2. F1 ↔ F2
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
+Pivoteo parcial en la columna 1: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ -3  -1   2  |  0  1  0 ]
@@ -383,7 +383,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
 
 ### Paso 3. F1 ← (-1/3) · F1
 
-Se convierte el pivote -3 en 1.
+Se divide toda la fila entre el pivote -3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
 
 ```text
 [  1  1/3  -2/3  |  0  -1/3  0 ]
@@ -393,7 +393,7 @@ Se convierte el pivote -3 en 1.
 
 ### Paso 4. F2 ← F2 + (-2) · F1
 
-Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(2)/(1) = -2; así, 2 + (-2)·(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [  1  1/3  -2/3  |  0  -1/3  0 ]
@@ -403,7 +403,7 @@ Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 5. F3 ← F3 + (2) · F1
 
-Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(-2)/(1) = 2; así, -2 + (2)·(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  1/3  -2/3  |  0  -1/3  0 ]
@@ -413,7 +413,7 @@ Se anula la entrada -2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 6. F2 ↔ F3
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
+Pivoteo parcial en la columna 2: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ 1  1/3  -2/3  |  0  -1/3  0 ]
@@ -423,7 +423,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 2.
 
 ### Paso 7. F2 ← (3/5) · F2
 
-Se convierte el pivote 5/3 en 1.
+Se divide toda la fila entre el pivote 5/3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
 
 ```text
 [ 1  1/3  -2/3  |  0  -1/3    0 ]
@@ -433,7 +433,7 @@ Se convierte el pivote 5/3 en 1.
 
 ### Paso 8. F1 ← F1 + (-1/3) · F2
 
-Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/3)/(1) = -1/3; así, 1/3 + (-1/3)·(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1    0  -4/5  |  0  -1/5  -1/5 ]
@@ -443,7 +443,7 @@ Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 9. F3 ← F3 + (-1/3) · F2
 
-Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/3)/(1) = -1/3; así, 1/3 + (-1/3)·(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  0  -4/5  |  0  -1/5  -1/5 ]
@@ -453,7 +453,7 @@ Se anula la entrada 1/3 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 10. F3 ← (5) · F3
 
-Se convierte el pivote 1/5 en 1.
+Se divide toda la fila entre el pivote 1/5, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
 
 ```text
 [ 1  0  -4/5  |  0  -1/5  -1/5 ]
@@ -463,7 +463,7 @@ Se convierte el pivote 1/5 en 1.
 
 ### Paso 11. F1 ← F1 + (4/5) · F3
 
-Se anula la entrada -4/5 en la columna 3; se opera sobre la fila completa.
+El multiplicador es −(-4/5)/(1) = 4/5; así, -4/5 + (4/5)·(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  0    0  |  4     3   -1 ]
@@ -473,7 +473,7 @@ Se anula la entrada -4/5 en la columna 3; se opera sobre la fila completa.
 
 ### Paso 12. F2 ← F2 + (-2/5) · F3
 
-Se anula la entrada 2/5 en la columna 3; se opera sobre la fila completa.
+El multiplicador es −(2/5)/(1) = -2/5; así, 2/5 + (-2/5)·(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 1  0  0  |   4   3  -1 ]
@@ -483,7 +483,7 @@ Se anula la entrada 2/5 en la columna 3; se opera sobre la fila completa.
 
 ### Paso 13. [I | A⁻¹]: inversa obtenida
 
-Las operaciones que convierten A en I convierten I en A⁻¹.
+Aplicar las mismas operaciones elementales a [A | I] equivale a multiplicar ambos bloques por A⁻¹: A⁻¹A = I y A⁻¹I = A⁻¹.
 
 ```text
 [ 1  0  0  |   4   3  -1 ]
@@ -493,7 +493,7 @@ Las operaciones que convierten A en I convierten I en A⁻¹.
 
 ### Paso 14. x1 = (4)·(8) + (3)·(-11) + (-1)·(-3) = 2
 
-Producto fila por columna en X = A⁻¹·B.
+Producto fila 1 de A⁻¹ por la columna B. La suma de productos da la componente x1 de X = A⁻¹B.
 
 ```text
 [ 1  0  0  |   4   3  -1 ]
@@ -503,7 +503,7 @@ Producto fila por columna en X = A⁻¹·B.
 
 ### Paso 15. x2 = (-2)·(8) + (-2)·(-11) + (1)·(-3) = 3
 
-Producto fila por columna en X = A⁻¹·B.
+Producto fila 2 de A⁻¹ por la columna B. La suma de productos da la componente x2 de X = A⁻¹B.
 
 ```text
 [ 1  0  0  |   4   3  -1 ]
@@ -513,7 +513,7 @@ Producto fila por columna en X = A⁻¹·B.
 
 ### Paso 16. x3 = (5)·(8) + (4)·(-11) + (-1)·(-3) = -1
 
-Producto fila por columna en X = A⁻¹·B.
+Producto fila 3 de A⁻¹ por la columna B. La suma de productos da la componente x3 de X = A⁻¹B.
 
 ```text
 [ 1  0  0  |   4   3  -1 ]

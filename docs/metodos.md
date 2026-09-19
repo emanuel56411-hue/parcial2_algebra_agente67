@@ -34,4 +34,10 @@ La familia compatible se escribe `X=Xp+Σ ti·vi`, con `A·Xp=B` y `A·vi=0`. V�
 
 El programa calcula el determinante con el producto de pivotes de Gauss y el signo de los intercambios. Utiliza `Fraction`, no un umbral arbitrario para decidir si un determinante es cero. La equivalencia entre métodos se prueba sobre los vectores exactos y se verifica cada componente de `|AX−B|`. Esta implementación prioriza la claridad y los sistemas pequeños, no el rendimiento de matrices industriales de gran tamaño.
 
+### Por qué el residual puede ser exactamente cero
+
+El motor convierte cada entrada finita a [`fractions.Fraction`](https://docs.python.org/3/library/fractions.html), que representa aritmética racional. Por eso no redondea durante la eliminación: si el sistema racional tiene solución única, la sustitución `A·X` reproduce `B` componente por componente y `E=max|A·X−B|=0`. Las aproximaciones decimales de la interfaz son informativas y nunca se reutilizan como entrada del algoritmo.
+
+Para entradas de punto flotante convencionales, el residual suele ser pequeño pero no necesariamente cero debido a la representación binaria. La [documentación oficial de Python sobre punto flotante](https://docs.python.org/3/tutorial/floatingpoint.html) explica esa diferencia. La referencia [NIST DLMF §3.2](https://dlmf.nist.gov/3.2) fundamenta la eliminación, la sustitución hacia atrás, el pivoteo parcial y el uso del vector residual como comprobación.
+
 Fuentes primarias consultadas el 19 de septiembre de 2026. Las explicaciones de este documento son resúmenes originales; no se incorporaron páginas del material docente al repositorio.

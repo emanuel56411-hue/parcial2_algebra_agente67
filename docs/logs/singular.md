@@ -28,9 +28,9 @@ F₆ = 2F₁, conservando B₆ = 175. La fila 1 exigiría B₆ = 310. La guía c
 
 ## Procedimiento — Diagnóstico: determinante y rangos
 
-### Paso 1. Matriz inicial
+### Paso 1. Matriz aumentada inicial
 
-El bloque a la derecha también participa en cada operación de fila.
+Punto de partida: [A | B]. La barra separa los coeficientes del bloque derecho, pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.
 
 ```text
 [ 2  1  3  1  2  1  |  155 ]
@@ -43,7 +43,7 @@ El bloque a la derecha también participa en cada operación de fila.
 
 ### Paso 2. F1 ↔ F6
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
+Pivoteo parcial en la columna 1: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ 4  2  6  2  4  2  |  175 ]
@@ -56,7 +56,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 1.
 
 ### Paso 3. F2 ← F2 + (-1/4) · F1
 
-Se anula la entrada 1 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(1)/(4) = -1/4; así, 1 + (-1/4)·(4) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2    6    2  4    2  |    175 ]
@@ -69,7 +69,7 @@ Se anula la entrada 1 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 4. F3 ← F3 + (-3/4) · F1
 
-Se anula la entrada 3 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(3)/(4) = -3/4; así, 3 + (-3/4)·(4) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -82,7 +82,7 @@ Se anula la entrada 3 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 5. F4 ← F4 + (-1/4) · F1
 
-Se anula la entrada 1 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(1)/(4) = -1/4; así, 1 + (-1/4)·(4) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -95,7 +95,7 @@ Se anula la entrada 1 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 6. F5 ← F5 + (-1/2) · F1
 
-Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(2)/(4) = -1/2; así, 2 + (-1/2)·(4) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -108,7 +108,7 @@ Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 7. F6 ← F6 + (-1/2) · F1
 
-Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
+El multiplicador es −(2)/(4) = -1/2; así, 2 + (-1/2)·(4) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -121,7 +121,7 @@ Se anula la entrada 2 en la columna 1; se opera sobre la fila completa.
 
 ### Paso 8. F3 ← F3 + (-1/5) · F2
 
-Se anula la entrada 1/2 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/2)/(5/2) = -1/5; así, 1/2 + (-1/5)·(5/2) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -134,7 +134,7 @@ Se anula la entrada 1/2 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 9. F4 ← F4 + (-1/5) · F2
 
-Se anula la entrada 1/2 en la columna 2; se opera sobre la fila completa.
+El multiplicador es −(1/2)/(5/2) = -1/5; así, 1/2 + (-1/5)·(5/2) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -147,7 +147,7 @@ Se anula la entrada 1/2 en la columna 2; se opera sobre la fila completa.
 
 ### Paso 10. F3 ↔ F5
 
-Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 3.
+Pivoteo parcial en la columna 3: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
 
 ```text
 [ 4    2     6     2  4    2  |    175 ]
@@ -160,7 +160,7 @@ Pivoteo parcial: se elige el mayor valor absoluto disponible en la columna 3.
 
 ### Paso 11. F4 ← F4 + (-3/5) · F3
 
-Se anula la entrada -3/5 en la columna 3; se opera sobre la fila completa.
+El multiplicador es −(-3/5)/(-1) = -3/5; así, -3/5 + (-3/5)·(-1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2     6     2     4    2  |    175 ]
@@ -173,7 +173,7 @@ Se anula la entrada -3/5 en la columna 3; se opera sobre la fila completa.
 
 ### Paso 12. F5 ← F5 + (-3/5) · F3
 
-Se anula la entrada -3/5 en la columna 3; se opera sobre la fila completa.
+El multiplicador es −(-3/5)/(-1) = -3/5; así, -3/5 + (-3/5)·(-1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2    6     2     4    2  |    175 ]
@@ -186,7 +186,7 @@ Se anula la entrada -3/5 en la columna 3; se opera sobre la fila completa.
 
 ### Paso 13. F5 ← F5 + (1/4) · F4
 
-Se anula la entrada -4/5 en la columna 4; se opera sobre la fila completa.
+El multiplicador es −(-4/5)/(16/5) = 1/4; así, -4/5 + (1/4)·(16/5) = 0 en la columna 4. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
 
 ```text
 [ 4    2    6     2     4     2  |    175 ]
@@ -199,7 +199,7 @@ Se anula la entrada -4/5 en la columna 4; se opera sobre la fila completa.
 
 ### Paso 14. Columna 6: sin pivote
 
-Todas las entradas disponibles son cero. Se continúa en la siguiente columna.
+Desde la fila activa hacia abajo todas las entradas de esta columna son cero. No se puede crear un pivote aquí; la columna corresponderá a una variable libre si no aparece un pivote después.
 
 ```text
 [ 4    2    6     2     4     2  |    175 ]
