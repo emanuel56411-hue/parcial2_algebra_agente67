@@ -16,6 +16,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Diagnosticar solución única, incompatibilidad o una familia de soluciones con parámetros libres.
 - Separar solución matemática y factibilidad de producción; consultar el balance por recurso.
 - Descargar el procedimiento en Markdown, los datos/resultados en JSON y un informe HTML imprimible como PDF.
+- Consultar un tutor opcional de OpenAI sobre el resultado o pedir una explicación del paso seleccionado.
 
 ## Iniciar la web
 
@@ -36,7 +37,27 @@ Abre **http://localhost:8501**. En el entorno existente del proyecto también pu
 venv/bin/python -m streamlit run app.py
 ```
 
-La página funciona localmente y no requiere cuentas ni claves de API. No se envían matrices a servicios de IA. El motor es un agente determinista basado en reglas; las explicaciones proceden de operaciones verificables. La tipografía usa fuentes locales/sistema.
+La calculadora funciona localmente y no requiere cuentas ni claves de API. El motor es un agente determinista basado en reglas; sus operaciones son verificables. El **Tutor IA es opcional**: solo envía datos a OpenAI cuando pulsas su botón o envías una pregunta. La tipografía usa fuentes locales/sistema.
+
+## Tutor IA opcional con OpenAI
+
+Resuelve primero un sistema. La pestaña **Tutor IA** permite preguntar sobre ese resultado; en **Procedimiento → Paso a paso → Ayuda de IA para este paso** encontrarás **Explicar este paso con IA**. El motor matemático conserva la autoridad sobre los resultados; el texto generado se presenta como orientación y puede contener errores.
+
+1. Instala las dependencias de `requirements.txt`.
+2. Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y completa `OPENAI_API_KEY` en tu editor local. Si ya existe el archivo, edítalo sin sobrescribir sus valores.
+3. Reinicia Streamlit después de configurar los secretos. En Streamlit Community Cloud, añade las mismas claves en **Settings → Secrets**.
+
+También se aceptan las variables de entorno `OPENAI_API_KEY`, `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`; tienen prioridad sobre el archivo. La clave se usa únicamente en el servidor y el archivo privado está excluido de Git. No la pegues en el chat del tutor ni la publiques en el repositorio.
+
+El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [API Responses y el SDK oficial de Python](https://developers.openai.com/es-419/api/docs/quickstart). Cada consulta envía las matrices A/B, diagnóstico, solución e interpretación; el chat añade hasta seis mensajes anteriores y la explicación de pasos añade las matrices anterior y actual. No se envían archivos del equipo ni el PDF completo. Se solicita `store=False`; esto no equivale a una garantía de retención cero por el proveedor.
+
+Controles de consumo: preguntas de hasta 1500 caracteres, contexto matemático de hasta 24000 caracteres, respuestas de hasta 1000 tokens, historial limitado y ningún reintento automático. La interfaz muestra los tokens reportados por OpenAI. Resolver, cambiar de pestaña o navegar entre pasos no genera llamadas a la API.
+
+El límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. Los intentos fallidos también cuentan para evitar gastos por reintentos. Borrar el chat o cambiar de sistema no restablece la cuota. Si el contador no puede escribirse, se bloquea la consulta antes de contactar con OpenAI.
+
+Este límite controla solicitudes en una instalación, **no es un presupuesto en dólares de la cuenta**: otras aplicaciones, réplicas o la pérdida del disco pueden alterar el consumo total. Revisa también los límites de tu proyecto OpenAI. El costo depende del modelo y los tokens; consulta sus [tarifas oficiales](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
+
+Las pruebas del tutor simulan las respuestas de OpenAI y no consumen saldo. La validación real requiere una clave con acceso al modelo; los errores de autenticación, cuota o conexión no impiden usar la calculadora.
 
 ## Consola sin dependencias
 
@@ -111,7 +132,7 @@ python scripts/build_deliverables.py
 
 Las pruebas comprueban soluciones conocidas, determinantes por una definición independiente, identidades de la inversa, familias paramétricas, reproducción de cada operación de fila, pivoteo, entradas inválidas y recorridos de los formularios web. La automatización de GitHub ejecuta las pruebas al recibir cambios.
 
-La comprobación visual es un paso separado de AppTest. Con el servidor ya iniciado y Playwright instalado, `python scripts/browser_check.py` prueba la página y guarda capturas en `docs/screenshots/`. Se puede indicar `--browser /ruta/al/ejecutable` para usar un Chromium o Brave instalado. Las capturas solo se generan al ejecutar esa comprobación; no se incluyen imágenes simuladas como evidencia.
+La comprobación visual es un paso separado de AppTest. Con el servidor ya iniciado y Playwright instalado, `python scripts/browser_check.py` prueba la página y guarda capturas en `docs/screenshots/`. Se puede indicar `--browser /ruta/al/ejecutable` para usar un Chromium o Brave instalado. Se incluyen **8 capturas reales** y el resultado de **7 comprobaciones aprobadas** en `docs/logs/browser.json`, incluida la interfaz del tutor sin realizar llamadas a OpenAI.
 
 ## Arquitectura
 
@@ -121,6 +142,8 @@ scenarios.py              Datos originales y variantes independientes
 reporting.py              Formato de matrices, guías y exportaciones
 main.py                   Consola, JSON y batería de escenarios
 app.py                    Interfaz Streamlit
+ai_tutor.py               Contexto matemático, API Responses y cuota diaria
+tutor_ui.py               Chat y explicación opcional de pasos
 scripts/build_deliverables.py  Ejemplos, bitácora y documento técnico
 examples/                 Entradas reutilizables
 tests/                    Pruebas de resultados y recorridos de interfaz

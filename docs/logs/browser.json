@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "Escenario compatible y gráfico visibles",
+    "Tutor IA visible sin enviar consultas a OpenAI",
+    "Navegación de operaciones Gauss-Jordan",
+    "Alerta de escasez visible",
+    "Diagnóstico incompatible visible",
+    "Familia paramétrica visible",
+    "Viewport móvil sin desbordamiento de la página"
+  ]
+}

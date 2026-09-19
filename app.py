@@ -11,6 +11,7 @@ from agent import MAX_SIZE, InputError, TechChipAgent, STATUS_LABELS, METHOD_LAB
 from main import validation_battery
 from reporting import METHOD_GUIDES, REFERENCES, html_report, markdown_report, matrix_latex
 from scenarios import A_BASE, B_GUIDE, B_TARGET, GUIDE_NOTE, PRODUCTS, RESOURCES, SCENARIOS, UNITS, X_TARGET, get_scenario
+from tutor_ui import render_step_tutor, render_tutor, reset_conversation
 
 ROOT = Path(__file__).resolve().parent
 st.set_page_config(page_title="TechChip · Matrix Studio", page_icon=":material/grid_on:", layout="wide")
@@ -22,6 +23,7 @@ def analyze_cached(A, B, production):
 
 
 def clear_result():
+    reset_conversation()
     for key in ("report", "report_title", "report_note", "report_techchip"):
         st.session_state.pop(key, None)
 
@@ -78,7 +80,7 @@ def render_results(report, title, note, techchip):
     else:
         st.info(report.interpretation[0], icon=":material/info:")
 
-    tab_summary, tab_steps, tab_verify, tab_exports = st.tabs(["Resumen", "Procedimiento", "Verificación", "Exportar"])
+    tab_summary, tab_steps, tab_verify, tab_exports, tab_tutor = st.tabs(["Resumen", "Procedimiento", "Verificación", "Exportar", "Tutor IA"])
     with tab_summary:
         if report.solution is not None:
             left, right = st.columns([1.25, 1])
@@ -138,6 +140,8 @@ def render_results(report, title, note, techchip):
             st.latex(guide["formula"])
             steps = report.methods[selected].steps
         render_steps(steps, selected)
+        if st.session_state.get(f"view_{selected}") == "Paso a paso":
+            render_step_tutor(report, title, note, selected, st.session_state.get(f"step_{selected}", 1) - 1)
     with tab_verify:
         if report.solution is not None:
             st.success("Los tres métodos coinciden exactamente. Todos los errores por componente son menores que 10⁻⁶.")
@@ -161,6 +165,8 @@ def render_results(report, title, note, techchip):
             st.download_button("Resultados JSON", json.dumps({"title": title, "note": note, **report.to_dict()}, ensure_ascii=False, indent=2), "resultado.json", "application/json", icon=":material/data_object:")
             st.download_button("Datos de entrada JSON", json.dumps(json_ready({"A": report.A, "B": report.B}), indent=2), "sistema.json", "application/json")
         st.caption("Para un PDF de este cálculo, abre el HTML descargado y selecciona Imprimir → Guardar como PDF.")
+    with tab_tutor:
+        render_tutor(report, title, note)
 
 
 with st.sidebar:
@@ -172,7 +178,7 @@ with st.sidebar:
     st.caption("1. Define tu sistema\n\n2. Compara tres métodos\n\n3. Revisa cada operación\n\n4. Exporta el análisis")
     st.space("large")
     st.badge("Cálculo racional exacto", color="green", icon=":material/verified:")
-    st.caption("Sin claves de API · Motor local\n\nMatrices de 1 × 1 a 12 × 12\n\nAgente de reglas deterministas · v2.0")
+    st.caption("Cálculo local · Tutor IA opcional\n\nMatrices de 1 × 1 a 12 × 12\n\nOperaciones exactas y explicaciones guiadas")
 
 if page == "Calculadora":
     st.caption("TECHCHIP SYSTEMS / LABORATORIO DE DECISIONES")

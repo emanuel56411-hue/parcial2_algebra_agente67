@@ -12,3 +12,4 @@ __pycache__/
 # Enlaces locales creados por Streamlit hacia el entorno virtual.
 /.agents/skills/developing-with-streamlit
 /.claude/skills/developing-with-streamlit
+/.tutor/
