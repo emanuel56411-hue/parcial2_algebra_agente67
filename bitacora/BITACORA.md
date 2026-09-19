@@ -488,9 +488,13 @@ Salida completa: [`infinite.json`](infinite.json).
 
 ## Evidencia visual
 
-- Inicio y entrada: [`docs/screenshots/01_inicio.png`](../docs/screenshots/01_inicio.png)
+- Inicio y entrada Streamlit: [`docs/screenshots/01_inicio.png`](../docs/screenshots/01_inicio.png)
 - Caso base compatible: [`docs/screenshots/02_plan_compatible.png`](../docs/screenshots/02_plan_compatible.png)
-- Procedimiento: [`docs/screenshots/03_procedimiento.png`](../docs/screenshots/03_procedimiento.png)
+- Procedimiento Streamlit: [`docs/screenshots/03_procedimiento.png`](../docs/screenshots/03_procedimiento.png)
 - Escasez: [`docs/screenshots/04_escasez.png`](../docs/screenshots/04_escasez.png)
 - Singular incompatible: [`docs/screenshots/05_singular.png`](../docs/screenshots/05_singular.png)
 - Infinitas soluciones: [`docs/screenshots/06_infinitas.png`](../docs/screenshots/06_infinitas.png)
+- Portada profesional en Vercel: [`docs/screenshots/08_vercel_profesional.png`](../docs/screenshots/08_vercel_profesional.png)
+- Procedimiento completo en Vercel: [`docs/screenshots/09_vercel_procedimiento.png`](../docs/screenshots/09_vercel_procedimiento.png)
+- Tutor IA en Vercel: [`docs/screenshots/10_vercel_tutor.png`](../docs/screenshots/10_vercel_tutor.png)
+- Vista móvil en Vercel: [`docs/screenshots/11_vercel_movil.png`](../docs/screenshots/11_vercel_movil.png)
