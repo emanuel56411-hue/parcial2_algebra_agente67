@@ -72,7 +72,7 @@ Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebS
 
 ## Tutor IA opcional con OpenAI
 
-Resuelve primero un sistema. La pestaña **Tutor IA** permite preguntar sobre ese resultado; en **Procedimiento → Paso a paso → Ayuda de IA para este paso** encontrarás **Explicar este paso con IA**. El motor matemático conserva la autoridad sobre los resultados; el texto generado se presenta como orientación y puede contener errores.
+Puedes saludar al Tutor IA antes de resolver; esa respuesta inicial es local y no consume cuota. Para preguntar sobre valores y pasos, resuelve primero un sistema. El modelo solo redacta frases cortas con marcadores: el motor matemático aporta todos los números y valida el texto antes de mostrarlo. Los cuatro botones de ayuda rápida responden desde el motor sin llamar a OpenAI.
 
 1. Instala las dependencias de `requirements.txt`.
 2. Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y completa `OPENAI_API_KEY` en tu editor local. Si ya existe el archivo, edítalo sin sobrescribir sus valores.
@@ -80,11 +80,11 @@ Resuelve primero un sistema. La pestaña **Tutor IA** permite preguntar sobre es
 
 También se aceptan las variables de entorno `OPENAI_API_KEY`, `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`; tienen prioridad sobre el archivo. La clave se usa únicamente en el servidor y el archivo privado está excluido de Git. No la pegues en el chat del tutor ni la publiques en el repositorio.
 
-El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [API Responses y el SDK oficial de Python](https://developers.openai.com/es-419/api/docs/quickstart). Cada consulta envía las matrices A/B, diagnóstico, solución e interpretación; el chat añade hasta seis mensajes anteriores y la explicación de pasos añade las matrices anterior y actual. No se envían archivos del equipo ni el PDF completo. Se solicita `store=False`; esto no equivale a una garantía de retención cero por el proveedor.
+El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [API Responses y el SDK oficial de Python](https://developers.openai.com/es-419/api/docs/quickstart) con salida JSON estructurada. Cada pregunta escrita envía las matrices A/B, diagnóstico, solución e interpretación; para un paso seleccionado añade sus matrices anterior y actual. No se reenvían mensajes anteriores, notas libres, archivos del equipo ni el PDF completo. Se solicita `store=False`; esto no equivale a una garantía de retención cero por el proveedor. Una respuesta inválida o fallida se sustituye por una explicación del motor identificada como tal.
 
-Controles de consumo: preguntas de hasta 1500 caracteres, contexto matemático de hasta 24000 caracteres, respuestas de hasta 1000 tokens, historial limitado y ningún reintento automático. La interfaz muestra los tokens reportados por OpenAI. Resolver, cambiar de pestaña o navegar entre pasos no genera llamadas a la API.
+Controles de consumo: preguntas de hasta 500 caracteres, contexto matemático de hasta 24000 caracteres, respuestas de hasta 700 tokens y un solo reintento ante una salida estructurada inválida. La API web limita a cinco preguntas por minuto y cliente en cada instancia, además del límite diario configurado. Saludar antes de resolver, usar las ayudas rápidas, resolver o navegar entre pasos no genera llamadas a OpenAI.
 
-En Streamlit, el límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. En Vercel existe además un límite preventivo por conexión e instancia, configurable con `OPENAI_DAILY_REQUEST_LIMIT`; por la naturaleza serverless no sustituye los límites y presupuesto del proyecto OpenAI.
+En Streamlit, el límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. En Vercel existe además un límite preventivo por cliente e instancia, configurable con `OPENAI_DAILY_REQUEST_LIMIT`; por la naturaleza serverless no es una cuota global compartida entre instancias ni sustituye los límites y presupuesto del proyecto OpenAI.
 
 Este límite controla solicitudes en una instalación, **no es un presupuesto en dólares de la cuenta**: otras aplicaciones, réplicas o la pérdida del disco pueden alterar el consumo total. Revisa también los límites de tu proyecto OpenAI. El costo depende del modelo y los tokens; consulta sus [tarifas oficiales](https://developers.openai.com/api/docs/models/gpt-4.1-mini).
 
@@ -139,6 +139,7 @@ Para los casos invertibles de TechChip, `det(A)=-83`. Los tres métodos coincide
 
 ## Entregables y documentación
 
+- [Auditoría de las seis fotos y comprobación independiente de la matriz](docs/auditoria_guia_fotos.md).
 - [Auditoría de cumplimiento del parcial](docs/cumplimiento.md).
 - [Informe técnico IEEEtran en PDF](docs/informe_tecnico_ieee.pdf) y [fuente LaTeX](docs/informe_tecnico_ieee.tex): cuerpo a dos columnas y anexos completos con los tres métodos.
 - [Interpretación de operaciones](docs/interpretacion_operaciones.md).

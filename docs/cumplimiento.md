@@ -41,9 +41,9 @@ No se atribuye una calificación: la evaluación corresponde al docente.
 
 ## Ampliación: tutor opcional de OpenAI
 
-Se incorporaron un chat sobre el sistema resuelto y una explicación del paso seleccionado mediante la API Responses. El motor de cálculo exacto permanece independiente. La clave se configura como secreto del servidor; las llamadas solo ocurren por una acción explícita, con contexto e historial limitados y cuota compartida de 50 solicitudes por día UTC en esta instalación.
+Se incorporaron un chat sobre el sistema resuelto y una explicación del paso seleccionado mediante la API Responses. El motor de cálculo exacto permanece independiente. El modelo devuelve texto estructurado con marcadores; la API y el frontend descartan cifras inventadas y respuestas malformadas. Los cuatro botones contextuales y el saludo previo al cálculo responden sin llamar a OpenAI. La clave se configura como secreto del servidor y el historial libre no se reenvía.
 
-La batería incluye **44 pruebas** en total, incluidas las pruebas específicas para Vercel: resolución exacta, diagnóstico singular, rechazo de solicitudes inválidas y Tutor IA con contexto recalculado y clave ausente del cuerpo. Las pruebas simuladas de OpenAI cubren aislamiento de conversaciones, conservación de resultados ante errores y control concurrente de la cuota. La comprobación de navegador cubre cálculo, elección de método, procedimiento, Tutor IA y viewport móvil.
+La batería actual incluye **52 pruebas Python** y **5 pruebas Vitest** para el sustituidor de marcadores y el validador, además de build y ESLint. Las respuestas simuladas cubren JSON inválido, marcadores desconocidos, cifras inventadas, texto demasiado largo, tiempo límite y respaldo del motor. La comprobación de navegador cubre cálculo, procedimiento, Tutor IA y viewport móvil; también se comprobó que un saludo previo al cálculo no consume OpenAI.
 
 ## Inconsistencias que requieren aclaración académica
 

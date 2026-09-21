@@ -10,6 +10,8 @@
 | Interpretación | 10 | `docs/interpretacion_operaciones.md` |
 | Documentación y Presentación | 10 | Informe IEEE, README, bitácora, interfaz y despliegue Vercel |
 
+La comparación detallada con las seis fotos está en [`auditoria_guia_fotos.md`](auditoria_guia_fotos.md). El cálculo independiente de determinante y solución por Cramer puede repetirse con `python scripts/verify_photo_matrix.py`.
+
 ## Compilación del PDF IEEE
 
 ```bash
