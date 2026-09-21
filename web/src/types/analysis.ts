@@ -9,6 +9,13 @@ export type Step = {
   target: number | null
   source: number | null
   factor: string | null
+  title: string | null
+  what: string | null
+  why: string | null
+  calc: string[]
+  pivot: [number, number] | null
+  changed_rows: number[]
+  decimals: Record<string, string>
 }
 
 export type MethodResult = {

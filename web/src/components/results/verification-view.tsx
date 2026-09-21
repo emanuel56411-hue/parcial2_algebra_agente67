@@ -1,19 +1,42 @@
-import { CheckCircle2 } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Check, CheckCircle2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { MathLine } from "@/components/math-value"
 import type { Analysis } from "@/types/analysis"
 
 export function VerificationView({ report }: { report: Analysis }) {
   if (!report.solution) return (
-    <Card><CardHeader><CardTitle>Diagnóstico por rangos</CardTitle></CardHeader><CardContent className="space-y-3"><p className="font-mono text-sm">det(A) = {report.determinant}</p><p className="font-mono text-sm">rango(A) = {report.rank_A}</p><p className="font-mono text-sm">rango([A|B]) = {report.rank_augmented}</p><p className="text-sm text-muted-foreground">{report.status === "inconsistent" ? "Los rangos distintos prueban que no existe solución." : "Los rangos iguales menores que n prueban que hay variables libres."}</p></CardContent></Card>
+    <Card>
+      <CardHeader><CardTitle>Verificación por rangos</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
+        <p className="font-mono text-sm tabular-nums">det(A) = {report.determinant}</p>
+        <p className="font-mono text-sm tabular-nums">rango(A) = {report.rank_A}</p>
+        <p className="font-mono text-sm tabular-nums">rango([A|B]) = {report.rank_augmented}</p>
+        <p className="text-sm text-muted-foreground">{report.status === "inconsistent" ? "Los rangos distintos prueban que no existe solución." : "Los rangos iguales menores que n prueban que hay variables libres."}</p>
+      </CardContent>
+    </Card>
   )
-  const methods = Object.values(report.methods)
+
   return (
-    <div className="space-y-5">
-      <Alert><CheckCircle2 /><AlertTitle>Comprobación exacta superada</AlertTitle><AlertDescription>Los tres métodos coinciden y E = max|A·X − B| = {report.max_error}. Por tanto, E &lt; 10⁻⁶.</AlertDescription></Alert>
-      <Card><CardHeader><CardTitle>Comparación entre métodos</CardTitle></CardHeader><CardContent className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Variable</TableHead>{methods.map((method) => <TableHead key={method.name}>{method.name}</TableHead>)}</TableRow></TableHeader><TableBody>{report.solution.map((_, index) => <TableRow key={index}><TableCell className="font-semibold">x{index + 1}</TableCell>{methods.map((method) => <TableCell className="font-mono" key={method.name}>{method.solution[index]}</TableCell>)}</TableRow>)}</TableBody></Table></CardContent></Card>
-      <Card><CardHeader><CardTitle>Sustitución directa</CardTitle></CardHeader><CardContent className="grid gap-2">{report.substitution.map((line, index) => <code key={index} className="overflow-x-auto whitespace-nowrap rounded-md bg-muted p-3 font-mono text-xs">{line}</code>)}</CardContent></Card>
-    </div>
+    <Card className="border-primary/30">
+      <CardHeader className="border-b">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2"><CheckCircle2 className="size-5 text-primary" /><CardTitle>Verificación: A·X = B</CardTitle></div>
+          {report.methods_agree && <Badge className="gap-1.5"><Check className="size-3.5" />Los 3 métodos coinciden</Badge>}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-6">
+        {report.substitution.map((line, index) => {
+          const exact = report.residual[index] === "0"
+          return (
+            <div key={index} className="flex min-w-0 items-center gap-3 rounded-lg border bg-muted/20 p-3">
+              <span className={exact ? "grid size-6 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground" : "grid size-6 shrink-0 place-items-center rounded-full bg-destructive text-white"} aria-label={exact ? "Residuo cero" : "Residuo distinto de cero"}>{exact ? <Check className="size-4" /> : "!"}</span>
+              <div className="min-w-0 flex-1 overflow-x-auto"><MathLine>{line}</MathLine></div>
+            </div>
+          )
+        })}
+        <p className="pt-2 text-sm text-muted-foreground">Residuo máximo exacto: <span className="font-mono font-semibold text-foreground">{report.max_error}</span>.</p>
+      </CardContent>
+    </Card>
   )
 }

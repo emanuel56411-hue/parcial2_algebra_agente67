@@ -131,6 +131,33 @@ class SolverTests(unittest.TestCase):
                     current[step.target] = [a+step.factor*b for a,b in zip(current[step.target], current[step.source])]
                 self.assertEqual(current, step.matrix, (method.name, step.operation))
 
+    def test_steps_include_structured_presentation_without_removing_legacy_fields(self):
+        report = self.agent.analyze([[2, 1], [1, -1]], [5, 1])
+        steps = [*report.diagnostic_steps, *(step for method in report.methods.values() for step in method.steps)]
+        for step in steps:
+            self.assertTrue(step.operation)
+            self.assertTrue(step.explanation)
+            self.assertTrue(step.title)
+            self.assertTrue(step.what)
+            self.assertTrue(step.why)
+            self.assertLessEqual(len(step.why.split()), 25)
+            self.assertIsInstance(step.calc, list)
+            self.assertIsInstance(step.changed_rows, list)
+            self.assertIsInstance(step.decimals, dict)
+        encoded = report.to_dict()
+        sample = encoded["methods"]["gauss"]["steps"][-1]
+        for field in ("title", "what", "why", "calc", "pivot", "changed_rows", "decimals"):
+            self.assertIn(field, sample)
+        self.assertTrue(sample["calc"][-1].startswith("Resultado:"))
+
+    def test_inverse_product_has_one_calculation_line_per_term(self):
+        report = self.agent.analyze([[2, 1], [1, -1]], [5, 1])
+        products = [step for step in report.methods["inverse"].steps if step.kind == "multiplication"]
+        self.assertEqual(len(products), 2)
+        for step in products:
+            self.assertEqual(sum(line.startswith("t") for line in step.calc), 2)
+            self.assertTrue(step.calc[-1].startswith("Resultado:"))
+
     def test_input_is_not_mutated(self):
         A, B = get_scenario("original")
         before = deepcopy((A, B))

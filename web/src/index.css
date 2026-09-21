@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -84,7 +85,7 @@
 }
 
 .dark {
-    --background: oklch(0.145 0.014 170);
+    --background: #0d1715;
     --foreground: oklch(0.95 0.01 170);
     --card: oklch(0.19 0.017 170);
     --card-foreground: oklch(0.95 0.01 170);
@@ -143,3 +144,41 @@
 ::selection {
   background: color-mix(in oklab, var(--primary) 28%, transparent);
 }
+
+.matrix-scroll {
+  scrollbar-color: color-mix(in oklab, var(--primary) 60%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+.matrix-bracket {
+  align-self: stretch;
+  color: transparent;
+  display: block;
+  min-width: 0.65rem;
+  position: relative;
+  width: 0.65rem;
+}
+
+.matrix-bracket:first-child {
+  border-bottom: 3px solid color-mix(in oklab, var(--foreground) 82%, transparent);
+  border-left: 3px solid color-mix(in oklab, var(--foreground) 82%, transparent);
+  border-top: 3px solid color-mix(in oklab, var(--foreground) 82%, transparent);
+}
+
+.matrix-bracket:last-child {
+  border-bottom: 3px solid color-mix(in oklab, var(--foreground) 82%, transparent);
+  border-right: 3px solid color-mix(in oklab, var(--foreground) 82%, transparent);
+  border-top: 3px solid color-mix(in oklab, var(--foreground) 82%, transparent);
+}
+
+@media (max-width: 640px) {
+  .matrix-scroll {
+    margin-inline: -0.5rem;
+    max-width: calc(100% + 1rem);
+  }
+}
+
+.math-formula .katex { font-size: 1em; }
+.matrix-cell .katex { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }

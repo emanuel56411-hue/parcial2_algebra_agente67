@@ -110,6 +110,15 @@ class Step:
     target: int | None = None
     source: int | None = None
     factor: Fraction | None = None
+    # Campos de presentación estructurados. Los campos anteriores se conservan
+    # para que consola, informes y clientes antiguos sigan siendo compatibles.
+    title: str | None = None
+    what: str | None = None
+    why: str | None = None
+    calc: list[str] = field(default_factory=list)
+    pivot: tuple[int, int] | None = None
+    changed_rows: list[int] = field(default_factory=list)
+    decimals: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -164,6 +173,10 @@ class LinearAlgebraSolver:
             f"Punto de partida: [A | {right_name}]. La barra separa los coeficientes del bloque derecho, "
             "pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.",
             snapshot(M), n,
+            title=f"Formar [A | {right_name}]",
+            what=f"Se construyó la matriz aumentada con el bloque {right_name} a la derecha.",
+            why="Las operaciones elementales sobre filas conservan un sistema equivalente.",
+            calc=[f"[A | {right_name}]"],
         )]
         pivots, pivot_values = [], []
         row, swaps = 0, 0
@@ -172,18 +185,48 @@ class LinearAlgebraSolver:
                 break
             p = max(range(row, len(M)), key=lambda i: abs(M[i][col]))
             if M[p][col] == 0:
-                steps.append(Step(f"Columna {col + 1}: sin pivote", "Desde la fila activa hacia abajo todas las entradas de esta columna son cero. No se puede crear un pivote aquí; la columna corresponderá a una variable libre si no aparece un pivote después.", snapshot(M), n))
+                steps.append(Step(
+                    f"Columna {col + 1}: sin pivote",
+                    "Desde la fila activa hacia abajo todas las entradas de esta columna son cero. No se puede crear un pivote aquí; la columna corresponderá a una variable libre si no aparece un pivote después.",
+                    snapshot(M), n,
+                    title=f"Revisar la columna {col + 1}",
+                    what=f"Se comprobó que la columna {col + 1} no tiene una entrada no nula disponible.",
+                    why="Todas las entradas disponibles son cero; no existe un pivote en esta columna.",
+                    calc=[f"aᵢ,{col + 1} = 0 para i ≥ {row + 1}"],
+                ))
                 continue
             if p != row:
                 M[row], M[p] = M[p], M[row]
                 swaps += 1
-                steps.append(Step(f"F{row + 1} ↔ F{p + 1}", f"Pivoteo parcial en la columna {col + 1}: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.", snapshot(M), n, "swap", row, p))
+                steps.append(Step(
+                    f"F{row + 1} ↔ F{p + 1}",
+                    f"Pivoteo parcial en la columna {col + 1}: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.",
+                    snapshot(M), n, "swap", row, p,
+                    title=f"Elegir el pivote de la columna {col + 1}",
+                    what=f"Se intercambiaron las filas {row + 1} y {p + 1}.",
+                    why="Intercambiar ecuaciones conserva las soluciones y evita dividir entre cero.",
+                    calc=[f"F{row + 1} ↔ F{p + 1}"],
+                    pivot=(row, col),
+                    changed_rows=[row, p],
+                    decimals={"pivote": decimal_text(M[row][col])},
+                ))
             pivot = M[row][col]
             pivot_values.append(pivot)
             if reduced and pivot != 1:
                 factor = 1 / pivot
                 M[row] = [v * factor for v in M[row]]
-                steps.append(Step(f"F{row + 1} ← ({factor}) · F{row + 1}", f"Se divide toda la fila entre el pivote {pivot}, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.", snapshot(M), n, "scale", row, factor=factor))
+                steps.append(Step(
+                    f"F{row + 1} ← ({factor}) · F{row + 1}",
+                    f"Se divide toda la fila entre el pivote {pivot}, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.",
+                    snapshot(M), n, "scale", row, factor=factor,
+                    title=f"Normalizar el pivote de la fila {row + 1}",
+                    what=f"Se multiplicó la fila {row + 1} por {factor} para convertir el pivote {pivot} en 1.",
+                    why="Multiplicar una ecuación por un número no nulo conserva sus soluciones.",
+                    calc=[f"factor = 1 / ({pivot}) = {factor}", f"F{row + 1} ← ({factor}) · F{row + 1}"],
+                    pivot=(row, col),
+                    changed_rows=[row],
+                    decimals={"pivote": decimal_text(pivot), "factor": decimal_text(factor)},
+                ))
             targets = range(len(M)) if reduced else range(row + 1, len(M))
             for target in targets:
                 if target == row or M[target][col] == 0:
@@ -191,7 +234,23 @@ class LinearAlgebraSolver:
                 factor = -M[target][col] / M[row][col]
                 entry = M[target][col]
                 M[target] = [a + factor * b for a, b in zip(M[target], M[row])]
-                steps.append(Step(f"F{target + 1} ← F{target + 1} + ({factor}) · F{row + 1}", f"El multiplicador es −({entry})/({M[row][col]}) = {factor}; así, {entry} + ({factor})·({M[row][col]}) = 0 en la columna {col + 1}. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.", snapshot(M), n, "add", target, row, factor))
+                steps.append(Step(
+                    f"F{target + 1} ← F{target + 1} + ({factor}) · F{row + 1}",
+                    f"El multiplicador es −({entry})/({M[row][col]}) = {factor}; así, {entry} + ({factor})·({M[row][col]}) = 0 en la columna {col + 1}. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.",
+                    snapshot(M), n, "add", target, row, factor,
+                    title=f"Eliminar la columna {col + 1} en la fila {target + 1}",
+                    what=f"Se sumó {factor} veces la fila {row + 1} a la fila {target + 1}.",
+                    why="Sumar un múltiplo de otra fila es reversible y conserva las soluciones.",
+                    calc=[
+                        f"factor = −({entry}) / ({M[row][col]})",
+                        f"factor = {factor}",
+                        f"F{target + 1} ← F{target + 1} + ({factor}) · F{row + 1}",
+                        f"{entry} + ({factor}) · ({M[row][col]}) = 0",
+                    ],
+                    pivot=(row, col),
+                    changed_rows=[target],
+                    decimals={"pivote": decimal_text(M[row][col]), "factor": decimal_text(factor)},
+                ))
             pivots.append(col)
             row += 1
         return M, steps, pivots, swaps, pivot_values
@@ -211,16 +270,44 @@ class LinearAlgebraSolver:
         formula = " · ".join(f"({v})" for v in values)
         explanation = (f"{swaps} intercambio(s). Las sumas de filas conservan el determinante. "
                        f"det(A) = (-1)^{swaps} · {formula} = {det}.") if rank_A == n else "No hay n pivotes independientes; det(A) = 0. No existe A⁻¹."
-        diagnostic.append(Step(f"det(A) = {det}", explanation, snapshot(upper), n))
+        determinant_calc = ([f"det(A) = (−1)^{swaps} · {formula}", f"det(A) = {det}"]
+                            if rank_A == n else [f"rango(A) = {rank_A} < {n}", "det(A) = 0"])
+        diagnostic.append(Step(
+            f"det(A) = {det}", explanation, snapshot(upper), n,
+            title="Calcular el determinante",
+            what=f"Se obtuvo det(A) = {det} a partir de los pivotes y los intercambios.",
+            why=("El producto de pivotes se ajusta con el signo de los intercambios."
+                 if rank_A == n else "Sin n pivotes independientes, A es singular y su determinante es cero."),
+            calc=determinant_calc,
+            decimals={"det(A)": decimal_text(det)},
+        ))
         status = "inconsistent" if contradictions else "infinite" if rank_A < n else "unique"
         report = Analysis(A, B, det, rank_A, rank_aug, status, diagnostic)
         if status != "unique":
             if contradictions:
                 for i in contradictions:
-                    diagnostic.append(Step(f"Contradicción: 0 = {upper[i][n]}", f"La fila {i + 1} demuestra que rango(A) = {rank_A} < rango([A|B]) = {rank_aug}. Se detienen los métodos de solución única.", snapshot(upper), n))
+                    diagnostic.append(Step(
+                        f"Contradicción: 0 = {upper[i][n]}",
+                        f"La fila {i + 1} demuestra que rango(A) = {rank_A} < rango([A|B]) = {rank_aug}. Se detienen los métodos de solución única.",
+                        snapshot(upper), n,
+                        title=f"Detectar una contradicción en la fila {i + 1}",
+                        what=f"Se identificó la igualdad imposible 0 = {upper[i][n]}.",
+                        why="Una igualdad 0 = c con c distinto de cero hace incompatible el sistema.",
+                        calc=[f"0 = {upper[i][n]}", f"rango(A) = {rank_A} < rango([A|B]) = {rank_aug}"],
+                        changed_rows=[i],
+                        decimals={"término independiente": decimal_text(upper[i][n])},
+                    ))
             else:
                 rref, reduced_steps, pivot_cols, _, _ = self._eliminate(augmented, n, True)
-                diagnostic.append(Step("Diagnóstico de variables libres", "Se reduce el sistema para describir la familia de soluciones; no se intenta invertir A.", snapshot(augmented), n))
+                diagnostic.append(Step(
+                    "Diagnóstico de variables libres",
+                    "Se reduce el sistema para describir la familia de soluciones; no se intenta invertir A.",
+                    snapshot(augmented), n,
+                    title="Identificar variables libres",
+                    what="Se preparó la reducción para describir la familia de soluciones.",
+                    why="Los rangos iguales menores que n implican una o más variables libres.",
+                    calc=[f"rango(A) = rango([A|B]) = {rank_A} < {n}"],
+                ))
                 diagnostic.extend(reduced_steps[1:])
                 report.free_columns = [c for c in range(n) if c not in pivot_cols]
                 report.particular = [Fraction(0) for _ in range(n)]
@@ -237,18 +324,51 @@ class LinearAlgebraSolver:
         # Gauss: matriz triangular y sustitución hacia atrás.
         x = [Fraction(0) for _ in range(n)]
         gauss_steps = diagnostic[:]
-        gauss_steps.append(Step("Matriz triangular superior U", "La eliminación terminó: debajo de cada pivote hay ceros. Ahora se resuelve U·X = C desde la última ecuación hacia la primera, porque cada fila solo depende de variables ya conocidas.", snapshot(upper), n))
+        gauss_steps.append(Step(
+            "Matriz triangular superior U",
+            "La eliminación terminó: debajo de cada pivote hay ceros. Ahora se resuelve U·X = C desde la última ecuación hacia la primera, porque cada fila solo depende de variables ya conocidas.",
+            snapshot(upper), n,
+            title="Completar la matriz triangular superior",
+            what="Se terminó la eliminación de las entradas situadas debajo de los pivotes.",
+            why="La forma triangular permite despejar las variables desde la última fila.",
+            calc=["[A | B] → [U | C]"],
+        ))
         for i in reversed(range(n)):
-            total = sum((upper[i][j] * x[j] for j in range(i + 1, n)), Fraction(0))
+            products = [upper[i][j] * x[j] for j in range(i + 1, n)]
+            total = sum(products, Fraction(0))
             x[i] = (upper[i][n] - total) / upper[i][i]
             expression = " + ".join(f"({upper[i][j]})·({x[j]})" for j in range(i + 1, n)) or "0"
-            gauss_steps.append(Step(f"x{i + 1} = ({upper[i][n]} − ({expression})) / ({upper[i][i]}) = {x[i]}", f"En la fila {i + 1} se pasan al lado derecho los términos ya conocidos y se divide entre el coeficiente de x{i + 1}. El valor se conserva como fracción exacta.", snapshot(upper), n, "substitution"))
+            term_lines = [
+                f"t{k + 1} = ({upper[i][j]}) · ({x[j]}) = {product}"
+                for k, (j, product) in enumerate(zip(range(i + 1, n), products))
+            ]
+            sum_line = f"S = {' + '.join(f't{k + 1}' for k in range(len(products))) or '0'} = {total}"
+            gauss_steps.append(Step(
+                f"x{i + 1} = ({upper[i][n]} − ({expression})) / ({upper[i][i]}) = {x[i]}",
+                f"En la fila {i + 1} se pasan al lado derecho los términos ya conocidos y se divide entre el coeficiente de x{i + 1}. El valor se conserva como fracción exacta.",
+                snapshot(upper), n, "substitution",
+                title=f"Despejar x{i + 1} por sustitución",
+                what=f"Se usaron los valores conocidos de la fila {i + 1} para calcular x{i + 1}.",
+                why="La forma triangular deja una sola incógnita nueva en cada fila.",
+                calc=[*term_lines, sum_line, f"x{i + 1} = ({upper[i][n]} − ({total})) / ({upper[i][i]})", f"Resultado: x{i + 1} = {x[i]}"],
+                pivot=(i, i),
+                decimals={f"x{i + 1}": decimal_text(x[i])},
+            ))
         report.methods["gauss"] = MethodResult(METHOD_LABELS["gauss"], x, gauss_steps)
 
         # Gauss-Jordan: reducción independiente de [A|B] a [I|X].
         rref, jordan_steps, _, _, _ = self._eliminate(augmented, n, True)
         x_jordan = [row[n] for row in rref]
-        jordan_steps.append(Step("[I | X]: lectura directa de la solución", "El bloque izquierdo es la identidad: la fila i representa 1·xᵢ = Xᵢ. Por eso la última columna se lee directamente, sin sustitución hacia atrás.", snapshot(rref), n))
+        jordan_steps.append(Step(
+            "[I | X]: lectura directa de la solución",
+            "El bloque izquierdo es la identidad: la fila i representa 1·xᵢ = Xᵢ. Por eso la última columna se lee directamente, sin sustitución hacia atrás.",
+            snapshot(rref), n,
+            title="Leer la solución en [I | X]",
+            what="Se leyó cada componente de X directamente en la última columna.",
+            why="Con I a la izquierda, cada fila expresa directamente xᵢ = Xᵢ.",
+            calc=[f"x{i + 1} = {value}" for i, value in enumerate(x_jordan)],
+            decimals={f"x{i + 1}": decimal_text(value) for i, value in enumerate(x_jordan)},
+        ))
         report.methods["gauss_jordan"] = MethodResult(METHOD_LABELS["gauss_jordan"], x_jordan, jordan_steps)
 
         # Inversa: reducir [A|I]; B solo interviene al multiplicar A⁻¹·B.
@@ -256,11 +376,30 @@ class LinearAlgebraSolver:
         inverse_aug = [row + right for row, right in zip(A, identity)]
         inverse_rref, inverse_steps, _, _, _ = self._eliminate(inverse_aug, n, True)
         inverse = [row[n:] for row in inverse_rref]
-        inverse_steps.append(Step("[I | A⁻¹]: inversa obtenida", "Aplicar las mismas operaciones elementales a [A | I] equivale a multiplicar ambos bloques por A⁻¹: A⁻¹A = I y A⁻¹I = A⁻¹.", snapshot(inverse_rref), n))
+        inverse_steps.append(Step(
+            "[I | A⁻¹]: inversa obtenida",
+            "Aplicar las mismas operaciones elementales a [A | I] equivale a multiplicar ambos bloques por A⁻¹: A⁻¹A = I y A⁻¹I = A⁻¹.",
+            snapshot(inverse_rref), n,
+            title="Obtener la matriz inversa",
+            what="Se transformó el bloque izquierdo en I y el derecho en A⁻¹.",
+            why="Las mismas operaciones convierten A en I y, simultáneamente, I en A⁻¹.",
+            calc=["[A | I] → [I | A⁻¹]", "A⁻¹A = I"],
+        ))
         x_inverse = matvec(inverse, B)
         for i, value in enumerate(x_inverse):
             expr = " + ".join(f"({v})·({b})" for v, b in zip(inverse[i], B))
-            inverse_steps.append(Step(f"x{i + 1} = {expr} = {value}", f"Producto fila {i + 1} de A⁻¹ por la columna B. La suma de productos da la componente x{i + 1} de X = A⁻¹B.", snapshot(inverse_rref), n, "multiplication"))
+            products = [v * b for v, b in zip(inverse[i], B)]
+            term_lines = [f"t{j + 1} = ({v}) · ({b}) = {product}" for j, (v, b, product) in enumerate(zip(inverse[i], B, products))]
+            inverse_steps.append(Step(
+                f"x{i + 1} = {expr} = {value}",
+                f"Producto fila {i + 1} de A⁻¹ por la columna B. La suma de productos da la componente x{i + 1} de X = A⁻¹B.",
+                snapshot(inverse_rref), n, "multiplication",
+                title=f"Calcular x{i + 1} con A⁻¹·B",
+                what=f"Se multiplicó la fila {i + 1} de A⁻¹ por la columna B.",
+                why="El producto fila por columna produce la componente correspondiente de X.",
+                calc=[*term_lines, f"x{i + 1} = {' + '.join(f't{j + 1}' for j in range(n))}", f"Resultado: x{i + 1} = {value}"],
+                decimals={f"x{i + 1}": decimal_text(value)},
+            ))
         report.methods["inverse"] = MethodResult(METHOD_LABELS["inverse"], x_inverse, inverse_steps, inverse)
         report.solution = x
         ax = matvec(A, x)

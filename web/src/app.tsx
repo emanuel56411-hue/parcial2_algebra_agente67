@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import {
   ArrowDown,
   Bot,
@@ -17,9 +17,12 @@ import {
 } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
 import { MatrixEditor } from "@/components/calculator/matrix-editor"
+import { ExactValue } from "@/components/math-value"
 import { ProcedureView } from "@/components/procedure/procedure-view"
 import { ResultSummary, StatusBadge } from "@/components/results/result-summary"
 import { VerificationView } from "@/components/results/verification-view"
+import { SolutionVisualization } from "@/components/visualization/solution-visualization"
+const ProductionChart = lazy(() => import("@/components/visualization/production-chart").then((module) => ({ default: module.ProductionChart })))
 import { TutorSheet } from "@/components/tutor/tutor-sheet"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -32,7 +35,6 @@ import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { cloneScenario, scenarios } from "@/data/scenarios"
 import { solveSystem } from "@/lib/api"
@@ -142,7 +144,7 @@ export default function App() {
 
         <section id="calculator" className="scroll-mt-20 border-b py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Laboratorio</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Define y resuelve el sistema</h2><p className="mt-3 text-muted-foreground">El caso compatible está cargado desde el inicio. Puedes editar cualquier celda antes de calcular.</p></div>
+            <div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">01 · Entrada</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Define y resuelve el sistema</h2><p className="mt-3 text-muted-foreground">El caso compatible está cargado desde el inicio. Puedes editar cualquier celda antes de calcular.</p></div>
             <div className="grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)]">
               <Card className="h-fit"><CardHeader><CardTitle className="text-lg">Configuración</CardTitle><CardDescription>Origen, escenario y método principal.</CardDescription></CardHeader><CardContent className="space-y-5">
                 <div className="space-y-2"><Label>Origen de los datos</Label><Select value={source} onValueChange={(value) => chooseSource(value as Source)}><SelectTrigger className="w-full" aria-label="Origen de los datos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scenario">Escenario preparado</SelectItem><SelectItem value="custom">Matriz propia</SelectItem><SelectItem value="json">Importar JSON</SelectItem></SelectContent></Select></div>
@@ -162,7 +164,52 @@ export default function App() {
           </div>
         </section>
 
-        {(loading || report) && <section id="results" className="scroll-mt-20 border-b py-14 sm:py-20" aria-live="polite"><div className="mx-auto max-w-7xl px-4 sm:px-6"><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Resultado</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Evidencia matemática</h2></div>{report && <div className="flex gap-2"><Button variant="outline" onClick={() => document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" })}><RotateCcw />Editar datos</Button><Button onClick={openTutor}><Bot />Tutor IA</Button></div>}</div>{loading ? <LoadingResults /> : report && <><Card className="mb-6"><CardContent className="grid gap-5 pt-6 sm:grid-cols-2 lg:grid-cols-4"><Metric label="Estado"><StatusBadge report={report} /></Metric><Metric label="Determinante">{report.determinant}</Metric><Metric label="Rangos A / [A|B]">{report.rank_A} / {report.rank_augmented}</Metric><Metric label="Error máximo">{report.max_error ?? "No aplica"}</Metric></CardContent></Card><Tabs defaultValue="summary"><div className="max-w-full overflow-x-auto pb-1"><TabsList variant="line" className="min-w-max"><TabsTrigger value="summary">Resumen</TabsTrigger><TabsTrigger value="procedure">Procedimiento</TabsTrigger><TabsTrigger value="verification">Verificación</TabsTrigger><TabsTrigger value="export">Exportar</TabsTrigger></TabsList></div><TabsContent value="summary" className="pt-5"><ResultSummary report={report} /></TabsContent><TabsContent value="procedure" className="pt-5"><ProcedureView report={report} preferredMethod={preferredMethod} onExplain={explainStep} /></TabsContent><TabsContent value="verification" className="pt-5"><VerificationView report={report} /></TabsContent><TabsContent value="export" className="pt-5"><Card><CardHeader><CardTitle>Comparte un análisis reproducible</CardTitle><CardDescription>Descarga los datos exactos o guarda esta página como PDF desde el navegador.</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-3"><Button onClick={() => downloadJson("resultado-techchip.json", report)}><Download />Resultado JSON</Button><Button variant="outline" onClick={() => downloadJson("sistema-techchip.json", currentInput)}><Braces />Datos de entrada</Button><Button variant="outline" onClick={() => window.print()}><Printer />Imprimir / PDF</Button><Button asChild variant="outline"><a href="https://raw.githubusercontent.com/emanuel56411-hue/parcial2_algebra_agente67/main/docs/informe_tecnico_ieee.pdf" target="_blank" rel="noreferrer"><FileDown />Informe IEEE</a></Button></CardContent></Card></TabsContent></Tabs></>}</div></section>}
+        {(loading || report) && (
+          <section id="results" className="scroll-mt-20 border-b py-14 sm:py-20" aria-live="polite">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+              <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+                <div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Análisis</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Evidencia matemática</h2></div>
+                {report && <div className="flex gap-2"><Button variant="outline" onClick={() => document.getElementById("calculator")?.scrollIntoView({ behavior: "smooth" })}><RotateCcw />Editar datos</Button><Button onClick={openTutor}><Bot />Tutor IA</Button></div>}
+              </div>
+
+              {loading ? <LoadingResults /> : report && (
+                <div className="space-y-12">
+                  <section aria-labelledby="diagnosis-title">
+                    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">02 · Diagnóstico</p><h3 id="diagnosis-title" className="mt-1 text-2xl font-semibold">Determinante y rangos</h3></div>
+                    <Card>
+                      <CardContent className="grid gap-5 pt-6 sm:grid-cols-2 lg:grid-cols-4">
+                        <Metric label="Estado"><StatusBadge report={report} /></Metric>
+                        <Metric label="Determinante"><ExactValue value={report.determinant} showDecimal /></Metric>
+                        <Metric label="Rangos A / [A|B]">{report.rank_A} / {report.rank_augmented}</Metric>
+                        <Metric label="Error máximo">{report.max_error ?? "No aplica"}</Metric>
+                      </CardContent>
+                    </Card>
+                  </section>
+
+                  <section aria-labelledby="method-title">
+                    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">03 · Método</p><h3 id="method-title" className="mt-1 text-2xl font-semibold">Procedimiento estructurado</h3></div>
+                    <ProcedureView report={report} preferredMethod={preferredMethod} onExplain={explainStep} />
+                  </section>
+
+                  <section aria-labelledby="final-title">
+                    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">04 · Resultado</p><h3 id="final-title" className="mt-1 text-2xl font-semibold">Conclusión del sistema</h3></div>
+                    <div className="space-y-5"><ResultSummary report={report} /><SolutionVisualization report={report} /><Suspense fallback={null}><ProductionChart report={report} /></Suspense></div>
+                  </section>
+
+                  <section aria-labelledby="verification-title">
+                    <div className="mb-4"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">05 · Verificación</p><h3 id="verification-title" className="mt-1 text-2xl font-semibold">Comprobación exacta</h3></div>
+                    <VerificationView report={report} />
+                  </section>
+
+                  <Card>
+                    <CardHeader><CardTitle>Comparte un análisis reproducible</CardTitle><CardDescription>Descarga los datos exactos o guarda esta página como PDF desde el navegador.</CardDescription></CardHeader>
+                    <CardContent className="flex flex-wrap gap-3"><Button onClick={() => downloadJson("resultado-techchip.json", report)}><Download />Resultado JSON</Button><Button variant="outline" onClick={() => downloadJson("sistema-techchip.json", currentInput)}><Braces />Datos de entrada</Button><Button variant="outline" onClick={() => window.print()}><Printer />Imprimir / PDF</Button><Button asChild variant="outline"><a href="https://raw.githubusercontent.com/emanuel56411-hue/parcial2_algebra_agente67/main/docs/informe_tecnico_ieee.pdf" target="_blank" rel="noreferrer"><FileDown />Informe IEEE</a></Button></CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         <section id="methodology" className="scroll-mt-20 py-14 sm:py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6"><div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Tres rutas, una respuesta</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Métodos que puedes defender</h2><p className="mt-3 text-muted-foreground">Cada recorrido parte de los datos originales, registra sus transformaciones y se contrasta con los demás.</p></div><div className="grid gap-4 md:grid-cols-3">{[["01", "Eliminación de Gauss", "Lleva [A|B] a [U|C] y aplica sustitución hacia atrás."], ["02", "Gauss-Jordan", "Normaliza pivotes y elimina arriba y abajo hasta [I|X]."], ["03", "Matriz inversa", "Construye A⁻¹ con [A|I] y calcula el producto A⁻¹B."]].map(([number, method, description]) => <Card key={number}><CardHeader><span className="font-mono text-xs text-primary">{number}</span><CardTitle>{method}</CardTitle><CardDescription className="leading-relaxed">{description}</CardDescription></CardHeader></Card>)}</div><div className="mt-6 grid gap-4 lg:grid-cols-2"><Alert><CheckCircle2 /><AlertTitle>Residual exacto</AlertTitle><AlertDescription>Las fracciones racionales permiten comprobar E = max|AX−B| sin introducir redondeos binarios.</AlertDescription></Alert><Alert className="border-amber-500/40"><ShieldAlert className="text-amber-600" /><AlertTitle>Balance no es optimización</AlertTitle><AlertDescription>AX=B consume capacidades; sin función objetivo no demuestra un máximo de beneficios ni un mínimo de costos.</AlertDescription></Alert></div></div></section>
       </main>
