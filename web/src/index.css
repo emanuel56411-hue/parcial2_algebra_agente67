@@ -182,3 +182,20 @@
 .matrix-cell .katex { font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+.tutor-sheet[data-side="right"] {
+  --foreground: #f0faf6;
+  --muted-foreground: #b6ccc3;
+  --primary: #69dcb0;
+  --primary-foreground: #0d1715;
+  --border: #345149;
+  --input: #43665a;
+  --ring: #5fd4ff;
+  inset: .5rem .5rem .5rem auto;
+  width: min(34rem, calc(100vw - 1rem));
+  max-width: none;
+  height: calc(100dvh - 1rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, #5fd4ff 35%, transparent);
+  border-radius: 1rem;
+}

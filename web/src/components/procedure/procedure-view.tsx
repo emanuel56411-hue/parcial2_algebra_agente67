@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { TutorAvatar } from "@/components/tutor/tutor-avatar"
 import { MathFormula, MathLine, MathText } from "@/components/math-value"
 import { MatrixDisplay } from "@/components/procedure/matrix-display"
 import type { Analysis, Step } from "@/types/analysis"
@@ -91,6 +92,15 @@ function StepSequence({ steps, detailed, method, onExplain }: { steps: Step[]; d
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-valuenow={selected + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label="Progreso de pasos"><div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${((selected + 1) / steps.length) * 100}%` }} /></div>
       </>}
     </div>
+    {!all && <div className="flex items-start gap-3 rounded-xl border border-cyan-300/25 bg-cyan-300/5 p-3 sm:p-4">
+      <TutorAvatar className="size-10 border-2 border-[#5fd4ff] shadow-[0_0_12px_#5fd4ff55] sm:size-12" />
+      <div className="min-w-0 flex-1 rounded-xl rounded-tl-sm border border-cyan-300/25 bg-[#132923] p-3 text-sm leading-relaxed">
+        <p className="font-semibold text-cyan-100">Te acompaño en este paso</p>
+        <p className="mt-1"><strong className="text-cyan-200">Qué hice:</strong> {steps[selected].what || steps[selected].operation}</p>
+        <p className="mt-1 text-muted-foreground"><strong className="text-amber-200">Por qué:</strong> {steps[selected].why || steps[selected].explanation}</p>
+        <button type="button" onClick={() => onExplain(method, selected)} className="mt-2 text-xs font-semibold text-cyan-200 underline decoration-cyan-300/50 underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5fd4ff]">Pregúntame sobre este paso</button>
+      </div>
+    </div>}
     {all ? <div className="grid gap-5">{steps.map((step, current) => <StepCard key={`${method}-${current}`} step={step} index={current} previous={current ? steps[current - 1].matrix : undefined} detailed={detailed} method={method} onExplain={onExplain} />)}</div> : <AnimatePresence mode="wait"><StepCard key={`${method}-${selected}`} step={steps[selected]} index={selected} previous={selected ? steps[selected - 1].matrix : undefined} detailed={detailed} method={method} onExplain={onExplain} /></AnimatePresence>}
   </div>
 }

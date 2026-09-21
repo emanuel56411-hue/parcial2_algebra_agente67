@@ -1,4 +1,5 @@
 import { lazy, Suspense, useMemo, useState } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import {
   ArrowDown,
   Bot,
@@ -24,6 +25,8 @@ import { VerificationView } from "@/components/results/verification-view"
 import { SolutionVisualization } from "@/components/visualization/solution-visualization"
 const ProductionChart = lazy(() => import("@/components/visualization/production-chart").then((module) => ({ default: module.ProductionChart })))
 import { TutorSheet } from "@/components/tutor/tutor-sheet"
+import { TutorAvatar } from "@/components/tutor/tutor-avatar"
+import tutorBanner from "@/assets/tutor-banner.webp"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -76,6 +79,7 @@ export default function App() {
   const [tutorOpen, setTutorOpen] = useState(false)
   const [stepContext, setStepContext] = useState<StepContext>(null)
   const [tutorPrompt, setTutorPrompt] = useState("")
+  const reducedMotion = useReducedMotion()
 
   const currentScenario = scenarios[scenarioKey]
   const title = source === "scenario" ? currentScenario.title : source === "json" ? "Sistema importado" : "Sistema personalizado"
@@ -127,6 +131,16 @@ export default function App() {
     setStepContext(null); setTutorPrompt(""); setTutorOpen(true)
   }
 
+  const tutorInput = useMemo<SolveInput | null>(() => {
+    if (report) return currentInput
+    if (source !== "json") return { A, B, production }
+    try {
+      const parsed = JSON.parse(jsonInput)
+      if (Array.isArray(parsed?.A) && Array.isArray(parsed?.B)) return { A: parsed.A, B: parsed.B, production }
+    } catch { /* El tutor pedirá corregir el JSON antes de enviarlo. */ }
+    return null
+  }, [report, currentInput, source, jsonInput, A, B, production])
+
   const scenarioEntries = useMemo(() => Object.entries(scenarios), [])
 
   return (
@@ -134,6 +148,17 @@ export default function App() {
       <a href="#calculator" className="sr-only z-50 rounded-md bg-background p-3 focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Saltar a la calculadora</a>
       <Header />
       <main>
+        <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6" aria-labelledby="tutor-welcome-title">
+          <div className="relative isolate overflow-hidden rounded-3xl border border-cyan-400/30 shadow-[0_24px_70px_-38px_#2ab8e8]" style={{ height: "clamp(220px, 40vw, 420px)" }}>
+            <img src={tutorBanner} alt="Tutor de IA especialista en matrices" width={1599} height={1066} fetchPriority="high" className="absolute inset-0 size-full object-cover object-[50%_35%]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1715] via-[#0d1715]/35 to-transparent" aria-hidden="true" />
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10">
+              <p className="mb-1 text-xs font-bold uppercase tracking-[.2em] text-cyan-200">Conoce a tu guía</p>
+              <h1 id="tutor-welcome-title" className="text-balance text-2xl font-bold text-white drop-shadow-md sm:text-4xl">Tutor de IA · Matrices</h1>
+              <p className="mt-2 max-w-xl text-sm text-slate-100 sm:text-base">Pregunta lo que no entiendas y revisa cada paso conmigo.</p>
+            </div>
+          </div>
+        </section>
         <section className="relative overflow-hidden border-b" aria-labelledby="hero-title">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_75%_25%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_38%)]" />
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_.8fr] lg:py-20">
@@ -214,7 +239,17 @@ export default function App() {
         <section id="methodology" className="scroll-mt-20 py-14 sm:py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6"><div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Tres rutas, una respuesta</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Métodos que puedes defender</h2><p className="mt-3 text-muted-foreground">Cada recorrido parte de los datos originales, registra sus transformaciones y se contrasta con los demás.</p></div><div className="grid gap-4 md:grid-cols-3">{[["01", "Eliminación de Gauss", "Lleva [A|B] a [U|C] y aplica sustitución hacia atrás."], ["02", "Gauss-Jordan", "Normaliza pivotes y elimina arriba y abajo hasta [I|X]."], ["03", "Matriz inversa", "Construye A⁻¹ con [A|I] y calcula el producto A⁻¹B."]].map(([number, method, description]) => <Card key={number}><CardHeader><span className="font-mono text-xs text-primary">{number}</span><CardTitle>{method}</CardTitle><CardDescription className="leading-relaxed">{description}</CardDescription></CardHeader></Card>)}</div><div className="mt-6 grid gap-4 lg:grid-cols-2"><Alert><CheckCircle2 /><AlertTitle>Residual exacto</AlertTitle><AlertDescription>Las fracciones racionales permiten comprobar E = max|AX−B| sin introducir redondeos binarios.</AlertDescription></Alert><Alert className="border-amber-500/40"><ShieldAlert className="text-amber-600" /><AlertTitle>Balance no es optimización</AlertTitle><AlertDescription>AX=B consume capacidades; sin función objetivo no demuestra un máximo de beneficios ni un mínimo de costos.</AlertDescription></Alert></div></div></section>
       </main>
       <footer className="border-t bg-card"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:px-6"><strong className="text-foreground">TechChip Matrix Studio</strong><span className="sm:mr-auto">Universidad Francisco Gavidia · Álgebra lineal explicable</span><a className="inline-flex items-center gap-2 hover:text-foreground" href="https://github.com/emanuel56411-hue/parcial2_algebra_agente67" target="_blank" rel="noreferrer"><Code2 className="size-4" />Código fuente</a></div></footer>
-      {report && <TutorSheet key={analysisVersion} open={tutorOpen} onOpenChange={setTutorOpen} input={currentInput} title={title} note={note} initialQuestion={tutorPrompt} stepContext={stepContext} />}
+      <motion.button
+        type="button"
+        aria-label="Abrir tutor de IA"
+        aria-haspopup="dialog"
+        aria-expanded={tutorOpen}
+        onClick={openTutor}
+        whileHover={reducedMotion ? undefined : { scale: 1.06 }}
+        whileTap={reducedMotion ? undefined : { scale: 0.96 }}
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid size-16 place-items-center rounded-full border-2 border-[#5fd4ff] bg-[#0d1715] shadow-[0_0_0_4px_#0d1715,0_0_28px_#5fd4ff88] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#5fd4ff] sm:right-6"
+      ><TutorAvatar eager className="size-14" /></motion.button>
+      <TutorSheet key={analysisVersion} open={tutorOpen} onOpenChange={setTutorOpen} input={tutorInput} title={title} note={note} initialQuestion={tutorPrompt} stepContext={stepContext} />
     </div>
   )
 }
