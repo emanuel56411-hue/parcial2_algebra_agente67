@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react"
 import katex from "katex"
 import { cn } from "@/lib/utils"
 import { decimal } from "@/lib/format"
@@ -26,8 +27,11 @@ export function toTex(source: string) {
 }
 
 export function MathFormula({ source, className }: { source: string; className?: string }) {
-  const html = katex.renderToString(toTex(source), { throwOnError: false, output: "html", strict: "ignore" })
-  return <span className={cn("math-formula", className)} aria-label={source} dangerouslySetInnerHTML={{ __html: html }} />
+  const element = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    if (element.current) katex.render(toTex(source), element.current, { throwOnError: false, output: "html", strict: "ignore", trust: false })
+  }, [source])
+  return <span ref={element} className={cn("math-formula", className)} aria-label={source} />
 }
 
 export function ExactValue({ value, showDecimal = false, className }: {

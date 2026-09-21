@@ -32,14 +32,16 @@ def reset_conversation():
 def request_answer(config, report, title, note, question, history, method=None, step_index=0):
     context = build_context(report, title, note, method, step_index)
     with st.spinner("Preparando una explicación del cálculo…"):
-        answer = ask_tutor(config, context, question, history, ROOT / ".tutor/usage.sqlite3")
+        answer = ask_tutor(config, context, question, history, ROOT / ".tutor/usage.sqlite3", report, method, step_index if method else None)
     used = st.session_state.get("tutor_tokens", 0)
     st.session_state.tutor_tokens = used + answer.input_tokens + answer.output_tokens
     return answer
 
 
 def show_answer(answer):
-    st.markdown(answer.text)
+    st.write(answer.text)
+    if answer.source == "engine":
+        st.caption("Explicación generada por el motor")
     if answer.incomplete:
         st.caption("La respuesta alcanzó el límite de longitud y puede estar incompleta.")
     st.caption(f"Uso de esta respuesta: {answer.input_tokens} tokens de entrada · {answer.output_tokens} de salida.")

@@ -1,4 +1,5 @@
-import type { Analysis, SolveInput, TutorMessage } from "@/types/analysis"
+import type { Analysis, SolveInput } from "@/types/analysis"
+import type { TutorAnswer, TutorSource } from "@/lib/tutor-contract"
 
 async function readResponse<T>(response: Response): Promise<T> {
   const body = await response.json().catch(() => ({ error: "El servidor no devolvió JSON válido." }))
@@ -17,16 +18,14 @@ export async function solveSystem(input: SolveInput): Promise<Analysis> {
 
 type TutorPayload = SolveInput & {
   question: string
-  history: TutorMessage[]
-  title: string
-  note: string
   method?: string
   step_index?: number
 }
 
 export type TutorResponse = {
-  answer: string
-  model: string
+  answer: TutorAnswer
+  source: TutorSource
+  model: string | null
   input_tokens: number
   output_tokens: number
   incomplete: boolean
@@ -37,6 +36,7 @@ export async function askTutor(payload: TutorPayload): Promise<TutorResponse> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(16000),
   })
   return readResponse<TutorResponse>(response)
 }

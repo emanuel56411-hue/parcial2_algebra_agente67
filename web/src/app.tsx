@@ -78,12 +78,9 @@ export default function App() {
   const [error, setError] = useState("")
   const [tutorOpen, setTutorOpen] = useState(false)
   const [stepContext, setStepContext] = useState<StepContext>(null)
-  const [tutorPrompt, setTutorPrompt] = useState("")
   const reducedMotion = useReducedMotion()
 
   const currentScenario = scenarios[scenarioKey]
-  const title = source === "scenario" ? currentScenario.title : source === "json" ? "Sistema importado" : "Sistema personalizado"
-  const note = source === "scenario" ? currentScenario.note : "Datos proporcionados por el usuario."
 
   function chooseScenario(key: string) {
     const next = cloneScenario(key)
@@ -123,12 +120,11 @@ export default function App() {
 
   function explainStep(method: string, stepIndex: number) {
     setStepContext({ method, stepIndex })
-    setTutorPrompt("Explica este paso completo: identifica la operación, justifica por qué conserva las soluciones y muestra cómo cambia la fila afectada.")
     setTutorOpen(true)
   }
 
   function openTutor() {
-    setStepContext(null); setTutorPrompt(""); setTutorOpen(true)
+    setStepContext(null); setTutorOpen(true)
   }
 
   const tutorInput = useMemo<SolveInput | null>(() => {
@@ -249,7 +245,7 @@ export default function App() {
         whileTap={reducedMotion ? undefined : { scale: 0.96 }}
         className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid size-16 place-items-center rounded-full border-2 border-[#5fd4ff] bg-[#0d1715] shadow-[0_0_0_4px_#0d1715,0_0_28px_#5fd4ff88] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#5fd4ff] sm:right-6"
       ><TutorAvatar eager className="size-14" /></motion.button>
-      <TutorSheet key={analysisVersion} open={tutorOpen} onOpenChange={setTutorOpen} input={tutorInput} title={title} note={note} initialQuestion={tutorPrompt} stepContext={stepContext} />
+      <TutorSheet key={analysisVersion} open={tutorOpen} onOpenChange={setTutorOpen} input={tutorInput} report={report} preferredMethod={preferredMethod} stepContext={stepContext} />
     </div>
   )
 }

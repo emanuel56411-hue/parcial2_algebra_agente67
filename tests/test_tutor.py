@@ -60,51 +60,51 @@ class TutorTests(unittest.TestCase):
 
     @patch("openai.OpenAI")
     def test_bounded_request_and_usage_with_no_retries_or_storage(self, factory):
-        response = SimpleNamespace(output_text="Explicación de prueba", usage=SimpleNamespace(input_tokens=120, output_tokens=30), status="completed")
+        response = SimpleNamespace(output_text=json.dumps({"resumen": "La solución es {{x1}}.", "pasos": [], "conclusion": "El cálculo es exacto.", "fuera_de_tema": False}), usage=SimpleNamespace(input_tokens=120, output_tokens=30), status="completed")
         client = factory.return_value.__enter__.return_value
         client.responses.create.return_value = response
         history = [{"role": role, "content": "a"*4000} for role in ["user", "assistant"]*8]
         history.append({"role": "system", "content": "No debe convertirse en una instrucción"})
-        answer = ask_tutor(self.config, "{}", "¿Qué significa?", history, self.database)
-        self.assertEqual((answer.text, answer.input_tokens, answer.output_tokens), ("Explicación de prueba", 120, 30))
+        answer = ask_tutor(self.config, "{}", "¿Qué significa?", history, self.database, self.report, "gauss", 0)
+        self.assertIn("-105/83", answer.text)
+        self.assertEqual((answer.input_tokens, answer.output_tokens, answer.source), (120, 30, "model"))
         kwargs = client.responses.create.call_args.kwargs
         self.assertFalse(kwargs["store"])
         self.assertEqual(kwargs["max_output_tokens"], MAX_OUTPUT_TOKENS)
-        self.assertLessEqual(len(kwargs["input"]), 8)
+        self.assertEqual(len(kwargs["input"]), 2)
         self.assertTrue(all(m["role"] != "system" for m in kwargs["input"]))
-        self.assertTrue(all(len(m["content"]) <= 3000 for m in kwargs["input"][1:-1]))
+        self.assertTrue(kwargs["text"]["format"]["strict"])
         self.assertEqual(factory.call_args.kwargs["max_retries"], 0)
         self.assertEqual(factory.call_args.kwargs["base_url"], "https://api.openai.com/v1")
         self.assertNotIn(self.config.api_key, repr(self.config))
 
     @patch("openai.OpenAI")
     def test_invalid_input_or_quota_stops_before_network(self, factory):
-        cases = [(TutorSettings(""), "{}", "Pregunta"), (self.config, "{}", " "),
-                 (self.config, "{}", "x"*1501), (self.config, "x"*(MAX_CONTEXT_CHARS+1), "Pregunta")]
+        cases = [(self.config, "{}", " "),
+                 (self.config, "{}", "x"*501), (self.config, "x"*(MAX_CONTEXT_CHARS+1), "Pregunta")]
         for config, context, question in cases:
             with self.assertRaises(TutorError):
-                ask_tutor(config, context, question, [], self.database)
+                ask_tutor(config, context, question, [], self.database, self.report)
         reserve_request(self.database, 2)
         reserve_request(self.database, 2)
-        with self.assertRaises(TutorError):
-            ask_tutor(self.config, "{}", "Pregunta", [], self.database)
+        self.assertEqual(ask_tutor(self.config, "{}", "Pregunta", [], self.database, self.report).source, "engine")
+        self.assertEqual(ask_tutor(TutorSettings(""), "{}", "Pregunta", [], self.database, self.report).source, "engine")
         factory.assert_not_called()
 
     @patch("openai.OpenAI")
-    def test_api_errors_are_redacted_and_attempt_is_counted(self, factory):
+    def test_api_errors_use_engine_and_attempt_is_counted(self, factory):
         from openai import APIConnectionError
         client = factory.return_value.__enter__.return_value
         client.responses.create.side_effect = APIConnectionError(message="secret-private-error", request=MagicMock())
-        with self.assertRaises(TutorError) as raised:
-            ask_tutor(self.config, "{}", "Pregunta", [], self.database)
-        self.assertNotIn("secret-private-error", str(raised.exception))
+        answer = ask_tutor(self.config, "{}", "Pregunta", [], self.database, self.report)
+        self.assertEqual(answer.source, "engine")
+        self.assertNotIn("secret-private-error", answer.text)
         self.assertEqual(reserve_request(self.database, 2), 2)
 
     @patch("openai.OpenAI")
     def test_unwritable_counter_fails_closed(self, factory):
         self.database.write_text("not a sqlite database")
-        with self.assertRaises(TutorError):
-            ask_tutor(self.config, "{}", "Pregunta", [], self.database)
+        self.assertEqual(ask_tutor(self.config, "{}", "Pregunta", [], self.database, self.report).source, "engine")
         factory.assert_not_called()
 
     def test_environment_key_works_without_secrets_file(self):
