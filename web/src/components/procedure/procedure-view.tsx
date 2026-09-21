@@ -72,15 +72,14 @@ function StepSequence({ steps, detailed, method, onExplain }: { steps: Step[]; d
   const [index, setIndex] = useState(0)
   const [all, setAll] = useState(false)
   const [playing, setPlaying] = useState(false)
-  const reduced = useReducedMotion()
   useEffect(() => {
     if (!playing || all) return
     const timer = window.setInterval(() => setIndex((current) => {
       if (current >= steps.length - 1) { setPlaying(false); return current }
       return current + 1
-    }), reduced ? 2000 : 1600)
+    }), 2100)
     return () => window.clearInterval(timer)
-  }, [playing, all, steps.length, reduced])
+  }, [playing, all, steps.length])
   const selected = Math.min(index, Math.max(0, steps.length - 1))
   if (!steps.length) return <p className="py-4 text-sm text-muted-foreground">Sin pasos registrados.</p>
   return <div className="space-y-5 py-2">
