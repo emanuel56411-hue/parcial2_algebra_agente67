@@ -27,7 +27,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 
 ## Iniciar la web
 
-Requiere **Python 3.11 o superior**. Windows, Linux y macOS:
+Requiere **Python 3.12 o superior**. Windows, Linux y macOS:
 
 ```bash
 python -m venv .venv
@@ -44,7 +44,7 @@ Abre **http://localhost:8501**. En el entorno existente del proyecto también pu
 venv/bin/python -m streamlit run app.py
 ```
 
-La calculadora funciona localmente y no requiere cuentas ni claves de API. El motor es un agente determinista basado en reglas; sus operaciones son verificables. El **Tutor IA es opcional**: solo envía datos a OpenAI cuando pulsas su botón o envías una pregunta. La tipografía usa fuentes locales/sistema.
+La calculadora funciona localmente y no requiere cuentas ni claves de API. El motor es un agente determinista basado en reglas; sus operaciones son verificables. El **Tutor IA es opcional**: solo las preguntas escritas sobre un sistema resuelto llaman a OpenAI; los saludos previos y las ayudas rápidas son locales. La tipografía usa fuentes locales/sistema.
 
 ## Desplegar en Vercel
 
