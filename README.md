@@ -6,13 +6,13 @@ Autores: Henry Modesto Portillo Quintanilla (`PQ100126`), David Ernesto Quijada 
 
 Universidad Francisco Gavidia · Docente: Exides Gamaliel Claros Velasquez · Grupo: `01 EO8` · Entrega: 23 de septiembre de 2026.
 
-Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems y sistemas personalizados de **1 × 1 a 12 × 12**. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
+Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems; la interfaz guiada permite elegir directamente sistemas de **2 × 2 a 6 × 6**, mientras el núcleo conserva soporte validado de 1 × 1 a 12 × 12 para JSON y consola. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
 
 > **Hallazgo en la guía:** el vector esperado `(15,20,25,10,15,20)` requiere `B=(185,200,280,150,245,195)`. Las disponibilidades originales son `(155,160,225,140,215,175)` y producen una solución distinta con `x1<0`. La aplicación conserva ambos escenarios y no sustituye datos para forzar la respuesta.
 
 ## Qué puedes hacer
 
-- Editar cualquier celda de A y B, pegar JSON o cargar un archivo.
+- Editar cualquier celda de A y B, pegar JSON o cargar un archivo tanto en la calculadora como en el Tutor IA.
 - Introducir enteros, decimales, notación científica y fracciones como `"2/3"`.
 - Comparar tres soluciones calculadas mediante algoritmos explícitos.
 - Elegir Gauss, Gauss-Jordan o matriz inversa como método principal antes de resolver; los demás quedan como verificación cruzada.
@@ -22,7 +22,9 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Diagnosticar solución única, incompatibilidad o una familia de soluciones con parámetros libres.
 - Separar solución matemática y factibilidad de producción; consultar el balance por recurso.
 - Descargar el procedimiento en Markdown, los datos/resultados en JSON y un informe HTML imprimible como PDF.
-- Consultar un tutor opcional de OpenAI sobre el resultado o pedir una explicación del paso seleccionado.
+- Consultar un tutor opcional de OpenAI sobre el resultado, elegir entre los tres métodos y pedir el procedimiento completo o la explicación del paso seleccionado.
+- Expandir el Tutor IA para inspeccionar matrices anchas y explicaciones extensas.
+- Visualizar rectas en 2×2, planos en 3×3 y el vector solución o diagnóstico por rangos desde 4×4 en adelante.
 - Alternar entre tema claro y oscuro; la preferencia queda guardada en el navegador.
 
 ## Iniciar la web
@@ -80,9 +82,9 @@ Puedes saludar al Tutor IA antes de resolver; esa respuesta inicial es local y n
 
 También se aceptan las variables de entorno `OPENAI_API_KEY`, `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`; tienen prioridad sobre el archivo. La clave se usa únicamente en el servidor y el archivo privado está excluido de Git. No la pegues en el chat del tutor ni la publiques en el repositorio.
 
-El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [API Responses y el SDK oficial de Python](https://developers.openai.com/es-419/api/docs/quickstart) con salida JSON estructurada. Cada pregunta escrita envía las matrices A/B, diagnóstico, solución e interpretación; para un paso seleccionado añade sus matrices anterior y actual. No se reenvían mensajes anteriores, notas libres, archivos del equipo ni el PDF completo. Se solicita `store=False`; esto no equivale a una garantía de retención cero por el proveedor. Una respuesta inválida o fallida se sustituye por una explicación del motor identificada como tal.
+El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [API Responses y el SDK oficial de Python](https://developers.openai.com/es-419/api/docs/quickstart) con salida JSON estructurada. Cada pregunta escrita envía las matrices A/B, diagnóstico, solución, interpretación y la traza exacta del método elegido; para un paso seleccionado también marca sus matrices anterior y actual. No se reenvían mensajes anteriores, notas libres, archivos del equipo ni el PDF completo. Se solicita `store=False`; esto no equivale a una garantía de retención cero por el proveedor. Una respuesta inválida o fallida se sustituye por la explicación completa del motor identificada como tal.
 
-Controles de consumo: preguntas de hasta 500 caracteres, contexto matemático de hasta 24000 caracteres, respuestas de hasta 700 tokens y un solo reintento ante una salida estructurada inválida. La API web limita a cinco preguntas por minuto y cliente en cada instancia, además del límite diario configurado. Saludar antes de resolver, usar las ayudas rápidas, resolver o navegar entre pasos no genera llamadas a OpenAI.
+El cuadro de prompt no impone un límite artificial de palabras o caracteres; permanece el límite técnico de 100 kB por solicitud para proteger la función web. El contexto matemático admite hasta 200000 caracteres, la respuesta hasta 6000 tokens y hay un solo reintento ante una salida estructurada inválida. La API web limita a cinco preguntas por minuto y cliente en cada instancia, además del límite diario configurado. Adjuntar/resolver un JSON y usar las ayudas rápidas no llama a OpenAI; una pregunta escrita sí puede hacerlo.
 
 En Streamlit, el límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. En Vercel existe además un límite preventivo por cliente e instancia, configurable con `OPENAI_DAILY_REQUEST_LIMIT`; por la naturaleza serverless no es una cuota global compartida entre instancias ni sustituye los límites y presupuesto del proyecto OpenAI.
 

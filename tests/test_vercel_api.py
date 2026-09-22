@@ -6,6 +6,7 @@ import os
 from agent import InputError
 from api.solve import analyze_payload, solve_payload
 from api.tutor import ask_tutor_serverless
+from tutor_contract import MAX_OUTPUT_TOKENS
 from api import tutor as tutor_module
 
 
@@ -53,7 +54,7 @@ class VercelApiTests(unittest.TestCase):
         self.assertNotIn("secret-test-key", request.data.decode())
         self.assertEqual(body["text"]["format"]["type"], "json_schema")
         self.assertTrue(body["text"]["format"]["strict"])
-        self.assertLessEqual(body["max_output_tokens"], 700)
+        self.assertEqual(body["max_output_tokens"], MAX_OUTPUT_TOKENS)
         self.assertIn('"solution":["2","1"]', body["input"][0]["content"])
         self.assertNotIn("history", request.data.decode())
 

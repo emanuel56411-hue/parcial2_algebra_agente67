@@ -25,7 +25,7 @@ export function ThemeProvider({ children, defaultTheme = "system", storageKey = 
       ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
       : theme
     root.classList.add(resolved)
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", resolved === "dark" ? "#0d1715" : "#f6f8f7")
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", resolved === "dark" ? "#1d1a2d" : "#faf7ff")
   }, [theme])
 
   const value = {

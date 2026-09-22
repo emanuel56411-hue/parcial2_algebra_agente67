@@ -22,7 +22,7 @@ class TutorTests(unittest.TestCase):
         self.config = TutorSettings("fake-key-for-tests", daily_limit=2)
         self.report = TechChipAgent().analyze(*get_scenario("original"), production=True)
 
-    def test_grounded_context_contains_selected_transition_without_all_traces(self):
+    def test_grounded_context_contains_selected_transition_and_full_method_trace(self):
         before = deepcopy(self.report.to_dict())
         context = json.loads(build_context(self.report, "Original", "No cambiar B", "gauss", 1))
         self.assertEqual(context["B"], ["155", "160", "225", "140", "215", "175"])
@@ -31,6 +31,8 @@ class TutorTests(unittest.TestCase):
         self.assertEqual(step["number"], 2)
         self.assertEqual(step["before"], before["methods"]["gauss"]["steps"][0]["matrix"])
         self.assertEqual(step["after"], before["methods"]["gauss"]["steps"][1]["matrix"])
+        self.assertEqual(len(context["method_steps"]), len(before["methods"]["gauss"]["steps"]))
+        self.assertEqual(context["method_steps"][1]["matrix"], step["after"])
         self.assertNotIn("methods", context)
         self.assertEqual(self.report.to_dict(), before)
 
@@ -81,7 +83,7 @@ class TutorTests(unittest.TestCase):
     @patch("openai.OpenAI")
     def test_invalid_input_or_quota_stops_before_network(self, factory):
         cases = [(self.config, "{}", " "),
-                 (self.config, "{}", "x"*501), (self.config, "x"*(MAX_CONTEXT_CHARS+1), "Pregunta")]
+                 (self.config, "x"*(MAX_CONTEXT_CHARS+1), "Pregunta")]
         for config, context, question in cases:
             with self.assertRaises(TutorError):
                 ask_tutor(config, context, question, [], self.database, self.report)

@@ -9,13 +9,13 @@ import sqlite3
 from agent import Analysis, json_ready
 
 from tutor_contract import (
-    INSTRUCTIONS, MAX_OUTPUT_TOKENS, MAX_QUESTION_CHARS, RESPONSE_FORMAT,
+    INSTRUCTIONS, MAX_OUTPUT_TOKENS, RESPONSE_FORMAT,
     InvalidTutorOutput, engine_answer, render_plain, validate_model_answer,
     validate_question,
 )
 
 DEFAULT_MODEL = "gpt-4.1-mini"
-MAX_CONTEXT_CHARS = 24000
+MAX_CONTEXT_CHARS = 200000
 MAX_HISTORY_MESSAGES = 6
 
 
@@ -40,7 +40,7 @@ class TutorAnswer:
 
 
 def build_context(report: Analysis, title: str, note: str, method=None, step_index=0):
-    """Envía el resultado y, opcionalmente, dos matrices; nunca toda la traza."""
+    """Envía el resultado exacto y la traza del método elegido para explicarla completa."""
     context = {
         "A": report.A, "B": report.B,
         "status": report.status, "determinant": report.determinant,
@@ -68,6 +68,20 @@ def build_context(report: Analysis, title: str, note: str, method=None, step_ind
             "split": step.split, "before": steps[step_index - 1].matrix if step_index else None,
             "after": step.matrix,
         }
+        context["method_steps"] = [
+            {
+                "number": index,
+                "operation": item.operation,
+                "title": item.title,
+                "what": item.what,
+                "why": item.why,
+                "calc": item.calc,
+                "pivot": item.pivot,
+                "factor": item.factor,
+                "matrix": item.matrix,
+            }
+            for index, item in enumerate(steps, start=1)
+        ]
     serialized = json.dumps(json_ready(context), ensure_ascii=False, separators=(",", ":"))
     if len(serialized) > MAX_CONTEXT_CHARS:
         raise TutorError("Este sistema genera un contexto demasiado grande para el tutor. Usa la explicación exacta del procedimiento o un sistema más pequeño.")

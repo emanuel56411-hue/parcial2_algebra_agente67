@@ -41,7 +41,7 @@ describe("marcadores del tutor", () => {
 describe("validador y respaldo", () => {
   it("acepta texto breve con referencias existentes", () => expect(validateModelAnswer(good, report, "gauss")).toBe(true))
   it("descarta respuestas malformadas y conserva una explicación del motor", () => {
-    const malformed: unknown[] = ["{bad json", { ...good, resumen: "Valor {{fantasma}}" }, { ...good, resumen: "La solución es 999" }, { ...good, resumen: "a".repeat(201) }, { ...good, pasos: [{ ...good.pasos[0], ref_paso: 99 }] }, { ...good, resumen: "x = 2" }]
+    const malformed: unknown[] = ["{bad json", { ...good, resumen: "Valor {{fantasma}}" }, { ...good, resumen: "La solución es 999" }, { ...good, resumen: "a".repeat(1601) }, { ...good, pasos: [{ ...good.pasos[0], ref_paso: 99 }] }, { ...good, resumen: "x = 2" }]
     for (const answer of malformed) {
       expect(validateModelAnswer(answer, report, "gauss")).toBe(false)
       expect(engineTutorAnswer(report, "gauss", 0).pasos[0].que).toBe(first.what)
@@ -53,5 +53,6 @@ describe("validador y respaldo", () => {
       expect(answer.fuera_de_tema).toBe(false)
       expect(answer.resumen.length).toBeGreaterThan(0)
     }
+    expect(actionTutorAnswer(report, "gauss", "method").pasos).toHaveLength(report.methods.gauss.steps.length)
   })
 })

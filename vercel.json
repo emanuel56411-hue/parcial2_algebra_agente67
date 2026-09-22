@@ -5,7 +5,8 @@
   "cleanUrls": true,
   "functions": {
     "api/solve.py": {
-      "includeFiles": "web/dist/**"
+      "includeFiles": "web/dist/**",
+      "maxDuration": 60
     }
   },
   "headers": [

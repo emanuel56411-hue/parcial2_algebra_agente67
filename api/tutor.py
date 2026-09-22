@@ -126,7 +126,7 @@ def ask_tutor_serverless(report, payload: dict, client_id: str) -> dict:
     input_tokens = output_tokens = 0
     for _ in range(2):
         try:
-            with urlopen(request, timeout=6) as response:
+            with urlopen(request, timeout=25) as response:
                 result = json.loads(response.read().decode("utf-8"))
         except (HTTPError, URLError, TimeoutError, OSError, ValueError, UnicodeError):
             return fallback

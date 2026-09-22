@@ -55,7 +55,7 @@ class TutorContractTests(unittest.TestCase):
             "{bad json",
             self.response(resumen="Valor {{desconocido}}"),
             self.response(resumen="La solución es 999."),
-            self.response(resumen="Texto " * 50),
+            self.response(resumen="x" * 1601),
             self.response(resumen="Paso 999 del cálculo"),
             self.response(resumen="La fórmula es x=2"),
             self.response(pasos=[{"titulo": "Inventado", "que": "", "por_que": "", "ref_paso": 999}]),
@@ -71,9 +71,10 @@ class TutorContractTests(unittest.TestCase):
         self.assertEqual(answer, original)
 
     def test_question_length_and_private_data(self):
-        for question in (" ", "x" * 501, "Mi correo es alguien@example.com", "Mi clave api es secreta", "sk-abcdefghi"):
+        for question in (" ", "Mi correo es alguien@example.com", "Mi clave api es secreta", "sk-abcdefghi"):
             with self.subTest(question=question), self.assertRaises(ValueError):
                 validate_question(question)
+        self.assertEqual(validate_question("x" * 5000), "x" * 5000)
         self.assertEqual(validate_question("  ¿Por qué este pivote?  "), "¿Por qué este pivote?")
 
 

@@ -5,7 +5,7 @@ import tomllib
 
 import streamlit as st
 
-from ai_tutor import DEFAULT_MODEL, MAX_QUESTION_CHARS, TutorError, TutorSettings, ask_tutor, build_context
+from ai_tutor import DEFAULT_MODEL, TutorError, TutorSettings, ask_tutor, build_context
 
 ROOT = Path(__file__).resolve().parent
 
@@ -81,7 +81,7 @@ def render_tutor(report, title, note):
     for message in messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
-    if question := st.chat_input("Pregunta sobre el sistema resuelto", key="tutor_prompt", max_chars=MAX_QUESTION_CHARS, disabled=not config.api_key, submit_mode="disable"):
+    if question := st.chat_input("Pregunta sobre el sistema resuelto", key="tutor_prompt", disabled=not config.api_key, submit_mode="disable"):
         try:
             answer = request_answer(config, report, title, note, question, messages)
         except TutorError as exc:

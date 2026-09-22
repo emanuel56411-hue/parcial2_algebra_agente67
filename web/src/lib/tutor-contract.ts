@@ -10,7 +10,7 @@ export type TutorToken =
   | { kind: "matrix"; matrix: Matrix; split: number }
 
 const markerPattern = /\{\{([^{}]+)\}\}/g
-const maxSteps = 8
+const maxSteps = 96
 
 export function methodSteps(report: Analysis, method: string): Step[] {
   return method === "diagnosis" ? report.diagnostic_steps : report.methods[method]?.steps || report.diagnostic_steps
@@ -75,7 +75,7 @@ export function validateModelAnswer(raw: unknown, report: Analysis, method: stri
   const answer = raw as Record<string, unknown>
   if (Object.keys(answer).sort().join() !== "conclusion,fuera_de_tema,pasos,resumen") return false
   if (typeof answer.fuera_de_tema !== "boolean" || !Array.isArray(answer.pasos) || answer.pasos.length > maxSteps) return false
-  if (!validText(answer.resumen, 200, report, method) || !validText(answer.conclusion, 200, report, method)) return false
+  if (!validText(answer.resumen, 1600, report, method) || !validText(answer.conclusion, 1600, report, method)) return false
   if (answer.fuera_de_tema && answer.pasos.length) return false
   return answer.pasos.every((item: unknown) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) return false
@@ -83,7 +83,7 @@ export function validateModelAnswer(raw: unknown, report: Analysis, method: stri
     if (Object.keys(step).sort().join() !== "por_que,que,ref_paso,titulo") return false
     const ref = step.ref_paso
     if (ref !== null && (typeof ref !== "number" || !Number.isInteger(ref) || ref < 1 || ref > methodSteps(report, method).length)) return false
-    return validText(step.titulo, 60, report, method) && validText(step.que, 200, report, method) && validText(step.por_que, 200, report, method)
+    return validText(step.titulo, 200, report, method) && validText(step.que, 2400, report, method) && validText(step.por_que, 2400, report, method)
   })
 }
 
@@ -98,7 +98,7 @@ export function engineTutorAnswer(report: Analysis, method: string, stepIndex?: 
     conclusion: "La matriz mostrada es el resultado exacto de este paso.", fuera_de_tema: false,
   }
   const resumen = report.status === "unique" ? "El sistema tiene solución única." : report.status === "infinite" ? "El sistema tiene infinitas soluciones." : "El sistema no tiene solución."
-  return { resumen, pasos: steps.length ? [stepAnswer(steps[steps.length - 1], steps.length)] : [], conclusion: report.interpretation[0] || resumen, fuera_de_tema: false }
+  return { resumen, pasos: steps.map((step, index) => stepAnswer(step, index + 1)), conclusion: report.interpretation[0] || resumen, fuera_de_tema: false }
 }
 
 export function actionTutorAnswer(report: Analysis, method: string, action: TutorAction, stepIndex = 0): TutorAnswer {
@@ -113,7 +113,7 @@ export function actionTutorAnswer(report: Analysis, method: string, action: Tuto
     resumen: report.solution ? "Comprueba cada fila del producto con el término independiente." : "El diagnóstico se comprueba comparando los rangos.",
     pasos: [], conclusion: report.solution && report.residual.every((value) => value === "0") ? "Todos los residuos exactos son cero." : report.interpretation[0] || "Consulta el diagnóstico del sistema.", fuera_de_tema: false,
   }
-  return { resumen: `Resumen del método ${method === "diagnosis" ? "de diagnóstico" : report.methods[method]?.name || method}.`, pasos: steps.length ? [stepAnswer(steps[0], 1), ...(steps.length > 1 ? [stepAnswer(steps[steps.length - 1], steps.length)] : [])] : [], conclusion: report.interpretation[0] || "Revisa el resultado exacto.", fuera_de_tema: false }
+  return { resumen: `Procedimiento completo del método ${method === "diagnosis" ? "de diagnóstico" : report.methods[method]?.name || method}. Cada operación aparece en el orden en que fue ejecutada.`, pasos: steps.map((step, index) => stepAnswer(step, index + 1)), conclusion: report.interpretation[0] || "Revisa el resultado exacto.", fuera_de_tema: false }
 }
 
 export function plainTutorText(text: string, report: Analysis, method: string): string {

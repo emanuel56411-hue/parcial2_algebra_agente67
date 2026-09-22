@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useRef, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import {
   ArrowDown,
@@ -9,6 +9,7 @@ import {
   Code2,
   Download,
   FileDown,
+  FileJson,
   FlaskConical,
   LoaderCircle,
   Menu,
@@ -31,7 +32,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -78,6 +78,7 @@ export default function App() {
   const [error, setError] = useState("")
   const [tutorOpen, setTutorOpen] = useState(false)
   const [stepContext, setStepContext] = useState<StepContext>(null)
+  const jsonFileRef = useRef<HTMLInputElement>(null)
   const reducedMotion = useReducedMotion()
 
   const currentScenario = scenarios[scenarioKey]
@@ -95,10 +96,25 @@ export default function App() {
   }
 
   function resizeCustom(raw: number) {
-    const size = Math.max(1, Math.min(12, raw || 3))
+    const size = Math.max(2, Math.min(6, raw || 3))
     setDimension(size)
     setA(Array.from({ length: size }, (_, row) => Array.from({ length: size }, (_, column) => row === column ? "1" : "0")))
     setB(Array(size).fill("1")); setProduction(false); setReport(null)
+  }
+
+  async function loadJsonFile(file: File) {
+    setError("")
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      if (!parsed || !Array.isArray(parsed.A) || !Array.isArray(parsed.B)) throw new Error('El archivo debe contener {"A":[[...]],"B":[...]}.')
+      setJsonInput(JSON.stringify(parsed, null, 2))
+      setReport(null)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo leer el archivo JSON.")
+    } finally {
+      if (jsonFileRef.current) jsonFileRef.current.value = ""
+    }
   }
 
   async function solve() {
@@ -145,11 +161,11 @@ export default function App() {
       <Header />
       <main>
         <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6" aria-labelledby="tutor-welcome-title">
-          <div className="relative isolate overflow-hidden rounded-3xl border border-cyan-400/30 shadow-[0_24px_70px_-38px_#2ab8e8]" style={{ height: "clamp(220px, 40vw, 420px)" }}>
+          <div className="relative isolate overflow-hidden rounded-[2rem] border border-violet-300/55 shadow-[0_28px_80px_-42px_#8b5cf6]" style={{ height: "clamp(220px, 40vw, 420px)" }}>
             <img src={tutorBanner} alt="Tutor de IA especialista en matrices" width={1599} height={1066} fetchPriority="high" className="absolute inset-0 size-full object-cover object-[50%_35%]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d1715] via-[#0d1715]/35 to-transparent" aria-hidden="true" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#29203f]/95 via-violet-900/25 to-sky-200/10" aria-hidden="true" />
             <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10">
-              <p className="mb-1 text-xs font-bold uppercase tracking-[.2em] text-cyan-200">Conoce a tu guía</p>
+              <p className="mb-1 text-xs font-bold uppercase tracking-[.2em] text-violet-200">Conoce a tu guía</p>
               <h1 id="tutor-welcome-title" className="text-balance text-2xl font-bold text-white drop-shadow-md sm:text-4xl">Tutor de IA · Matrices</h1>
               <p className="mt-2 max-w-xl text-sm text-slate-100 sm:text-base">Pregunta lo que no entiendas y revisa cada paso conmigo.</p>
             </div>
@@ -170,13 +186,13 @@ export default function App() {
               <Card className="h-fit"><CardHeader><CardTitle className="text-lg">Configuración</CardTitle><CardDescription>Origen, escenario y método principal.</CardDescription></CardHeader><CardContent className="space-y-5">
                 <div className="space-y-2"><Label>Origen de los datos</Label><Select value={source} onValueChange={(value) => chooseSource(value as Source)}><SelectTrigger className="w-full" aria-label="Origen de los datos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scenario">Escenario preparado</SelectItem><SelectItem value="custom">Matriz propia</SelectItem><SelectItem value="json">Importar JSON</SelectItem></SelectContent></Select></div>
                 {source === "scenario" && <div className="space-y-2"><Label>Escenario</Label><Select value={scenarioKey} onValueChange={chooseScenario}><SelectTrigger className="w-full" aria-label="Escenario preparado"><SelectValue /></SelectTrigger><SelectContent>{scenarioEntries.map(([key, item]) => <SelectItem key={key} value={key}>{item.shortTitle}</SelectItem>)}</SelectContent></Select><p className="text-xs leading-relaxed text-muted-foreground">{currentScenario.note}</p></div>}
-                {source === "custom" && <div className="space-y-2"><Label htmlFor="dimension">Dimensión cuadrada</Label><Input id="dimension" type="number" min={1} max={12} value={dimension} onChange={(event) => resizeCustom(Number(event.target.value))} /></div>}
+                {source === "custom" && <div className="space-y-2"><Label>Dimensión cuadrada</Label><Select value={String(dimension)} onValueChange={(value) => resizeCustom(Number(value))}><SelectTrigger className="w-full" aria-label="Dimensión de la matriz"><SelectValue /></SelectTrigger><SelectContent>{[2, 3, 4, 5, 6].map((size) => <SelectItem key={size} value={String(size)}>{size} × {size}</SelectItem>)}</SelectContent></Select><p className="text-xs text-muted-foreground">Elige directamente entre 2×2 y 6×6.</p></div>}
                 <div className="space-y-2"><Label>Método principal</Label><Select value={preferredMethod} onValueChange={setPreferredMethod}><SelectTrigger className="w-full" aria-label="Método principal"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gauss">Eliminación de Gauss</SelectItem><SelectItem value="gauss_jordan">Gauss-Jordan</SelectItem><SelectItem value="inverse">Matriz inversa</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">Los otros métodos también se calculan para comprobar la coincidencia.</p></div>
                 <Separator />
-                <div className="flex items-center justify-between gap-4"><div><Label htmlFor="production">Interpretación productiva</Label><p className="mt-1 text-xs text-muted-foreground">Exige X ≥ 0 para declarar el plan viable.</p></div><Switch id="production" checked={production} onCheckedChange={(checked) => { setProduction(checked); setReport(null) }} /></div>
+                <div className="flex items-center justify-between gap-4"><div><Label htmlFor="production">Interpretación productiva</Label><p className="mt-1 text-xs text-muted-foreground">Exige X ≥ 0. Si X está en miles, A se interpreta por cada mil módulos.</p></div><Switch id="production" checked={production} onCheckedChange={(checked) => { setProduction(checked); setReport(null) }} /></div>
               </CardContent></Card>
               <Card className="min-w-0"><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle>Matriz aumentada A · X = B</CardTitle><CardDescription>Acepta enteros, decimales, notación científica y fracciones.</CardDescription></div><Badge variant="outline">{A.length} × {A.length}</Badge></div></CardHeader><CardContent className="min-w-0 space-y-5">
-                {source === "json" ? <div className="space-y-2"><Label htmlFor="json-input">Datos JSON</Label><Textarea id="json-input" className="min-h-60 font-mono text-xs" value={jsonInput} onChange={(event) => { setJsonInput(event.target.value); setReport(null) }} spellCheck={false} /><p className="text-xs text-muted-foreground">B puede ser vector o columna; escribe las fracciones como &quot;2/3&quot;.</p></div> : <div id="matrix-editor"><MatrixEditor A={A} B={B} onChange={(nextA, nextB) => { setA(nextA); setB(nextB); setReport(null) }} /></div>}
+                {source === "json" ? <div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="json-input">Datos JSON</Label><input ref={jsonFileRef} type="file" accept="application/json,.json" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadJsonFile(file) }} /><Button type="button" size="sm" variant="outline" onClick={() => jsonFileRef.current?.click()}><FileJson />Subir archivo JSON</Button></div><Textarea id="json-input" className="min-h-60 font-mono text-xs" value={jsonInput} onChange={(event) => { setJsonInput(event.target.value); setReport(null) }} spellCheck={false} /><p className="text-xs text-muted-foreground">B puede ser vector o columna; escribe las fracciones como &quot;2/3&quot;.</p></div> : <div id="matrix-editor"><MatrixEditor A={A} B={B} onChange={(nextA, nextB) => { setA(nextA); setB(nextB); setReport(null) }} /></div>}
                 {source === "scenario" && scenarioKey !== "example" && <Alert className="border-amber-500/40 bg-amber-500/5"><ShieldAlert className="text-amber-600" /><AlertTitle>Discrepancia documentada</AlertTitle><AlertDescription>El vector esperado requiere un B diferente. El escenario original y la variante compatible permanecen separados.</AlertDescription></Alert>}
                 {error && <Alert variant="destructive" role="alert"><ShieldAlert /><AlertTitle>No se pudo resolver</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5"><p className="text-xs text-muted-foreground">El servidor valida dimensiones y vuelve a calcular todo desde A y B.</p><Button id="solve" size="lg" onClick={() => void solve()} disabled={loading}>{loading ? <LoaderCircle className="animate-spin" /> : <Calculator />}{loading ? "Analizando…" : "Resolver sistema"}</Button></div>
@@ -232,7 +248,7 @@ export default function App() {
           </section>
         )}
 
-        <section id="methodology" className="scroll-mt-20 py-14 sm:py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6"><div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Tres rutas, una respuesta</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Métodos que puedes defender</h2><p className="mt-3 text-muted-foreground">Cada recorrido parte de los datos originales, registra sus transformaciones y se contrasta con los demás.</p></div><div className="grid gap-4 md:grid-cols-3">{[["01", "Eliminación de Gauss", "Lleva [A|B] a [U|C] y aplica sustitución hacia atrás."], ["02", "Gauss-Jordan", "Normaliza pivotes y elimina arriba y abajo hasta [I|X]."], ["03", "Matriz inversa", "Construye A⁻¹ con [A|I] y calcula el producto A⁻¹B."]].map(([number, method, description]) => <Card key={number}><CardHeader><span className="font-mono text-xs text-primary">{number}</span><CardTitle>{method}</CardTitle><CardDescription className="leading-relaxed">{description}</CardDescription></CardHeader></Card>)}</div><div className="mt-6 grid gap-4 lg:grid-cols-2"><Alert><CheckCircle2 /><AlertTitle>Residual exacto</AlertTitle><AlertDescription>Las fracciones racionales permiten comprobar E = max|AX−B| sin introducir redondeos binarios.</AlertDescription></Alert><Alert className="border-amber-500/40"><ShieldAlert className="text-amber-600" /><AlertTitle>Balance no es optimización</AlertTitle><AlertDescription>AX=B consume capacidades; sin función objetivo no demuestra un máximo de beneficios ni un mínimo de costos.</AlertDescription></Alert></div></div></section>
+        <section id="methodology" className="scroll-mt-20 py-14 sm:py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6"><div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">Tres rutas, una respuesta</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Métodos que puedes defender</h2><p className="mt-3 text-muted-foreground">Cada recorrido parte de los datos originales, registra sus transformaciones y se contrasta con los demás.</p></div><div className="grid gap-4 md:grid-cols-3">{[["01", "Eliminación de Gauss", "Lleva [A|B] a [U|C] y aplica sustitución hacia atrás.", "from-violet-100/75 to-pink-50/60 dark:from-violet-950/30 dark:to-pink-950/10"], ["02", "Gauss-Jordan", "Normaliza pivotes y elimina arriba y abajo hasta [I|X].", "from-sky-100/75 to-violet-50/60 dark:from-sky-950/30 dark:to-violet-950/10"], ["03", "Matriz inversa", "Construye A⁻¹ con [A|I] y calcula el producto A⁻¹B.", "from-emerald-100/75 to-sky-50/60 dark:from-emerald-950/30 dark:to-sky-950/10"]].map(([number, method, description, color]) => <Card key={number} className={`bg-gradient-to-br ${color}`}><CardHeader><span className="font-mono text-xs text-primary">{number}</span><CardTitle>{method}</CardTitle><CardDescription className="leading-relaxed">{description}</CardDescription></CardHeader></Card>)}</div><div className="mt-6 grid gap-4 lg:grid-cols-2"><Alert className="bg-emerald-50/60 dark:bg-emerald-950/15"><CheckCircle2 /><AlertTitle>Residual exacto</AlertTitle><AlertDescription>Las fracciones racionales permiten comprobar E = max|AX−B| sin introducir redondeos binarios.</AlertDescription></Alert><Alert className="border-amber-500/40 bg-amber-50/60 dark:bg-amber-950/15"><ShieldAlert className="text-amber-600" /><AlertTitle>Balance no es optimización</AlertTitle><AlertDescription>AX=B consume capacidades; sin función objetivo no demuestra un máximo de beneficios ni un mínimo de costos.</AlertDescription></Alert></div></div></section>
       </main>
       <footer className="border-t bg-card"><div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:px-6"><strong className="text-foreground">TechChip Matrix Studio</strong><span className="sm:mr-auto">Universidad Francisco Gavidia · Álgebra lineal explicable</span><a className="inline-flex items-center gap-2 hover:text-foreground" href="https://github.com/emanuel56411-hue/parcial2_algebra_agente67" target="_blank" rel="noreferrer"><Code2 className="size-4" />Código fuente</a></div></footer>
       <motion.button
@@ -243,7 +259,7 @@ export default function App() {
         onClick={openTutor}
         whileHover={reducedMotion ? undefined : { scale: 1.06 }}
         whileTap={reducedMotion ? undefined : { scale: 0.96 }}
-        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid size-16 place-items-center rounded-full border-2 border-[#5fd4ff] bg-[#0d1715] shadow-[0_0_0_4px_#0d1715,0_0_28px_#5fd4ff88] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#5fd4ff] sm:right-6"
+        className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 grid size-16 place-items-center rounded-full border-2 border-violet-300 bg-violet-100 shadow-[0_0_0_4px_#faf7ff,0_0_30px_#a78bfa88] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-400 dark:bg-violet-950 dark:shadow-[0_0_0_4px_#211d34,0_0_30px_#a78bfa77] sm:right-6"
       ><TutorAvatar eager className="size-14" /></motion.button>
       <TutorSheet key={analysisVersion} open={tutorOpen} onOpenChange={setTutorOpen} input={tutorInput} report={report} preferredMethod={preferredMethod} stepContext={stepContext} />
     </div>
