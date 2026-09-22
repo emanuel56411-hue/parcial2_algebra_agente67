@@ -36,7 +36,7 @@ def technical_pdf(reports):
         canvas.setStrokeColor(colors.HexColor("#DCE7E2"))
         canvas.line(margin, 34, width-margin, 34)
         canvas.setFont("Helvetica", 7)
-        canvas.drawString(margin, 22, "TechChip Matrix Studio | Parcial 2 - Algebra Lineal | 19 septiembre 2026")
+        canvas.drawString(margin, 22, "TechChip Matrix Studio | Parcial 2 - Algebra Lineal | 22 septiembre 2026")
         canvas.drawRightString(width-margin, 22, str(document.page))
     frames = [Frame(margin, 45, column, height-90, id="left"), Frame(margin+column+gutter, 45, column, height-90, id="right")]
     first_frames = [Frame(margin, height-135, width-2*margin, 90, id="title"),
@@ -67,7 +67,7 @@ def technical_pdf(reports):
     story = [p("TechChip Systems: balance de recursos con álgebra lineal exacta", "PaperTitle"),
              p("Documento técnico del Parcial 2. Ingeniería en Inteligencia Artificial y Telecomunicaciones. Diseño de artículo a dos columnas inspirado en IEEE; no es una publicación de IEEE ni usa su plantilla oficial."), FrameBreak(),
              heading("Resumen"),
-             p("Se implementa un agente determinista para analizar sistemas cuadrados AX = B mediante Gauss, Gauss-Jordan e inversa. Los algoritmos registran operaciones elementales y usan números racionales exactos. El caso industrial 6 x 6 tiene determinante -83, pero su solución con las capacidades originales contiene una variable negativa. Se documenta una contradicción entre las capacidades y el vector esperado de la guía, sin modificar silenciosamente los datos. La solución se ofrece por consola y web con exportaciones reproducibles."),
+             p("Se implementa un agente explicable para analizar sistemas cuadrados AX = B mediante Gauss, Gauss-Jordan e inversa. Los algoritmos registran operaciones elementales y usan números racionales exactos. El caso industrial 6 x 6 tiene determinante -83, pero su solución con las capacidades originales contiene una variable negativa. Se demuestra que el vector indicado por la guía es incorrecto para ese B, sin modificar silenciosamente los datos. La solución se ofrece por consola y web con exportaciones reproducibles y un tutor opcional de IA."),
              p("Palabras clave: sistemas lineales; pivoteo parcial; rango; balance de recursos; trazabilidad."),
              heading("I. Modelado y unidades"),
              p("Cada xj representa miles de módulos por turno. Las filas son recursos y las columnas, líneas de producción. Para que las unidades sean coherentes, aij se interpreta como unidades del recurso i por cada mil módulos j. La frase 'por unidad' del enunciado debe aclararse con el docente si se refiere a módulos individuales. El modelo continuo permite fracciones; no impone producción entera."),
@@ -84,8 +84,8 @@ def technical_pdf(reports):
              p("El determinante es (-1)^s multiplicado por los pivotes de U, con s intercambios. Las sumas de filas no lo alteran. Si falta un pivote, det(A)=0. El rango de A cuenta pivotes; una fila [0,...,0|c] con c distinto de 0 aumenta en 1 el rango de [A|B]."),
              p("Si ambos rangos son n hay una solución; si son iguales y menores que n hay variables libres; si difieren el sistema es incompatible. Para el caso indeterminado se construye X = Xp + suma ti*vi, con A Xp = B y A vi = 0 [3]."),
              heading("IV. Arquitectura y entradas"),
-             p("El agente aplica el ciclo validar, diagnosticar, resolver, verificar y explicar. agent.py contiene los algoritmos, scenarios.py los datos, reporting.py la presentación, main.py la CLI y app.py la web. El núcleo usa solo la biblioteca estándar. La web utiliza Streamlit, pandas y Altair; no requiere servicios propietarios, claves API ni un modelo generativo."),
-             p("Se aceptan matrices cuadradas de 1 a 12 incógnitas, vectores planos o columna, números decimales, notación científica y fracciones. Se rechazan dimensiones incorrectas, booleanos, valores vacíos, NaN, infinitos y división por cero. El JSON se limita a 100 kB, cada literal a 64 caracteres y exponentes a +/-50 para acotar el trabajo."),
+             p("El agente aplica el ciclo validar, diagnosticar, resolver, verificar y explicar. agent.py contiene los algoritmos, exercise_parser.py convierte de forma segura ecuaciones, JSON o bloques A/B, scenarios.py conserva los datos, main.py expone la CLI y api/solve.py atiende la web React. El Tutor IA de OpenAI es opcional: el servidor recalcula el contexto y el motor exacto sigue siendo la única fuente de cifras."),
+             p("La interfaz ofrece dimensiones de 2 x 2 a 6 x 6; el motor interno admite hasta 12 x 12. Se aceptan vectores planos o columna, enteros, decimales, notación científica y fracciones. Se rechazan dimensiones incorrectas, expresiones no lineales, código, valores vacíos, NaN, infinitos y división por cero. No existe el límite anterior de 500 caracteres; permanece un límite técnico de 100 kB por solicitud."),
              p("Fraction opera exactamente sobre los racionales introducidos; los decimales JSON se leen con Decimal. La presentación decimal es aproximada y no interviene en las pruebas. Esta elección favorece sistemas educativos pequeños: las operaciones de eliminación son O(n^3), pero el costo de las fracciones crece con sus dígitos. El historial completo puede ocupar O(n^4) celdas."),
              heading("V. Validación y resultados"),
              table([["Escenario", "Rangos", "Estado"]]+[[key, f"{r.rank_A}/{r.rank_augmented}", {"unique":"Única","infinite":"Infinitas","inconsistent":"Incompatible"}[r.status]] for key,r in reports.items()], [column*.30,column*.20,column*.50-12]),
@@ -100,20 +100,22 @@ def technical_pdf(reports):
              p("El valor del prototipo es la trazabilidad: entradas visibles, escenarios comparables, cálculo reproducible e informes auditables. Resolver igualdades no optimiza beneficios, costos o tiempos. No hay datos suficientes para una función objetivo; llamar 'óptima' a toda solución positiva sería incorrecto."),
              p("Una implantación empresarial exigiría validar unidades y datos reales, decidir si se permite capacidad ociosa, modelar costos/demanda, conectar fuentes de datos y acordar controles de acceso, persistencia y operación. Estas extensiones no se presentan como implementadas. El proyecto actual es una demostración funcional y una base para un piloto."),
              heading("VIII. Reproducción y entrega"),
-             p("python main.py --validate ejecuta la batería. python -m unittest discover -s tests -v ejecuta las pruebas con las dependencias web instaladas. streamlit run app.py inicia la web. python scripts/build_deliverables.py regenera los ejemplos, bitácora, procedimientos y este PDF (requiere reportlab)."),
-             p("Los anexos contienen el desarrollo algebraico completo del sistema original mediante operaciones verificables a mano. Son trazas generadas por el software, no evidencia de una resolución manuscrita independiente. Si el docente exige una entrega manuscrita, debe elaborarse y contrastarse con estas trazas. Añadir identificación del estudiante y revisar la discrepancia con el docente antes de la entrega."),
+             p("python main.py --validate ejecuta la batería. python -m unittest discover -s tests -v ejecuta las 60 pruebas Python; npm test, npm run lint y npm run build validan el frontend. python scripts/build_deliverables.py regenera ejemplos, bitácora, procedimientos y este PDF (requiere reportlab)."),
+             p("Los anexos contienen el desarrollo algebraico completo por Gauss y Gauss-Jordan del sistema original mediante operaciones verificables a mano. Son trazas generadas y comprobadas por software, no evidencia de escritura manuscrita independiente. Si la rúbrica exige hojas manuscritas físicas, deben elaborarse y contrastarse con estas trazas."),
              heading("Referencias")]
     for i,(name,url) in enumerate(REFERENCES,1):
         story.append(p(f"[{i}] {name}. Material docente, 18.06SC Linear Algebra, MIT OpenCourseWare. Consulta: 19/09/2026."))
         story.append(Paragraph(f'<link href="{escape(url, quote=True)}" color="#087968">Consultar fuente primaria en MIT OpenCourseWare</link>', styles["Paper"]))
     story += [NextPageTemplate("appendix"), PageBreak(), p("Anexo A. Diagnóstico y determinante del caso original", "AppendixHeading"), p("Cada matriz se muestra después de la operación indicada. Las barras separan coeficientes y términos independientes. Los valores son racionales exactos.")]
-    sequences = [("Diagnóstico", original.diagnostic_steps)] + [(m.name,m.steps) for m in original.methods.values()]
+    sequences = [("Diagnóstico", original.diagnostic_steps),
+                 (original.methods["gauss"].name, original.methods["gauss"].steps),
+                 (original.methods["gauss_jordan"].name, original.methods["gauss_jordan"].steps)]
     for section,(name,steps) in enumerate(sequences):
         if section:
             story += [PageBreak(), p(f"Anexo {chr(65+section)}. {name}: desarrollo completo", "AppendixHeading")]
         for i, step in enumerate(steps,1):
             story.append(KeepTogether([p(f"Paso {i}. {step.operation}", "PaperHeading"), p(step.explanation), matrix(step.matrix,step.split,width-2*margin-12)]))
-    story += [PageBreak(), p("Anexo E. Sustitución y comparación de escenarios", "AppendixHeading")]
+    story += [PageBreak(), p("Anexo D. Sustitución y comparación de escenarios", "AppendixHeading")]
     for key, report in reports.items():
         story.append(heading(SCENARIOS[key][0]))
         for item in report.interpretation:
@@ -150,7 +152,7 @@ def main():
             lines += ["| Producto | Miles de módulos (exacto) | Aproximación |", "|---|---:|---:|"]
             lines += [f"| {name} | {v} | {decimal_text(v)} |" for name,v in zip(PRODUCTS, report.solution)]
             lines += ["", f"E = ({', '.join(map(str, report.residual))}); error máximo = {report.max_error}.", ""]
-    lines += ["## Decisión recomendada", "", "Aclarar con el docente o propietario de los datos cuál disponibilidad es válida. En un contexto industrial, si se permiten capacidades ociosas, modelar AX ≤ B con X ≥ 0 e incorporar demanda y una función objetivo. No sustituir producciones negativas por cero: se perderían las igualdades. Las cantidades continuas en miles tampoco garantizan una solución en unidades enteras.", ""]
+    lines += ["## Decisión recomendada", "", "Usar las disponibilidades originales B = (155, 160, 225, 140, 215, 175) como caso principal y registrar como incorrecto el vector indicado en la guía. En un contexto industrial, si se permiten capacidades ociosas, modelar AX ≤ B con X ≥ 0 e incorporar demanda y una función objetivo. No sustituir producciones negativas por cero: se perderían las igualdades. Las cantidades continuas en miles tampoco garantizan una solución en unidades enteras.", ""]
     (ROOT / "docs/interpretacion_operaciones.md").write_text("\n".join(lines), encoding="utf-8")
     try:
         technical_pdf(reports)

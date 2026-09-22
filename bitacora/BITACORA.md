@@ -1,111 +1,16 @@
 # Bitácora de pruebas — TechChip Matrix Studio
 
-Resultados regenerados el 19 de septiembre de 2026 mediante `main.py`; los JSON enlazados contienen la salida completa, incluidas todas las matrices intermedias.
+Resultados regenerados el 22 de septiembre de 2026 mediante el motor exacto; los JSON enlazados contienen la salida completa, incluidas todas las matrices intermedias. El B original es el caso principal y el vector equivocado de la guía no se usa como resultado esperado.
 
 | Escenario | det(A) | rangos A/[A|B] | Diagnóstico | Estado |
 |---|---:|---:|---|---|
-| Base consistente | -83 | 6/6 | Solución única | Cumple |
-| B impreso en la guía | -83 | 6/6 | Solución única | Cumple: discrepancia demostrada |
+| Caso principal: B original | -83 | 6/6 | Solución única | Cumple: error de la guía demostrado |
+| Comparación didáctica: B alternativo | -83 | 6/6 | Solución única | Cumple como comparación, no como caso principal |
 | Escasez de resina | -83 | 6/6 | Solución única | Cumple |
 | Singular incompatible | 0 | 5/6 | Cero soluciones | Cumple |
 | Singular compatible indeterminado | 0 | 5/5 | Infinitas soluciones | Cumple |
 
-## 1. Base consistente
-
-### Entrada usada
-
-```json
-{
-  "A": [
-    [
-      "2",
-      "1",
-      "3",
-      "1",
-      "2",
-      "1"
-    ],
-    [
-      "1",
-      "3",
-      "2",
-      "2",
-      "1",
-      "2"
-    ],
-    [
-      "3",
-      "2",
-      "4",
-      "1",
-      "3",
-      "2"
-    ],
-    [
-      "1",
-      "1",
-      "1",
-      "4",
-      "2",
-      "1"
-    ],
-    [
-      "2",
-      "1",
-      "2",
-      "1",
-      "5",
-      "3"
-    ],
-    [
-      "1",
-      "2",
-      "1",
-      "2",
-      "1",
-      "4"
-    ]
-  ],
-  "B": [
-    "185",
-    "200",
-    "280",
-    "150",
-    "245",
-    "195"
-  ],
-  "production": true
-}
-```
-
-### Salida literal resumida
-
-```text
-status: unique
-det(A): -83
-rank(A): 6
-rank([A|B]): 6
-solution: (15, 20, 25, 10, 15, 20)
-residual |AX-B|: (0, 0, 0, 0, 0, 0)
-max_error: 0
-methods_agree: True
-```
-
-Salida completa: [`compatible.json`](compatible.json).
-
-### Diagnóstico
-
-- Plan factible para el modelo continuo: todas las cantidades son no negativas y AX = B consume el 100 % de cada disponibilidad.
-- X se expresa en miles de unidades; X·1000 se informa como cantidad continua, sin redondear a unidades enteras.
-- La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.
-
-### Esperado frente a obtenido
-
-- **Esperado:** X=(15,20,25,10,15,20), E=0.
-- **Obtenido:** X = (15, 20, 25, 10, 15, 20), error máximo = 0.
-- **Estado:** Cumple.
-
-## 2. B impreso en la guía
+## 1. Caso principal: B original
 
 ### Entrada usada
 
@@ -197,9 +102,104 @@ Salida completa: [`original.json`](original.json).
 
 ### Esperado frente a obtenido
 
-- **Esperado:** La respuesta impresa no puede satisfacer este B; informar la discrepancia.
+- **Esperado:** Resolver el B original sin forzar el vector incorrecto y obtener E=0.
 - **Obtenido:** X = (-105/83, 345/83, 2430/83, 1170/83, 1130/83, 2010/83), error máximo = 0.
-- **Estado:** Cumple: discrepancia demostrada.
+- **Estado:** Cumple: error de la guía demostrado.
+
+## 2. Comparación didáctica: B alternativo
+
+### Entrada usada
+
+```json
+{
+  "A": [
+    [
+      "2",
+      "1",
+      "3",
+      "1",
+      "2",
+      "1"
+    ],
+    [
+      "1",
+      "3",
+      "2",
+      "2",
+      "1",
+      "2"
+    ],
+    [
+      "3",
+      "2",
+      "4",
+      "1",
+      "3",
+      "2"
+    ],
+    [
+      "1",
+      "1",
+      "1",
+      "4",
+      "2",
+      "1"
+    ],
+    [
+      "2",
+      "1",
+      "2",
+      "1",
+      "5",
+      "3"
+    ],
+    [
+      "1",
+      "2",
+      "1",
+      "2",
+      "1",
+      "4"
+    ]
+  ],
+  "B": [
+    "185",
+    "200",
+    "280",
+    "150",
+    "245",
+    "195"
+  ],
+  "production": true
+}
+```
+
+### Salida literal resumida
+
+```text
+status: unique
+det(A): -83
+rank(A): 6
+rank([A|B]): 6
+solution: (15, 20, 25, 10, 15, 20)
+residual |AX-B|: (0, 0, 0, 0, 0, 0)
+max_error: 0
+methods_agree: True
+```
+
+Salida completa: [`compatible.json`](compatible.json).
+
+### Diagnóstico
+
+- Plan factible para el modelo continuo: todas las cantidades son no negativas y AX = B consume el 100 % de cada disponibilidad.
+- X se expresa en miles de unidades; X·1000 se informa como cantidad continua, sin redondear a unidades enteras.
+- La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.
+
+### Esperado frente a obtenido
+
+- **Esperado:** Reproducir el vector indicado solo con su B alternativo, E=0.
+- **Obtenido:** X = (15, 20, 25, 10, 15, 20), error máximo = 0.
+- **Estado:** Cumple como comparación, no como caso principal.
 
 ## 3. Escasez de resina
 
