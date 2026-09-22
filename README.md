@@ -23,6 +23,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Separar solución matemática y factibilidad de producción; consultar el balance por recurso.
 - Descargar el procedimiento en Markdown, los datos/resultados en JSON y un informe HTML imprimible como PDF.
 - Consultar un tutor opcional de OpenAI sobre el resultado, elegir entre los tres métodos y pedir el procedimiento completo o la explicación del paso seleccionado.
+- Escribir directamente sistemas como `2x + y = 5; x - y = 1`: el tutor los convierte de forma determinista a A/B, los valida y los resuelve antes de explicarlos.
 - Expandir el Tutor IA para inspeccionar matrices anchas y explicaciones extensas.
 - Visualizar rectas en 2×2, planos en 3×3 y el vector solución o diagnóstico por rangos desde 4×4 en adelante.
 - Alternar entre tema claro y oscuro; la preferencia queda guardada en el navegador.
@@ -74,7 +75,9 @@ Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebS
 
 ## Tutor IA opcional con OpenAI
 
-Puedes saludar al Tutor IA antes de resolver; esa respuesta inicial es local y no consume cuota. Para preguntar sobre valores y pasos, resuelve primero un sistema. El modelo solo redacta frases cortas con marcadores: el motor matemático aporta todos los números y valida el texto antes de mostrarlo. Los cuatro botones de ayuda rápida responden desde el motor sin llamar a OpenAI.
+Puedes saludar al Tutor IA, escribirle un sistema o adjuntar un JSON antes de usar la calculadora principal. El modelo generativo solo redacta explicaciones con marcadores: el motor matemático aporta todos los números y valida el texto antes de mostrarlo. Los cuatro botones de ayuda rápida y la conversión de ecuaciones responden desde el motor sin llamar a OpenAI.
+
+El chat también acepta ejercicios escritos sin depender de OpenAI. Separa las ecuaciones con punto y coma o una por línea y usa variables `x, y, z, w, u, v` o `x1…x6`. Admite enteros, decimales, notación científica y fracciones, constantes en ambos lados, JSON y la notación `A=[[...]], B=[...]`. Solo interpreta expresiones lineales; productos entre variables, potencias, código y sistemas no cuadrados se rechazan. Una vez convertido, el mismo motor exacto ejecuta Gauss, Gauss-Jordan e inversa.
 
 1. Instala las dependencias de `requirements.txt`.
 2. Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y completa `OPENAI_API_KEY` en tu editor local. Si ya existe el archivo, edítalo sin sobrescribir sus valores.
@@ -178,6 +181,7 @@ La comprobación visual es un paso separado de AppTest. Con el servidor ya inici
 
 ```text
 agent.py                  Validación, Gauss, Gauss-Jordan, inversa, explicación
+exercise_parser.py        Conversión segura de prompts lineales y JSON a A/B
 scenarios.py              Datos originales y variantes independientes
 reporting.py              Formato de matrices, guías y exportaciones
 main.py                   Consola, JSON y batería de escenarios

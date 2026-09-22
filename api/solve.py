@@ -8,6 +8,7 @@ from agent import InputError, TechChipAgent, validate_input
 from ai_tutor import TutorError
 from api._http import JsonHandler
 from api.tutor import ask_tutor_serverless
+from exercise_parser import parse_exercise
 
 STATIC_ROOT = Path(__file__).resolve().parents[1] / "web" / "dist"
 
@@ -36,6 +37,23 @@ def analyze_payload(payload: object):
     return TechChipAgent().analyze(A, B, production=production)
 
 
+def solve_exercise_payload(payload: object) -> dict:
+    """Convierte un prompt lineal seguro a A/B y lo resuelve con el motor exacto."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("exercise"), str):
+        raise InputError("Envía el ejercicio escrito en el campo exercise.")
+    production = payload.get("production", False)
+    if not isinstance(production, bool):
+        raise InputError("production debe ser verdadero o falso.")
+    parsed = parse_exercise(payload["exercise"])
+    report = TechChipAgent().analyze(parsed.A, parsed.B, production=production)
+    return {
+        "input": parsed.to_input(production),
+        "analysis": report.to_dict(),
+        "variables": parsed.variables,
+        "source": parsed.source,
+    }
+
+
 class handler(JsonHandler):
     def do_GET(self) -> None:
         path = urlsplit(self.path).path
@@ -53,13 +71,15 @@ class handler(JsonHandler):
 
     def do_POST(self) -> None:
         path = urlsplit(self.path).path
-        if path not in ("/api/solve", "/api/tutor"):
+        if path not in ("/api/solve", "/api/tutor", "/api/exercise"):
             self._send_json(404, {"error": "Ruta no encontrada."})
             return
         try:
             payload = self._read_json()
             if path == "/api/solve":
                 result = solve_payload(payload)
+            elif path == "/api/exercise":
+                result = solve_exercise_payload(payload)
             else:
                 report = analyze_payload(payload)
                 forwarded = self.headers.get("X-Forwarded-For", "")

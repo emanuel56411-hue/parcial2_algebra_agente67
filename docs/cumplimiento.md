@@ -41,9 +41,9 @@ No se atribuye una calificación: la evaluación corresponde al docente.
 
 ## Ampliación: tutor opcional de OpenAI
 
-Se incorporaron un chat sobre el sistema resuelto y una explicación del paso seleccionado mediante la API Responses. El motor de cálculo exacto permanece independiente. El modelo devuelve texto estructurado con marcadores; la API y el frontend descartan cifras inventadas y respuestas malformadas. Los cuatro botones contextuales y el saludo previo al cálculo responden sin llamar a OpenAI. La clave se configura como secreto del servidor y el historial libre no se reenvía.
+Se incorporaron un chat sobre el sistema resuelto y una explicación del paso seleccionado mediante la API Responses. El tutor también recibe ecuaciones lineales, JSON o bloques A/B antes de usar la calculadora, los convierte de forma determinista y ejecuta el mismo motor exacto. El modelo generativo permanece independiente del cálculo: devuelve texto estructurado con marcadores y la API y el frontend descartan cifras inventadas o respuestas malformadas. Los cuatro botones contextuales, el saludo previo y la conversión de ejercicios responden sin llamar a OpenAI. La clave se configura como secreto del servidor y el historial libre no se reenvía.
 
-La batería actual incluye **52 pruebas Python** y **5 pruebas Vitest** para el sustituidor de marcadores y el validador, además de build y ESLint. Las respuestas simuladas cubren JSON inválido, marcadores desconocidos, cifras inventadas, texto demasiado largo, tiempo límite y respaldo del motor. La comprobación de navegador cubre cálculo, procedimiento, Tutor IA y viewport móvil; también se comprobó que un saludo previo al cálculo no consume OpenAI.
+La batería actual incluye **60 pruebas Python** y **5 pruebas Vitest** para el motor, la conversión segura de ejercicios escritos, el sustituidor de marcadores y el validador, además de build y ESLint. Las respuestas simuladas cubren JSON inválido, marcadores desconocidos, cifras inventadas, texto demasiado largo, tiempo límite y respaldo del motor. La comprobación de navegador cubre cálculo, procedimiento, Tutor IA y viewport móvil; también se comprobó que un saludo previo al cálculo no consume OpenAI.
 
 ## Inconsistencias que requieren aclaración académica
 

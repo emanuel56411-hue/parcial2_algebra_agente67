@@ -4,7 +4,7 @@ import json
 import os
 
 from agent import InputError
-from api.solve import analyze_payload, solve_payload
+from api.solve import analyze_payload, solve_exercise_payload, solve_payload
 from api.tutor import ask_tutor_serverless
 from tutor_contract import MAX_OUTPUT_TOKENS
 from api import tutor as tutor_module
@@ -23,6 +23,11 @@ class VercelApiTests(unittest.TestCase):
         self.assertEqual(result["status"], "inconsistent")
         self.assertEqual(result["rank_A"], 1)
         self.assertEqual(result["rank_augmented"], 2)
+
+    def test_written_exercise_endpoint(self):
+        result = solve_exercise_payload({"exercise": "2x + y = 5; x - y = 1"})
+        self.assertEqual(result["analysis"]["solution"], ["2", "1"])
+        self.assertEqual(result["variables"], ["x", "y"])
 
     def test_rejects_invalid_payload(self):
         for payload in (None, [], {}, {"A": [[1]], "B": [1], "production": "yes"}):

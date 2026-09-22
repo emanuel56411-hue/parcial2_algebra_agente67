@@ -16,6 +16,15 @@ export async function solveSystem(input: SolveInput): Promise<Analysis> {
   return readResponse<Analysis>(response)
 }
 
+export async function solveExercise(exercise: string, production = false): Promise<{ input: SolveInput; analysis: Analysis; variables: string[]; source: string }> {
+  const response = await fetch("/api/exercise", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ exercise, production }),
+  })
+  return readResponse(response)
+}
+
 type TutorPayload = SolveInput & {
   question: string
   method?: string
