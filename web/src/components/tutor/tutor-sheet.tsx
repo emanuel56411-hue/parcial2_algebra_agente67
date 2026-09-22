@@ -108,7 +108,7 @@ export function TutorSheet({ open, onOpenChange, input, report, preferredMethod,
     setQuestion("")
     setLoading(true)
     try {
-      const result = await askTutor({ ...activeInput, question: text, method, step_index: stepIndex })
+      const result = await askTutor({ ...activeInput, question: text, method, ...(!attached && stepContext ? { step_index: stepIndex } : {}) })
       const valid = result.source === "model" && validateModelAnswer(result.answer, activeReport, method)
       const serverEngine = result.source === "engine" && result.answer && typeof result.answer.resumen === "string" && typeof result.answer.conclusion === "string" && typeof result.answer.fuera_de_tema === "boolean" && Array.isArray(result.answer.pasos) && result.answer.pasos.every((step) => step && typeof step.titulo === "string" && typeof step.que === "string" && typeof step.por_que === "string" && (step.ref_paso === null || Number.isInteger(step.ref_paso)))
       const answer = valid || serverEngine ? result.answer : engineTutorAnswer(activeReport, method, attached ? undefined : stepContext?.stepIndex)

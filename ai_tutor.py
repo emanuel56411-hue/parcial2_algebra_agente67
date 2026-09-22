@@ -39,7 +39,7 @@ class TutorAnswer:
     source: str = "model"
 
 
-def build_context(report: Analysis, title: str, note: str, method=None, step_index=0):
+def build_context(report: Analysis, title: str, note: str, method=None, step_index=None):
     """Envía el resultado exacto y la traza del método elegido para explicarla completa."""
     context = {
         "A": report.A, "B": report.B,
@@ -57,17 +57,6 @@ def build_context(report: Analysis, title: str, note: str, method=None, step_ind
             steps = report.methods[method].steps
         else:
             raise TutorError("Selecciona un método disponible para este sistema.")
-        if not 0 <= step_index < len(steps):
-            raise TutorError("Selecciona un paso válido del procedimiento.")
-        step = steps[step_index]
-        context["selected_step"] = {
-            "method": method, "number": step_index + 1,
-            "operation": step.operation, "explanation": step.explanation,
-            "title": step.title, "what": step.what, "why": step.why,
-            "calc": step.calc, "pivot": step.pivot, "factor": step.factor,
-            "split": step.split, "before": steps[step_index - 1].matrix if step_index else None,
-            "after": step.matrix,
-        }
         context["method_steps"] = [
             {
                 "number": index,
@@ -82,6 +71,18 @@ def build_context(report: Analysis, title: str, note: str, method=None, step_ind
             }
             for index, item in enumerate(steps, start=1)
         ]
+        if step_index is not None:
+            if not 0 <= step_index < len(steps):
+                raise TutorError("Selecciona un paso válido del procedimiento.")
+            step = steps[step_index]
+            context["selected_step"] = {
+                "method": method, "number": step_index + 1,
+                "operation": step.operation, "explanation": step.explanation,
+                "title": step.title, "what": step.what, "why": step.why,
+                "calc": step.calc, "pivot": step.pivot, "factor": step.factor,
+                "split": step.split, "before": steps[step_index - 1].matrix if step_index else None,
+                "after": step.matrix,
+            }
     serialized = json.dumps(json_ready(context), ensure_ascii=False, separators=(",", ":"))
     if len(serialized) > MAX_CONTEXT_CHARS:
         raise TutorError("Este sistema genera un contexto demasiado grande para el tutor. Usa la explicación exacta del procedimiento o un sistema más pequeño.")

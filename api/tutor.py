@@ -84,11 +84,11 @@ def ask_tutor_serverless(report, payload: dict, client_id: str) -> dict:
         raise TutorError("El historial del tutor no es válido.")
     method = payload.get("method")
     step_index = payload.get("step_index")
-    if method is not None and (not isinstance(method, str) or type(step_index) is not int):
+    if method is not None and not isinstance(method, str):
         raise TutorError("El paso seleccionado no es válido.")
     if method is None and step_index is not None:
         raise TutorError("El paso seleccionado no es válido.")
-    if step_index is not None and step_index < 0:
+    if step_index is not None and (type(step_index) is not int or step_index < 0):
         raise TutorError("El paso seleccionado no es válido.")
     try:
         fallback = _engine_response(report, method, step_index)
@@ -98,7 +98,7 @@ def ask_tutor_serverless(report, payload: dict, client_id: str) -> dict:
     if not api_key:
         return fallback
     try:
-        context = build_context(report, "", "", method, step_index or 0)
+        context = build_context(report, "", "", method, step_index)
     except TutorError:
         return fallback
     try:

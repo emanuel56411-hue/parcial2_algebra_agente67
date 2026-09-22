@@ -84,6 +84,14 @@ class VercelApiTests(unittest.TestCase):
         self.assertEqual(answer["source"], "engine")
         self.assertNotIn("secret", str(answer))
 
+    def test_general_method_question_falls_back_to_complete_trace(self):
+        payload = {"A": [[2, 1], [1, -1]], "B": [5, 1], "question": "Explícame Gauss completo", "method": "gauss"}
+        report = analyze_payload(payload)
+        with patch.dict(os.environ, {}, clear=True):
+            answer = ask_tutor_serverless(report, payload, "full-trace-test")
+        self.assertEqual(answer["source"], "engine")
+        self.assertEqual(len(answer["answer"]["pasos"]), len(report.methods["gauss"].steps))
+
     def test_minute_limit_is_enforced(self):
         with patch.dict(os.environ, {"OPENAI_DAILY_REQUEST_LIMIT": "30"}):
             for _ in range(5):

@@ -36,6 +36,10 @@ class TutorTests(unittest.TestCase):
         self.assertNotIn("methods", context)
         self.assertEqual(self.report.to_dict(), before)
 
+        full_context = json.loads(build_context(self.report, "Original", "", "gauss"))
+        self.assertNotIn("selected_step", full_context)
+        self.assertEqual(len(full_context["method_steps"]), len(before["methods"]["gauss"]["steps"]))
+
     def test_singular_context_preserves_diagnosis_and_parametric_family(self):
         for scenario, status in [("singular", "inconsistent"), ("infinite", "infinite")]:
             report = TechChipAgent().analyze(*get_scenario(scenario))
