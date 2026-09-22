@@ -8,7 +8,7 @@ Universidad Francisco Gavidia · Docente: Exides Gamaliel Claros Velasquez · Gr
 
 Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems; la interfaz guiada permite elegir directamente sistemas de **2 × 2 a 6 × 6**, mientras el núcleo conserva soporte validado de 1 × 1 a 12 × 12 para JSON y consola. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
 
-> **Hallazgo en la guía:** el vector esperado `(15,20,25,10,15,20)` requiere `B=(185,200,280,150,245,195)`. Las disponibilidades originales son `(155,160,225,140,215,175)` y producen una solución distinta con `x1<0`. La aplicación conserva ambos escenarios y no sustituye datos para forzar la respuesta.
+> **Error confirmado en la guía:** el vector indicado `(15,20,25,10,15,20)` no es la respuesta del sistema impreso; requiere otro `B=(185,200,280,150,245,195)`. Las disponibilidades originales `(155,160,225,140,215,175)` producen una solución distinta con `x1<0`. La aplicación carga por defecto los datos originales y no los sustituye para forzar el resultado incorrecto. El otro B se conserva solo como comparación didáctica.
 
 ## Qué puedes hacer
 

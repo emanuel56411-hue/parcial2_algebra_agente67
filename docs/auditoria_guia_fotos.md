@@ -58,7 +58,7 @@ con `det(A)=-83`, ambos rangos iguales a 6 y residuo exacto cero. Como `x₁=-10
 ## Alcance y comprobaciones pendientes
 
 - **Desarrollo manual:** el PDF contiene todas las operaciones y matrices, calculadas por software y verificables a mano. Las fotos piden un “desarrollo manual paso a paso”; si significa hojas resueltas a mano, todavía deben elaborarse y adjuntarse. No se presentan las trazas generadas como manuscrito.
-- **Dato oficial contradictorio:** pedir al docente que confirme si manda el `B` impreso o el vector esperado. Con los dos a la vez, la prueba base es imposible.
+- **Resultado incorrecto confirmado:** el vector indicado no corresponde al `B` impreso y no debe usarse para validar el caso original. El programa conserva el `B` original y calcula su solución real.
 - **Unidades:** la foto dice que `x` está en *miles de unidades* y que `A` es consumo “por unidad”. Para que `AX=B` tenga las horas, kg, m² y MWh impresos, el informe interpreta los coeficientes como consumo **por mil módulos**. Confirmar esta escala con el docente.
 - **Alcance empresarial:** `AX=B` y `X≥0` comprueban un balance exacto. No prueban optimización de costos o beneficios: faltan función objetivo, demanda y reglas sobre capacidad ociosa.
 - **Metadatos de entrega:** autores, carnés, docente, grupo y fecha figuran en el PDF, pero no aparecen en estas seis fotos; deben ser confirmados por el equipo antes de entregarlo. Confirmar también si IEEEtran `conference` satisface el formato solicitado.

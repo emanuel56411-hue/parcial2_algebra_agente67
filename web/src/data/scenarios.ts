@@ -28,9 +28,9 @@ export const scenarios: Record<string, Scenario> = {
     production: true,
   },
   compatible: {
-    title: "TechChip · vector esperado",
+    title: "Variante didáctica · B alternativo",
     shortTitle: "Vector esperado",
-    note: "Variante didáctica con B = A·X esperado; no es la disponibilidad original de la guía.",
+    note: "Comparación con B = A·X indicado; no es la disponibilidad original de la guía ni el caso principal.",
     A: A_BASE,
     B: [185, 200, 280, 150, 245, 195],
     production: true,

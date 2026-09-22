@@ -1,8 +1,8 @@
-# TechChip · vector esperado
+# Variante didáctica · B alternativo
 
 TechChip Matrix Studio · procedimiento reproducible
 
-Variante didáctica con B = A·X esperado. Esta disponibilidad no es la de la guía. La guía contiene una inconsistencia: el vector esperado (15, 20, 25, 10, 15, 20) requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original (155, 160, 225, 140, 215, 175). Ambos casos se conservan por separado.
+Comparación con B = A·X indicado. Esta disponibilidad no es la de la guía ni el caso principal. La guía contiene un resultado incorrecto: el vector indicado (15, 20, 25, 10, 15, 20) requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original (155, 160, 225, 140, 215, 175). El programa usa los datos originales; el otro B se conserva únicamente como comparación didáctica.
 
 ## 1. Sistema de entrada
 

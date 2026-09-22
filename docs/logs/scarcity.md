@@ -2,7 +2,7 @@
 
 TechChip Matrix Studio · procedimiento reproducible
 
-Parte de B original y modifica únicamente B₃ = 100. La guía contiene una inconsistencia: el vector esperado (15, 20, 25, 10, 15, 20) requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original (155, 160, 225, 140, 215, 175). Ambos casos se conservan por separado.
+Parte de B original y modifica únicamente B₃ = 100. La guía contiene un resultado incorrecto: el vector indicado (15, 20, 25, 10, 15, 20) requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original (155, 160, 225, 140, 215, 175). El programa usa los datos originales; el otro B se conserva únicamente como comparación didáctica.
 
 ## 1. Sistema de entrada
 

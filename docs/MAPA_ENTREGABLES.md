@@ -4,7 +4,7 @@
 |---|---:|---|
 | Dominio de Álgebra Lineal | 20 | `docs/informe_tecnico_ieee.tex`, apéndices completos y comparación exacta |
 | Modelación Empresarial | 15 | Secciones II–III del informe e `docs/interpretacion_operaciones.md` |
-| Implementación del Agente IA | 20 | `agent.py`, `exercise_parser.py`, `api/solve.py`, `api/tutor.py`, `web/` |
+| Implementación del Agente IA | 20 | `agent.py`, `api/solve.py`, `api/tutor.py`, `web/` |
 | Rigor Matemático | 15 | Tres trazas exactas, determinante por pivotes, rangos y pruebas |
 | Pruebas y Extremos | 10 | `bitacora/BITACORA.md` y JSON completos por escenario |
 | Interpretación | 10 | `docs/interpretacion_operaciones.md` |

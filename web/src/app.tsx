@@ -47,7 +47,7 @@ import type { Analysis, SolveInput } from "@/types/analysis"
 type Source = "scenario" | "custom" | "json"
 type StepContext = { method: string; stepIndex: number } | null
 
-const initial = cloneScenario("compatible")
+const initial = cloneScenario("original")
 
 function Metric({ label, children, id }: { label: string; children: React.ReactNode; id?: string }) {
   return <div className="space-y-1 border-l-2 border-primary/30 pl-4"><span className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">{label}</span><div id={id} className="font-mono text-lg font-semibold">{children}</div></div>
@@ -64,7 +64,7 @@ function Header() {
 
 export default function App() {
   const [source, setSource] = useState<Source>("scenario")
-  const [scenarioKey, setScenarioKey] = useState("compatible")
+  const [scenarioKey, setScenarioKey] = useState("original")
   const [A, setA] = useState(initial.A)
   const [B, setB] = useState(initial.B)
   const [production, setProduction] = useState(initial.production)
@@ -175,13 +175,13 @@ export default function App() {
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_75%_25%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_38%)]" />
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_.8fr] lg:py-20">
             <div className="max-w-3xl"><Badge variant="outline" className="mb-5"><FlaskConical /> Álgebra lineal explicable</Badge><h1 id="hero-title" className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">Del sistema matricial a una decisión defendible.</h1><p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">Resuelve balances de capacidad con aritmética racional, tres métodos auditables y una explicación clara de cada operación.</p><div className="mt-7 flex flex-wrap gap-3"><Button asChild size="lg"><a href="#calculator">Abrir laboratorio <ArrowDown /></a></Button><Button asChild size="lg" variant="outline"><a href="#methodology">Ver metodología</a></Button></div></div>
-            <Card className="self-end border-primary/20 bg-card/85 shadow-xl shadow-primary/5"><CardHeader><div className="flex items-center justify-between"><Badge>Caso base listo</Badge><span className="font-mono text-xs text-muted-foreground">6 × 6</span></div><CardTitle>Vector esperado de la guía</CardTitle><CardDescription>Precargado con el B compatible y claramente separado de las disponibilidades originales.</CardDescription></CardHeader><CardContent><div className="grid grid-cols-3 gap-2 font-mono text-sm">{[15, 20, 25, 10, 15, 20].map((value, index) => <div key={index} className="rounded-lg border bg-muted/30 p-3"><span className="block text-[10px] text-muted-foreground">x{index + 1}</span><strong>{value}</strong></div>)}</div></CardContent></Card>
+            <Card className="self-end border-primary/20 bg-card/85 shadow-xl shadow-primary/5"><CardHeader><div className="flex items-center justify-between"><Badge>Datos originales</Badge><span className="font-mono text-xs text-muted-foreground">6 × 6</span></div><CardTitle>Disponibilidades de la guía</CardTitle><CardDescription>El sistema usa el B impreso y calcula su solución real, sin forzar el vector incorrecto del enunciado.</CardDescription></CardHeader><CardContent><div className="grid grid-cols-3 gap-2 font-mono text-sm">{[155, 160, 225, 140, 215, 175].map((value, index) => <div key={index} className="rounded-lg border bg-muted/30 p-3"><span className="block text-[10px] text-muted-foreground">B{index + 1}</span><strong>{value}</strong></div>)}</div></CardContent></Card>
           </div>
         </section>
 
         <section id="calculator" className="scroll-mt-20 border-b py-14 sm:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">01 · Entrada</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Define y resuelve el sistema</h2><p className="mt-3 text-muted-foreground">El caso compatible está cargado desde el inicio. Puedes editar cualquier celda antes de calcular.</p></div>
+            <div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">01 · Entrada</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Define y resuelve el sistema</h2><p className="mt-3 text-muted-foreground">Los datos originales de la guía están cargados desde el inicio. Puedes editar cualquier celda antes de calcular.</p></div>
             <div className="grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)]">
               <Card className="h-fit"><CardHeader><CardTitle className="text-lg">Configuración</CardTitle><CardDescription>Origen, escenario y método principal.</CardDescription></CardHeader><CardContent className="space-y-5">
                 <div className="space-y-2"><Label>Origen de los datos</Label><Select value={source} onValueChange={(value) => chooseSource(value as Source)}><SelectTrigger className="w-full" aria-label="Origen de los datos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scenario">Escenario preparado</SelectItem><SelectItem value="custom">Matriz propia</SelectItem><SelectItem value="json">Importar JSON</SelectItem></SelectContent></Select></div>
@@ -193,7 +193,7 @@ export default function App() {
               </CardContent></Card>
               <Card className="min-w-0"><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle>Matriz aumentada A · X = B</CardTitle><CardDescription>Acepta enteros, decimales, notación científica y fracciones.</CardDescription></div><Badge variant="outline">{A.length} × {A.length}</Badge></div></CardHeader><CardContent className="min-w-0 space-y-5">
                 {source === "json" ? <div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="json-input">Datos JSON</Label><input ref={jsonFileRef} type="file" accept="application/json,.json" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadJsonFile(file) }} /><Button type="button" size="sm" variant="outline" onClick={() => jsonFileRef.current?.click()}><FileJson />Subir archivo JSON</Button></div><Textarea id="json-input" className="min-h-60 font-mono text-xs" value={jsonInput} onChange={(event) => { setJsonInput(event.target.value); setReport(null) }} spellCheck={false} /><p className="text-xs text-muted-foreground">B puede ser vector o columna; escribe las fracciones como &quot;2/3&quot;.</p></div> : <div id="matrix-editor"><MatrixEditor A={A} B={B} onChange={(nextA, nextB) => { setA(nextA); setB(nextB); setReport(null) }} /></div>}
-                {source === "scenario" && scenarioKey !== "example" && <Alert className="border-amber-500/40 bg-amber-500/5"><ShieldAlert className="text-amber-600" /><AlertTitle>Discrepancia documentada</AlertTitle><AlertDescription>El vector esperado requiere un B diferente. El escenario original y la variante compatible permanecen separados.</AlertDescription></Alert>}
+                {source === "scenario" && scenarioKey !== "example" && <Alert className="border-amber-500/40 bg-amber-500/5"><ShieldAlert className="text-amber-600" /><AlertTitle>{scenarioKey === "original" ? "Resultado incorrecto documentado" : "Variante solo comparativa"}</AlertTitle><AlertDescription>{scenarioKey === "original" ? "El vector indicado en el enunciado no resuelve este B. Aquí se calcula la respuesta real de los datos originales." : "Este B alternativo produce el vector indicado, pero no pertenece a los datos originales de la guía."}</AlertDescription></Alert>}
                 {error && <Alert variant="destructive" role="alert"><ShieldAlert /><AlertTitle>No se pudo resolver</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5"><p className="text-xs text-muted-foreground">El servidor valida dimensiones y vuelve a calcular todo desde A y B.</p><Button id="solve" size="lg" onClick={() => void solve()} disabled={loading}>{loading ? <LoaderCircle className="animate-spin" /> : <Calculator />}{loading ? "Analizando…" : "Resolver sistema"}</Button></div>
               </CardContent></Card>

@@ -45,7 +45,7 @@ Se incorporaron un chat sobre el sistema resuelto y una explicación del paso se
 
 La batería actual incluye **60 pruebas Python** y **5 pruebas Vitest** para el motor, la conversión segura de ejercicios escritos, el sustituidor de marcadores y el validador, además de build y ESLint. Las respuestas simuladas cubren JSON inválido, marcadores desconocidos, cifras inventadas, texto demasiado largo, tiempo límite y respaldo del motor. La comprobación de navegador cubre cálculo, procedimiento, Tutor IA y viewport móvil; también se comprobó que un saludo previo al cálculo no consume OpenAI.
 
-## Inconsistencias que requieren aclaración académica
+## Error confirmado en el resultado de la guía
 
 **Disponibilidades frente a respuesta esperada.** Con A de la guía:
 
@@ -56,7 +56,7 @@ B original       = (155, 160, 225, 140, 215, 175)
 A·X esperado − B = ( 30,  40,  55,  10,  30,  20)
 ```
 
-La respuesta correcta para B original es `(-105,345,2430,1170,1130,2010)/83`. El programa no oculta que x1 es negativo. Se debe confirmar si se corrige B o la respuesta esperada; no es posible satisfacer ambos simultáneamente.
+La respuesta correcta para B original es `(-105,345,2430,1170,1130,2010)/83`. El programa no oculta que x1 es negativo. El vector indicado en la guía es incorrecto para estos datos y no se usa como resultado esperado; el B alternativo queda únicamente como comparación didáctica.
 
 **Unidades.** Si x está en miles de módulos, los coeficientes deben estar expresados en consumo por mil módulos. Si realmente son consumos por módulo individual, debe cambiarse la escala. La interpretación adoptada se explica en el sistema y el informe.
 

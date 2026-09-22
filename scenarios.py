@@ -12,13 +12,14 @@ PRODUCTS = ["AI-Edge 1", "AI-Server Pro", "AI-Autonomous Car", "AI-IoT LowPower"
 RESOURCES = ["Litografía EUV", "Pruebas ATE", "Resina de encapsulado", "Sustrato de silicio", "Energía láser", "Inspección óptica"]
 UNITS = ["horas-máquina", "horas-máquina", "kg", "m²", "MWh", "horas-persona"]
 GUIDE_NOTE = (
-    "La guía contiene una inconsistencia: el vector esperado (15, 20, 25, 10, 15, 20) "
+    "La guía contiene un resultado incorrecto: el vector indicado (15, 20, 25, 10, 15, 20) "
     "requiere B = (185, 200, 280, 150, 245, 195). No resuelve el B original "
-    "(155, 160, 225, 140, 215, 175). Ambos casos se conservan por separado."
+    "(155, 160, 225, 140, 215, 175). El programa usa los datos originales; el otro B "
+    "se conserva únicamente como comparación didáctica."
 )
 SCENARIOS = {
     "original": ("TechChip · datos originales", "Disponibilidades transcritas de la guía, sin correcciones ocultas."),
-    "compatible": ("TechChip · vector esperado", "Variante didáctica con B = A·X esperado. Esta disponibilidad no es la de la guía."),
+    "compatible": ("Variante didáctica · B alternativo", "Comparación con B = A·X indicado. Esta disponibilidad no es la de la guía ni el caso principal."),
     "scarcity": ("Escasez · resina a 100 kg", "Parte de B original y modifica únicamente B₃ = 100."),
     "singular": ("Singular · sin solución", "F₆ = 2F₁, conservando B₆ = 175. La fila 1 exigiría B₆ = 310."),
     "infinite": ("Singular · infinitas soluciones", "F₆ = 2F₁ y B₆ = 2B₁ = 310. Se conserva la dependencia en ambos lados."),
