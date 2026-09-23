@@ -19,6 +19,66 @@ _CONSTANT = re.compile(rf"{_NUMBER}$")
 _ALLOWED = re.compile(r"^[0-9A-Za-z_./*+\-]+$")
 _SYMBOL_ORDER = {name: index for index, name in enumerate(("x", "y", "z", "w", "u", "v"))}
 
+_PRODUCTION_RESOURCES = (
+    ("materia prima a", "materia prima A"), ("materia prima b", "materia prima B"),
+    ("mano de obra", "mano de obra"), ("maquina cnc", "máquina CNC"),
+    ("energia", "energía"), ("componentes electronicos", "componentes electrónicos"),
+    ("empaque", "empaque"), ("control de calidad", "control de calidad"),
+    ("almacenamiento", "almacenamiento"), ("transporte", "transporte"),
+)
+
+
+def _resource_key(text: str) -> str | None:
+    folded = text.casefold().replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+    for key, _ in _PRODUCTION_RESOURCES:
+        if key in folded:
+            return key
+    return None
+
+
+def _production_narrative(prompt: str):
+    """Extrae el formato narrativo industrial repetitivo sin depender del LLM."""
+    if not re.search(r"cada\s+unidad\s+de\s+P\d+", prompt, re.I) or not re.search(r"disponibilidad\s+total", prompt, re.I):
+        return None
+    product_matches = list(re.finditer(r"Cada\s+unidad\s+de\s+(P\d+)\b(.*?)(?=Cada\s+unidad\s+de\s+P\d+\b|En\s+cuanto\s+a\s+la\s+disponibilidad|Pregunta\s*:|$)", prompt, re.I | re.S))
+    if not product_matches:
+        return None
+    products = []
+    rows = []
+    evidence = []
+    resource_order = []
+    number = r"(?:\d+(?:[.,]\d+)?|\d+/\d+)"
+    for match in product_matches:
+        product = match.group(1).upper()
+        body = match.group(2)
+        found = {}
+        for value, descriptor in re.findall(rf"({number})\s*((?:kg\s+de\s+|horas?\s+de\s+|kWh\s+de\s+|m[³3]\s+de\s+|componentes?\s+electr[oó]nicos|unidades?\s+de\s+)[^,;.]*)", body, re.I):
+            key = _resource_key(descriptor)
+            if key:
+                found[key] = value.replace(",", ".")
+                if key not in resource_order:
+                    resource_order.append(key)
+                evidence.append({"product": product, "resource": dict(_PRODUCTION_RESOURCES)[key], "value": found[key], "fragment": match.group(0).strip()})
+        products.append(product)
+        rows.append(found)
+    availability_match = re.search(r"disponibilidad\s+total.*?(?=Pregunta\s*:|$)", prompt, re.I | re.S)
+    if not availability_match:
+        return None
+    available = {}
+    for value, descriptor in re.findall(rf"({number})\s*((?:kg\s+de\s+|horas?\s+de\s+|kWh\s+de\s+|m[³3]\s+de\s+|componentes?\s+electr[oó]nicos|unidades?\s+de\s+|capacidad\s+de\s+)[^,;.]*)", availability_match.group(0), re.I):
+        key = _resource_key(descriptor)
+        if key:
+            available[key] = value.replace(",", ".")
+    if len(products) < 2 or len(products) > 10 or len(resource_order) != len(products) or any(set(row) != set(resource_order) for row in rows) or set(available) != set(resource_order):
+        return None
+    A = [[row[key] for key in resource_order] for row in rows]
+    # Los productos capturados son columnas; la tabla anterior es producto×recurso.
+    A = [[rows[col][key] for col in range(len(products))] for key in resource_order]
+    B = [available[key] for key in resource_order]
+    A, B = _validated(A, B)
+    availability_evidence = [{"resource": dict(_PRODUCTION_RESOURCES)[key], "value": available[key], "fragment": availability_match.group(0).strip()} for key in resource_order]
+    return ParsedExercise(A, B, products, "production_text", detect_method(prompt), {"coefficients": evidence, "availability": availability_evidence, "verified": True})
+
 
 class StructuredInputError(InputError):
     """El usuario proporcionó una matriz reconocible, pero sus datos son inválidos."""

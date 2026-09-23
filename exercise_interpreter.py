@@ -9,7 +9,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from agent import InputError, validate_input
-from exercise_parser import ParsedExercise, StructuredInputError, detect_method, parse_exercise
+from exercise_parser import ParsedExercise, StructuredInputError, _production_narrative, detect_method, parse_exercise
 
 INTERPRETER_MODEL = "gpt-4.1-mini"
 MAX_PROMPT_BYTES = 100_000
@@ -167,6 +167,12 @@ def interpret_exercise(prompt: str) -> ParsedExercise:
         raise InputError("Escribe o adjunta un ejercicio antes de resolverlo.")
     if len(prompt.encode("utf-8")) > MAX_PROMPT_BYTES:
         raise InputError("El ejercicio no puede superar 100 kB.")
+    # Los enunciados industriales repetitivos se extraen localmente para que
+    # funcionen incluso cuando no hay OPENAI_API_KEY o la red está temporalmente
+    # indisponible; el LLM queda como respaldo para narraciones no estructuradas.
+    production = _production_narrative(prompt)
+    if production is not None:
+        return production
     try:
         return parse_exercise(prompt)
     except StructuredInputError:
