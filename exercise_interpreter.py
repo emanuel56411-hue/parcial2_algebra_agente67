@@ -49,7 +49,9 @@ REGLAS DE EXTRACCIÓN (son obligatorias):
    NOMBRE del recurso que lo acompaña; no confíes únicamente en la posición de
    la oración y no transpongas ni reordenes.
 4) Para b, relee el párrafo de disponibilidad total y empareja cada número con
-   el NOMBRE explícito de su recurso antes de colocarlo en el orden original.
+   el NOMBRE explícito de su recurso. La oración puede mencionar los recursos
+   en un orden distinto: NUNCA copies ese orden. Reordena los valores únicamente
+   según la lista de recursos fijada en el paso 1 (la fila correspondiente de a).
 5) Haz una auditoría final número por número: compara cada entrada de a y b con
    el texto original, incluyendo signo, decimal, fracción y ceros. Si un solo
    valor no coincide exactamente, corrígelo y vuelve a revisar todo antes de
