@@ -90,6 +90,22 @@ class ExerciseParserTests(unittest.TestCase):
         self.assertFalse(request_body["store"])
 
     @patch("exercise_interpreter.urlopen")
+    def test_natural_language_accepts_public_lowercase_a_b_contract(self, urlopen):
+        response = MagicMock()
+        response.read.return_value = json.dumps({
+            "status": "completed",
+            "output_text": json.dumps({
+                "status": "ok", "a": [["7", "4"], ["3", "5"]], "b": ["579", "643"],
+                "variables": ["P1", "P2"], "preferred_method": "none", "clarification": "",
+            }),
+        }).encode()
+        urlopen.return_value.__enter__.return_value = response
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            parsed = interpret_exercise("7 kg de A y 4 kg de B; disponibilidades 579 y 643")
+        self.assertEqual(parsed.A, [[7, 4], [3, 5]])
+        self.assertEqual(parsed.B, [579, 643])
+
+    @patch("exercise_interpreter.urlopen")
     def test_ambiguous_model_extraction_requests_clarification(self, urlopen):
         response = MagicMock()
         response.read.return_value = json.dumps({
