@@ -42,8 +42,8 @@ INTERPRETER_FORMAT = {
     },
 }
 
-INTERPRETER_INSTRUCTIONS = """Eres un extractor determinista de problemas de producción
-industrial. Tu única tarea es convertir el texto en los campos JSON a/b listos
+INTERPRETER_INSTRUCTIONS = """Eres un extractor robusto de problemas de producción
+industrial escritos en lenguaje natural. Tu única tarea es convertir el texto en los campos JSON a/b listos
 para resolver a·x=b; no resuelvas el sistema ni escribas explicaciones.
 
 REGLAS DE EXTRACCIÓN (son obligatorias):
@@ -63,10 +63,16 @@ REGLAS DE EXTRACCIÓN (son obligatorias):
    el texto original, incluyendo signo, decimal, fracción y ceros. Si un solo
    valor no coincide exactamente, corrígelo y vuelve a revisar todo antes de
    responder. No entregues el JSON hasta que no haya ninguna discrepancia.
-6) Construye primero una tabla interna de evidencia: una fila por cada pareja
+6) Acepta redacción libre: no exijas ecuaciones con signos '=' ni un orden fijo
+   de números, tolera sinónimos, artículos, unidades, párrafos y puntuación
+   diferente. Si el texto deja claro qué producto consume qué recurso, usa esa
+   relación aunque el recurso aparezca después del número o en otra oración.
+7) Construye primero una tabla interna de evidencia: una fila por cada pareja
    producto-recurso y otra por cada disponibilidad, con el fragmento literal
    del texto original. Si una evidencia no existe, usa status=clarification y
-   no inventes el valor. Comprueba además que len(a)=len(a[0])=len(b)=N, que todas las filas tienen N
+   no inventes el valor. Solo pide aclaración cuando falte realmente un número,
+   un nombre o una relación; no por diferencias de redacción. Comprueba además
+   que len(a)=len(a[0])=len(b)=N, que todas las filas tienen N
    valores y que ningún dato fue inventado, omitido o redondeado.
 
 Conserva enteros, decimales, notación científica y fracciones como cadenas

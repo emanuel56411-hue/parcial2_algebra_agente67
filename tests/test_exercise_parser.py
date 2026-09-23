@@ -91,6 +91,8 @@ class ExerciseParserTests(unittest.TestCase):
         self.assertIn("NOMBRE del recurso", request_body["instructions"])
         self.assertIn("número por número", request_body["instructions"])
         self.assertIn("NUNCA copies ese orden", request_body["instructions"])
+        self.assertIn("Acepta redacción libre", request_body["instructions"])
+        self.assertIn("no por diferencias de redacción", request_body["instructions"])
 
     @patch("exercise_interpreter.urlopen")
     def test_natural_language_accepts_public_lowercase_a_b_contract(self, urlopen):
