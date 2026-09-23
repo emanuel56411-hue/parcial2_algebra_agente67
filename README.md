@@ -6,13 +6,13 @@ Autores: Henry Modesto Portillo Quintanilla (`PQ100126`), David Ernesto Quijada 
 
 Universidad Francisco Gavidia · Docente: Exides Gamaliel Claros Velasquez · Grupo: `01 EO8` · Entrega: 23 de septiembre de 2026.
 
-Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems; la interfaz guiada permite elegir directamente sistemas de **2 × 2 a 6 × 6**, mientras el núcleo conserva soporte validado de 1 × 1 a 12 × 12 para JSON y consola. Dispone de una interfaz completa en Streamlit y una versión responsive preparada para Vercel.
+Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems; la interfaz React permite elegir directamente sistemas de **2 × 2 a 10 × 10** y también acepta enunciados, ecuaciones, JSON o archivos de texto. El núcleo conserva soporte validado de 1 × 1 a 12 × 12 para JSON y consola.
 
 > **Error confirmado en la guía:** el vector indicado `(15,20,25,10,15,20)` no es la respuesta del sistema impreso; requiere otro `B=(185,200,280,150,245,195)`. Las disponibilidades originales `(155,160,225,140,215,175)` producen una solución distinta con `x1<0`. La aplicación carga por defecto los datos originales y no los sustituye para forzar el resultado incorrecto. El otro B se conserva solo como comparación didáctica.
 
 ## Qué puedes hacer
 
-- Editar cualquier celda de A y B, pegar JSON o cargar un archivo tanto en la calculadora como en el Tutor IA.
+- Editar cualquier celda de A y B; escribir un problema en lenguaje natural; pegar JSON; o cargar un archivo `.json`, `.txt` o `.md`.
 - Introducir enteros, decimales, notación científica y fracciones como `"2/3"`.
 - Comparar tres soluciones calculadas mediante algoritmos explícitos.
 - Elegir Gauss, Gauss-Jordan o matriz inversa como método principal antes de resolver; los demás quedan como verificación cruzada.
@@ -23,7 +23,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Separar solución matemática y factibilidad de producción; consultar el balance por recurso.
 - Descargar el procedimiento en Markdown, los datos/resultados en JSON y un informe HTML imprimible como PDF.
 - Consultar un tutor opcional de OpenAI sobre el resultado, elegir entre los tres métodos y pedir el procedimiento completo o la explicación del paso seleccionado.
-- Escribir directamente sistemas como `2x + y = 5; x - y = 1`: el tutor los convierte de forma determinista a A/B, los valida y los resuelve antes de explicarlos.
+- Escribir directamente sistemas como `2x + y = 5; x - y = 1` o describir consumos y disponibilidades con palabras. Los formatos exactos se convierten de forma determinista; los enunciados libres pasan por una extracción estructurada y siempre se vuelven a validar antes de resolver.
 - Expandir el Tutor IA para inspeccionar matrices anchas y explicaciones extensas.
 - Visualizar rectas en 2×2, planos en 3×3 y el vector solución o diagnóstico por rangos desde 4×4 en adelante.
 - Alternar entre tema claro y oscuro; la preferencia queda guardada en el navegador.
@@ -47,7 +47,7 @@ Abre **http://localhost:8501**. En el entorno existente del proyecto también pu
 venv/bin/python -m streamlit run app.py
 ```
 
-La calculadora funciona localmente y no requiere cuentas ni claves de API. El motor es un agente determinista basado en reglas; sus operaciones son verificables. El **Tutor IA es opcional**: solo las preguntas escritas sobre un sistema resuelto llaman a OpenAI; los saludos previos y las ayudas rápidas son locales. La tipografía usa fuentes locales/sistema.
+La calculadora matricial, el JSON y las ecuaciones explícitas funcionan localmente sin cuentas ni claves. El motor es determinista y sus operaciones son verificables. Una clave de OpenAI solo es necesaria para interpretar enunciados libres y para las preguntas generativas del Tutor IA; si falta, la interfaz solicita ecuaciones completas o JSON.
 
 ## Desplegar en Vercel
 
@@ -69,7 +69,7 @@ npx vercel           # despliegue de prueba
 npx vercel --prod    # producción
 ```
 
-También puedes importar el repositorio de GitHub desde el panel de Vercel. `vercel.json` instala y compila `web/` y publica `web/dist`; no hace falta repetir esa configuración en el panel. Para activar el tutor, configura `OPENAI_API_KEY` como secreto de producción. Opcionalmente define `OPENAI_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless usa la biblioteca estándar.
+También puedes importar el repositorio de GitHub desde el panel de Vercel. `vercel.json` instala y compila `web/` y publica `web/dist`; no hace falta repetir esa configuración en el panel. Para activar el intérprete de lenguaje natural y el tutor, configura `OPENAI_API_KEY` como secreto de producción. Opcionalmente define `OPENAI_MODEL`, `OPENAI_INTERPRETER_MODEL` y `OPENAI_DAILY_REQUEST_LIMIT`. `.vercelignore` excluye las dependencias pesadas de Streamlit porque la función serverless usa la biblioteca estándar.
 
 Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebSocket persistente. Por eso la versión alojada usa una aplicación React estática y una función Python por solicitud. El Tutor IA de Vercel vuelve a ejecutar el sistema en el servidor antes de construir el contexto; la respuesta generativa nunca tiene autoridad sobre los números exactos.
 
@@ -77,7 +77,7 @@ Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebS
 
 Puedes saludar al Tutor IA, escribirle un sistema o adjuntar un JSON antes de usar la calculadora principal. El modelo generativo solo redacta explicaciones con marcadores: el motor matemático aporta todos los números y valida el texto antes de mostrarlo. Los cuatro botones de ayuda rápida y la conversión de ecuaciones responden desde el motor sin llamar a OpenAI.
 
-El chat también acepta ejercicios escritos sin depender de OpenAI. Separa las ecuaciones con punto y coma o una por línea y usa variables `x, y, z, w, u, v` o `x1…x6`. Admite enteros, decimales, notación científica y fracciones, constantes en ambos lados, JSON y la notación `A=[[...]], B=[...]`. Solo interpreta expresiones lineales; productos entre variables, potencias, código y sistemas no cuadrados se rechazan. Una vez convertido, el mismo motor exacto ejecuta Gauss, Gauss-Jordan e inversa.
+La entrada acepta ejercicios escritos. Separa las ecuaciones con punto y coma o una por línea y usa variables `x, y, z, w, u, v` o `x1…x10`. Admite enteros, decimales, notación científica y fracciones, constantes en ambos lados, JSON y la notación `A=[[...]], B=[...]`. Si no coincide con esos formatos, el intérprete de lenguaje natural solicita a OpenAI únicamente un objeto estructurado con A, B, nombres de variables y método preferido. Si faltan datos o hay ambigüedad, pide aclaración. Una vez convertido, el mismo motor exacto ejecuta Gauss, Gauss-Jordan e inversa.
 
 1. Instala las dependencias de `requirements.txt`.
 2. Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y completa `OPENAI_API_KEY` en tu editor local. Si ya existe el archivo, edítalo sin sobrescribir sus valores.
@@ -182,6 +182,7 @@ La comprobación visual es un paso separado de AppTest. Con el servidor ya inici
 ```text
 agent.py                  Validación, Gauss, Gauss-Jordan, inversa, explicación
 exercise_parser.py        Conversión segura de prompts lineales y JSON a A/B
+exercise_interpreter.py   Extracción estructurada de A/B desde lenguaje natural
 scenarios.py              Datos originales y variantes independientes
 reporting.py              Formato de matrices, guías y exportaciones
 main.py                   Consola, JSON y batería de escenarios

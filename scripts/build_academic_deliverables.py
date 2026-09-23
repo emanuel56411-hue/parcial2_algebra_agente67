@@ -29,7 +29,7 @@ def load_reports():
 
 
 def tex_escape(text):
-    replacements = {"\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#", "_": r"\_", "{": r"\{", "}": r"\}", "~": r"\textasciitilde{}", "^": r"\textasciicircum{}", "−": "-", "×": r"\(\times\)", "·": r"\(\cdot\)", "≥": r"\(\ge\)", "≤": r"\(\le\)", "≠": r"\(\ne\)", "←": r"\(\leftarrow\)", "↔": r"\(\leftrightarrow\)", "²": r"\textsuperscript{2}", "₁": r"\textsubscript{1}", "₂": r"\textsubscript{2}", "₃": r"\textsubscript{3}", "₄": r"\textsubscript{4}", "₅": r"\textsubscript{5}", "₆": r"\textsubscript{6}", "⁻": "-", "…": r"\ldots{}"}
+    replacements = {"\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#", "_": r"\_", "{": r"\{", "}": r"\}", "~": r"\textasciitilde{}", "^": r"\textasciicircum{}", "−": "-", "×": r"\(\times\)", "·": r"\(\cdot\)", "≥": r"\(\ge\)", "≤": r"\(\le\)", "≠": r"\(\ne\)", "←": r"\(\leftarrow\)", "↔": r"\(\leftrightarrow\)", "²": r"\textsuperscript{2}", "ᵢ": r"\textsubscript{i}", "₁": r"\textsubscript{1}", "₂": r"\textsubscript{2}", "₃": r"\textsubscript{3}", "₄": r"\textsubscript{4}", "₅": r"\textsubscript{5}", "₆": r"\textsubscript{6}", "⁻": "-", "…": r"\ldots{}"}
     return "".join(replacements.get(char, char) for char in str(text))
 
 
@@ -120,6 +120,7 @@ def build_ieee(reports):
     constraint_rows = "\n".join(rf"$R_{i}$ & {tex_escape(name)} & {tex_escape(unit)} & {b} \\" for i, (name, unit, b) in enumerate(zip(RESOURCES, UNITS, base["B"]), 1))
     comparison_rows = "\n".join(rf"$x_{i}$ & {base['methods']['gauss']['solution'][i-1]} & {base['methods']['gauss_jordan']['solution'][i-1]} & {base['methods']['inverse']['solution'][i-1]} \\" for i in range(1, 7))
     solution_tex = r"\left(" + ",".join(frac_tex(value) for value in base["solution"]) + r"\right)^T"
+    base_matrix = matrix_tex(base["A"], width=r"0.72\linewidth")
     tex = rf"""\documentclass[conference]{{IEEEtran}}
 \usepackage[utf8]{{inputenc}}
 \usepackage[T1]{{fontenc}}
@@ -144,7 +145,7 @@ Docente: Exides Gamaliel Claros Velasquez \quad Grupo: 01 EO8 \quad Entrega: 23 
 \begin{{document}}
 \maketitle
 \begin{{abstract}}
-Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X={solution_tex}$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones, junto con entrada mediante ecuaciones, JSON y bloques A/B.
+Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X={solution_tex}$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones. La entrada admite matrices de hasta $10\times10$, ecuaciones, JSON y enunciados en lenguaje natural convertidos a $A$ y $B$ mediante una salida estructurada.
 \end{{abstract}}
 \begin{{IEEEkeywords}}álgebra lineal, sistemas de ecuaciones, eliminación de Gauss, Gauss--Jordan, matriz inversa, agente explicable, balance de recursos\end{{IEEEkeywords}}
 
@@ -155,11 +156,10 @@ TechChip Systems S.A. fabrica seis líneas de aceleradores de inteligencia artif
 Cada variable es continua y se expresa en miles de módulos por turno. Para coherencia dimensional, $a_{{ij}}$ se interpreta como consumo del recurso $i$ por cada mil módulos de la línea $j$.
 \begin{{table}}[ht]\caption{{Variables del modelo}}\centering\footnotesize\begin{{tabular}}{{lll}}\toprule Variable&Línea&Unidad\\\midrule {variable_rows}\bottomrule\end{{tabular}}\end{{table}}
 La matriz de coeficientes es
-{matrix_tex(base['A'])}
+{base_matrix}
 y las restricciones del caso principal original son:
 \begin{{table}}[ht]\caption{{Recursos y disponibilidades originales}}\centering\scriptsize\begin{{tabular}}{{llll}}\toprule&Recurso&Unidad&$b_i$\\\midrule {constraint_rows}\bottomrule\end{{tabular}}\end{{table}}
-La matriz aumentada inicial es
-{matrix_tex(initial, 6)}
+La matriz aumentada inicial y todas sus transformaciones se reproducen íntegramente en el Apéndice A.
 Las operaciones elementales son reversibles y conservan el conjunto solución. Si la eliminación obtiene seis pivotes, $\det(A)$ es distinto de cero, $A$ es invertible y existe una única solución. En la ejecución, $\det(A)=-83\neq0$ y $\operatorname{{rango}}(A)=\operatorname{{rango}}([A\mid B])=6$.
 
 \section{{Discrepancia de datos}}
@@ -195,8 +195,8 @@ Los seis residuos son cero y $E_{{\max}}=0<10^{{-6}}$.
 
 \section{{Arquitectura del agente}}
 El flujo funcional es:
-\begin{{center}}\begin{{tabular}}{{c}}\fbox{{Entrada JSON / consola / web}}\\$\downarrow$\\\fbox{{Validación dimensional y racional}}\\$\downarrow$\\\fbox{{Determinante, rangos y diagnóstico}}\\$\downarrow$\\\fbox{{Gauss / Gauss--Jordan / inversa}}\\$\downarrow$\\\fbox{{Verificación $AX=B$ e interpretación}}\end{{tabular}}\end{{center}}
-\texttt{{agent.py}} contiene validación, pivoteo, rangos y análisis; \texttt{{exercise_parser.py}} convierte de forma segura ecuaciones lineales, JSON y bloques A/B; \texttt{{api/solve.py}} ofrece la función serverless y \texttt{{web/}} la interfaz React. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite 2x2 hasta 6x6 y no conserva el límite anterior de 500 caracteres; solo aplica un límite técnico de 100 kB \cite{{openai}}.
+\begin{{center}}\begin{{tabular}}{{c}}\fbox{{Texto / ecuaciones / JSON / editor web}}\\$\downarrow$\\\fbox{{Extracción estructurada de $A$ y $B$}}\\$\downarrow$\\\fbox{{Validación dimensional y racional}}\\$\downarrow$\\\fbox{{Determinante, rangos y diagnóstico}}\\$\downarrow$\\\fbox{{Gauss / Gauss--Jordan / inversa}}\\$\downarrow$\\\fbox{{Verificación $AX=B$ e interpretación}}\end{{tabular}}\end{{center}}
+\texttt{{agent.py}} contiene validación, pivoteo, rangos y análisis; \texttt{{exercise\_parser.py}} convierte de forma determinista ecuaciones lineales, JSON y bloques A/B; y \texttt{{exercise\_interpreter.py}} usa una salida JSON estructurada del modelo únicamente cuando la entrada libre no pertenece a esos formatos. La matriz extraída vuelve a validarse antes de llegar al motor exacto. Si faltan datos o existe ambigüedad, la interfaz solicita una aclaración y no calcula. \texttt{{api/solve.py}} ofrece la función serverless y \texttt{{web/}} la interfaz React. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite de $2\times2$ hasta $10\times10$ y aplica un límite técnico de 100 kB por entrada \cite{{openai}}.
 
 \section{{Pruebas de validación}}
 \begin{{table*}}[ht]\caption{{Resultados generados por el agente}}\centering\footnotesize\begin{{tabular}}{{lllll}}\toprule Escenario&$\det(A)$&Rangos&Resultado exacto&Diagnóstico\\\midrule

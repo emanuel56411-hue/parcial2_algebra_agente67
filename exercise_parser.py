@@ -13,11 +13,22 @@ from agent import InputError, json_ready, number, validate_input
 
 _SUBSCRIPTS = str.maketrans("₀₁₂₃₄₅₆₇₈₉−", "0123456789-")
 _NUMBER = r"(?:(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?|\d+/\d+)"
-_VARIABLE = r"(?:x[1-6]|[xyzwuv])"
+_VARIABLE = r"(?:x(?:10|[1-9])|[xyzwuv])"
 _TERM = re.compile(rf"(?:(?P<coefficient>{_NUMBER})\*?)?(?P<variable>{_VARIABLE})$", re.I)
 _CONSTANT = re.compile(rf"{_NUMBER}$")
 _ALLOWED = re.compile(r"^[0-9A-Za-z_./*+\-]+$")
 _SYMBOL_ORDER = {name: index for index, name in enumerate(("x", "y", "z", "w", "u", "v"))}
+
+
+class StructuredInputError(InputError):
+    """El usuario proporcionó una matriz reconocible, pero sus datos son inválidos."""
+
+
+def _validated(A, B):
+    try:
+        return validate_input(A, B)
+    except InputError as exc:
+        raise StructuredInputError(str(exc)) from None
 
 
 @dataclass(frozen=True)
@@ -26,6 +37,7 @@ class ParsedExercise:
     B: list[Fraction]
     variables: list[str]
     source: str
+    preferred_method: str | None = None
 
     def to_input(self, production: bool = False) -> dict:
         return {"A": json_ready(self.A), "B": json_ready(self.B), "production": production}
@@ -45,9 +57,27 @@ def _json_candidate(prompt: str):
             value = json.loads(candidate, parse_float=Decimal)
         except (ValueError, RecursionError):
             continue
-        if isinstance(value, dict) and "A" in value and "B" in value:
-            A, B = validate_input(value["A"], value["B"])
-            return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "json")
+        if (isinstance(value, list) and value and
+                all(isinstance(row, list) and len(row) == len(value) + 1 for row in value)):
+            A, B = _validated([row[:-1] for row in value], [row[-1] for row in value])
+            return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "json", detect_method(prompt))
+        if isinstance(value, dict):
+            # Acepta diferencias inocuas de mayúsculas/minúsculas y envoltorios
+            # frecuentes, sin adivinar el significado de claves desconocidas.
+            containers = [value]
+            containers.extend(item for item in value.values() if isinstance(item, dict))
+            for container in containers:
+                folded = {str(key).casefold(): item for key, item in container.items()}
+                matrix = next((folded[key] for key in ("a", "matriz_a", "matriza", "matrix_a", "matrixa", "coeficientes") if key in folded), None)
+                vector = next((folded[key] for key in ("b", "vector_b", "vectorb", "terminos_independientes", "resultados", "disponibilidades") if key in folded), None)
+                if matrix is not None and vector is not None:
+                    A, B = _validated(matrix, vector)
+                    return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "json", detect_method(prompt))
+                augmented = next((folded[key] for key in ("matriz_aumentada", "matrizaumentada", "augmented_matrix", "augmented") if key in folded), None)
+                if (isinstance(augmented, list) and augmented and
+                        all(isinstance(row, list) and len(row) == len(augmented) + 1 for row in augmented)):
+                    A, B = _validated([row[:-1] for row in augmented], [row[-1] for row in augmented])
+                    return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "json", detect_method(prompt))
     return None
 
 
@@ -69,8 +99,20 @@ def _matrix_notation(prompt: str):
         B, _ = decoder.raw_decode(prompt, start_b)
     except (ValueError, RecursionError):
         return None
-    A, B = validate_input(A, B)
-    return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "matrix_notation")
+    A, B = _validated(A, B)
+    return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "matrix_notation", detect_method(prompt))
+
+
+def detect_method(prompt: str) -> str | None:
+    """Detecta una preferencia de presentación; no altera el cálculo exacto."""
+    lowered = prompt.casefold().replace("–", "-")
+    if re.search(r"gauss[\s_-]*jordan", lowered):
+        return "gauss_jordan"
+    if re.search(r"matriz\s+inversa|m[eé]todo\s+de\s+la\s+inversa|por\s+inversa", lowered):
+        return "inverse"
+    if re.search(r"(?:eliminaci[oó]n\s+de\s+)?gauss(?!\s*[- ]?jordan)", lowered):
+        return "gauss"
+    return None
 
 
 def _expression(text: str) -> tuple[dict[str, Fraction], Fraction]:
@@ -93,7 +135,7 @@ def _expression(text: str) -> tuple[dict[str, Fraction], Fraction]:
         elif _CONSTANT.fullmatch(body):
             constant += number(body) * sign
         else:
-            raise InputError(f"Término no lineal o no reconocido: {piece!r}. Usa x, y, z o x1…x6.")
+            raise InputError(f"Término no lineal o no reconocido: {piece!r}. Usa x, y, z o x1…x10.")
     return coefficients, constant
 
 
@@ -147,10 +189,10 @@ def parse_exercise(prompt: str) -> ParsedExercise:
         names.update(variable for variable, value in coefficients.items() if value)
         parsed_rows.append((coefficients, right_constant - left_constant))
 
-    indexed = all(re.fullmatch(r"x[1-6]", name) for name in names)
+    indexed = all(re.fullmatch(r"x(?:10|[1-9])", name) for name in names)
     symbolic = all(name in _SYMBOL_ORDER for name in names)
     if not names or not (indexed or symbolic):
-        raise InputError("Usa variables x, y, z, w, u, v o bien x1…x6, sin mezclarlas.")
+        raise InputError("Usa variables x, y, z, w, u, v o bien x1…x10, sin mezclarlas.")
     if indexed:
         variables = sorted(names, key=lambda value: int(value[1:]))
         expected = [f"x{i + 1}" for i in range(len(variables))]
@@ -158,11 +200,11 @@ def parse_exercise(prompt: str) -> ParsedExercise:
             raise InputError("Las variables numeradas deben ser consecutivas desde x1.")
     else:
         variables = sorted(names, key=_SYMBOL_ORDER.get)
-    if not 2 <= len(variables) <= 6:
-        raise InputError("El prompt debe describir un sistema de 2 a 6 variables.")
+    if not 2 <= len(variables) <= 10:
+        raise InputError("El ejercicio debe describir un sistema de 2 a 10 variables.")
     if len(equations) != len(variables):
         raise InputError(f"Encontré {len(equations)} ecuaciones y {len(variables)} variables; el sistema debe ser cuadrado.")
     A = [[coefficients.get(variable, Fraction(0)) for variable in variables] for coefficients, _ in parsed_rows]
     B = [right for _, right in parsed_rows]
     A, B = validate_input(A, B)
-    return ParsedExercise(A, B, variables, "equations")
+    return ParsedExercise(A, B, variables, "equations", detect_method(prompt))

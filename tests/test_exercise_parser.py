@@ -1,10 +1,13 @@
 """Ejercicios escritos: conversión exacta y rechazo de expresiones inseguras."""
 from fractions import Fraction
+import json
+from unittest.mock import MagicMock, patch
 import unittest
 
 from agent import InputError, TechChipAgent
 from api.solve import solve_exercise_payload
 from exercise_parser import parse_exercise
+from exercise_interpreter import interpret_exercise
 
 
 class ExerciseParserTests(unittest.TestCase):
@@ -43,6 +46,62 @@ class ExerciseParserTests(unittest.TestCase):
         result = solve_exercise_payload({"exercise": prompt})
         self.assertEqual(result["analysis"]["solution"], ["1", "2", "3", "4", "5", "6"])
         self.assertEqual(result["variables"], ["x1", "x2", "x3", "x4", "x5", "x6"])
+
+    def test_ten_by_ten_prompt_and_requested_method(self):
+        prompt = "; ".join(f"x{i} = {i}" for i in range(1, 11)) + "; resuelve por Gauss-Jordan"
+        parsed = parse_exercise(prompt)
+        self.assertEqual(len(parsed.A), 10)
+        self.assertEqual(parsed.B, list(range(1, 11)))
+        self.assertEqual(parsed.preferred_method, "gauss_jordan")
+
+    def test_flexible_json_keys_and_nested_payload(self):
+        parsed = parse_exercise('{"sistema":{"coeficientes":[[2,1],[1,-1]],"disponibilidades":[5,1]}}')
+        self.assertEqual(parsed.A, [[2, 1], [1, -1]])
+        self.assertEqual(parsed.B, [5, 1])
+        augmented = parse_exercise('{"matriz_aumentada":[[2,1,5],[1,-1,1]]}')
+        self.assertEqual(augmented.A, [[2, 1], [1, -1]])
+        self.assertEqual(augmented.B, [5, 1])
+
+    @patch("exercise_interpreter.urlopen")
+    def test_recognized_but_invalid_json_is_not_sent_to_model(self, urlopen):
+        with self.assertRaisesRegex(InputError, "A debe tener"):
+            interpret_exercise('{"coeficientes":[[1,2]],"disponibilidades":[3]}')
+        urlopen.assert_not_called()
+
+    @patch("exercise_interpreter.urlopen")
+    def test_natural_language_uses_structured_model_extraction(self, urlopen):
+        response = MagicMock()
+        response.read.return_value = json.dumps({
+            "status": "completed",
+            "output_text": json.dumps({
+                "status": "ok", "A": [["7", "3"], ["4", "5"]], "B": ["579", "643"],
+                "variables": ["producto A", "producto B"], "preferred_method": "gauss_jordan", "clarification": "",
+            }),
+        }).encode()
+        urlopen.return_value.__enter__.return_value = response
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
+            parsed = interpret_exercise("Dos productos consumen recursos; resuelve por Gauss-Jordan con los datos indicados.")
+        self.assertEqual(parsed.source, "llm")
+        self.assertEqual(parsed.A, [[7, 3], [4, 5]])
+        self.assertEqual(parsed.B, [579, 643])
+        self.assertEqual(parsed.preferred_method, "gauss_jordan")
+        request_body = json.loads(urlopen.call_args.args[0].data.decode())
+        self.assertEqual(request_body["text"]["format"]["type"], "json_schema")
+        self.assertFalse(request_body["store"])
+
+    @patch("exercise_interpreter.urlopen")
+    def test_ambiguous_model_extraction_requests_clarification(self, urlopen):
+        response = MagicMock()
+        response.read.return_value = json.dumps({
+            "status": "completed",
+            "output_text": json.dumps({
+                "status": "clarification", "A": [], "B": [], "variables": [],
+                "preferred_method": "none", "clarification": "¿Cuánto recurso B consume el segundo producto?",
+            }),
+        }).encode()
+        urlopen.return_value.__enter__.return_value = response
+        with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}), self.assertRaisesRegex(InputError, "Necesito una aclaración"):
+            interpret_exercise("El primer producto usa 7 kg; hay 579 kg disponibles.")
 
     def test_rejects_nonlinear_incomplete_and_unsafe_expressions(self):
         invalid = [

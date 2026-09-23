@@ -8,7 +8,7 @@ from agent import InputError, TechChipAgent, validate_input
 from ai_tutor import TutorError
 from api._http import JsonHandler
 from api.tutor import ask_tutor_serverless
-from exercise_parser import parse_exercise
+from exercise_interpreter import interpret_exercise
 
 STATIC_ROOT = Path(__file__).resolve().parents[1] / "web" / "dist"
 
@@ -44,13 +44,14 @@ def solve_exercise_payload(payload: object) -> dict:
     production = payload.get("production", False)
     if not isinstance(production, bool):
         raise InputError("production debe ser verdadero o falso.")
-    parsed = parse_exercise(payload["exercise"])
+    parsed = interpret_exercise(payload["exercise"])
     report = TechChipAgent().analyze(parsed.A, parsed.B, production=production)
     return {
         "input": parsed.to_input(production),
         "analysis": report.to_dict(),
         "variables": parsed.variables,
         "source": parsed.source,
+        "preferred_method": parsed.preferred_method,
     }
 
 

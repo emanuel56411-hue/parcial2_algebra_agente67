@@ -16,13 +16,21 @@ export async function solveSystem(input: SolveInput): Promise<Analysis> {
   return readResponse<Analysis>(response)
 }
 
-export async function solveExercise(exercise: string, production = false): Promise<{ input: SolveInput; analysis: Analysis; variables: string[]; source: string }> {
+export type ExerciseResult = {
+  input: SolveInput
+  analysis: Analysis
+  variables: string[]
+  source: "json" | "matrix_notation" | "equations" | "llm"
+  preferred_method: "gauss" | "gauss_jordan" | "inverse" | null
+}
+
+export async function solveExercise(exercise: string, production = false): Promise<ExerciseResult> {
   const response = await fetch("/api/exercise", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ exercise, production }),
   })
-  return readResponse(response)
+  return readResponse<ExerciseResult>(response)
 }
 
 type TutorPayload = SolveInput & {

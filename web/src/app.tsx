@@ -27,7 +27,6 @@ import { SolutionVisualization } from "@/components/visualization/solution-visua
 const ProductionChart = lazy(() => import("@/components/visualization/production-chart").then((module) => ({ default: module.ProductionChart })))
 import { TutorSheet } from "@/components/tutor/tutor-sheet"
 import { TutorAvatar } from "@/components/tutor/tutor-avatar"
-import tutorBanner from "@/assets/tutor-banner.webp"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -40,7 +39,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { cloneScenario, scenarios } from "@/data/scenarios"
-import { solveSystem } from "@/lib/api"
+import { solveExercise, solveSystem } from "@/lib/api"
 import { downloadJson } from "@/lib/format"
 import type { Analysis, SolveInput } from "@/types/analysis"
 
@@ -48,6 +47,17 @@ type Source = "scenario" | "custom" | "json"
 type StepContext = { method: string; stepIndex: number } | null
 
 const initial = cloneScenario("original")
+
+function methodFromJson(value: unknown): "gauss" | "gauss_jordan" | "inverse" | null {
+  if (!value || typeof value !== "object") return null
+  const candidate = (value as { method?: unknown; metodo?: unknown }).method ?? (value as { metodo?: unknown }).metodo
+  if (typeof candidate !== "string") return null
+  const normalized = candidate.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_-]+/g, " ")
+  if (normalized.includes("jordan")) return "gauss_jordan"
+  if (normalized.includes("inversa") || normalized.includes("inverse")) return "inverse"
+  if (normalized.includes("gauss")) return "gauss"
+  return null
+}
 
 function Metric({ label, children, id }: { label: string; children: React.ReactNode; id?: string }) {
   return <div className="space-y-1 border-l-2 border-primary/30 pl-4"><span className="text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">{label}</span><div id={id} className="font-mono text-lg font-semibold">{children}</div></div>
@@ -70,6 +80,7 @@ export default function App() {
   const [production, setProduction] = useState(initial.production)
   const [dimension, setDimension] = useState(3)
   const [jsonInput, setJsonInput] = useState('{"A":[[2,1],[1,-1]],"B":[5,1]}')
+  const [inputNotice, setInputNotice] = useState("")
   const [preferredMethod, setPreferredMethod] = useState("gauss")
   const [report, setReport] = useState<Analysis | null>(null)
   const [analysisVersion, setAnalysisVersion] = useState(0)
@@ -89,27 +100,28 @@ export default function App() {
   }
 
   function chooseSource(next: Source) {
-    setSource(next); setReport(null); setError("")
+    setSource(next); setReport(null); setError(""); setInputNotice("")
     if (next === "scenario") chooseScenario(scenarioKey)
     if (next === "custom") resizeCustom(dimension)
     if (next === "json") setProduction(false)
   }
 
   function resizeCustom(raw: number) {
-    const size = Math.max(2, Math.min(6, raw || 3))
+    const size = Math.max(2, Math.min(10, raw || 3))
     setDimension(size)
     setA(Array.from({ length: size }, (_, row) => Array.from({ length: size }, (_, column) => row === column ? "1" : "0")))
     setB(Array(size).fill("1")); setProduction(false); setReport(null)
   }
 
   async function loadJsonFile(file: File) {
-    setError("")
+    setError(""); setInputNotice("")
     try {
       const text = await file.text()
-      const parsed = JSON.parse(text)
-      if (!parsed || !Array.isArray(parsed.A) || !Array.isArray(parsed.B)) throw new Error('El archivo debe contener {"A":[[...]],"B":[...]}.')
-      setJsonInput(JSON.stringify(parsed, null, 2))
+      if (!text.trim()) throw new Error("El archivo está vacío.")
+      if (new Blob([text]).size > 100_000) throw new Error("El archivo no puede superar 100 kB.")
+      setJsonInput(text)
       setReport(null)
+      setInputNotice(`Archivo cargado: ${file.name}. Puedes revisarlo antes de resolver.`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo leer el archivo JSON.")
     } finally {
@@ -118,15 +130,34 @@ export default function App() {
   }
 
   async function solve() {
-    setError(""); setReport(null); setLoading(true)
+    setError(""); setInputNotice(""); setReport(null); setLoading(true)
     try {
       let input: SolveInput
+      let result: Analysis
       if (source === "json") {
-        const parsed = JSON.parse(jsonInput)
-        if (!parsed || !Array.isArray(parsed.A) || !Array.isArray(parsed.B)) throw new Error("El JSON debe contener A y B como arreglos.")
-        input = { A: parsed.A, B: parsed.B, production }
-      } else input = { A, B, production }
-      const result = await solveSystem(input)
+        let parsed: unknown = null
+        try { parsed = JSON.parse(jsonInput) } catch { /* El servidor interpretará el texto libre. */ }
+        const direct = parsed && typeof parsed === "object" && Array.isArray((parsed as { A?: unknown }).A) && Array.isArray((parsed as { B?: unknown }).B)
+        if (direct) {
+          const system = parsed as { A: SolveInput["A"]; B: SolveInput["B"] }
+          input = { A: system.A, B: system.B, production }
+          result = await solveSystem(input)
+          const requestedMethod = methodFromJson(parsed)
+          if (requestedMethod) setPreferredMethod(requestedMethod)
+          setInputNotice("Entrada detectada como JSON A/B y validada directamente.")
+        } else {
+          const interpreted = await solveExercise(jsonInput, production)
+          input = interpreted.input
+          result = interpreted.analysis
+          setA(input.A.map((row) => row.map(String))); setB(input.B.map(String)); setDimension(input.A.length)
+          if (interpreted.preferred_method) setPreferredMethod(interpreted.preferred_method)
+          const labels = { llm: "lenguaje natural con IA", equations: "ecuaciones escritas", matrix_notation: "notación A/B", json: "JSON flexible" }
+          setInputNotice(`Entrada interpretada como ${labels[interpreted.source]}. Se extrajo y validó un sistema ${input.A.length}×${input.A.length}.`)
+        }
+      } else {
+        input = { A, B, production }
+        result = await solveSystem(input)
+      }
       setCurrentInput(input); setReport(result); setAnalysisVersion((value) => value + 1)
       window.setTimeout(() => document.getElementById("results")?.scrollIntoView({ behavior: "smooth" }), 50)
     } catch (caught) {
@@ -160,17 +191,6 @@ export default function App() {
       <a href="#calculator" className="sr-only z-50 rounded-md bg-background p-3 focus:not-sr-only focus:fixed focus:left-3 focus:top-3">Saltar a la calculadora</a>
       <Header />
       <main>
-        <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6" aria-labelledby="tutor-welcome-title">
-          <div className="relative isolate overflow-hidden rounded-[2rem] border border-violet-300/55 shadow-[0_28px_80px_-42px_#8b5cf6]" style={{ height: "clamp(220px, 40vw, 420px)" }}>
-            <img src={tutorBanner} alt="Tutor de IA especialista en matrices" width={1599} height={1066} fetchPriority="high" className="absolute inset-0 size-full object-cover object-[50%_35%]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#29203f]/95 via-violet-900/25 to-sky-200/10" aria-hidden="true" />
-            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10">
-              <p className="mb-1 text-xs font-bold uppercase tracking-[.2em] text-violet-200">Conoce a tu guía</p>
-              <h1 id="tutor-welcome-title" className="text-balance text-2xl font-bold text-white drop-shadow-md sm:text-4xl">Tutor de IA · Matrices</h1>
-              <p className="mt-2 max-w-xl text-sm text-slate-100 sm:text-base">Pregunta lo que no entiendas y revisa cada paso conmigo.</p>
-            </div>
-          </div>
-        </section>
         <section className="relative overflow-hidden border-b" aria-labelledby="hero-title">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_75%_25%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_38%)]" />
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_.8fr] lg:py-20">
@@ -184,18 +204,19 @@ export default function App() {
             <div className="mb-8 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">01 · Entrada</p><h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Define y resuelve el sistema</h2><p className="mt-3 text-muted-foreground">Los datos originales de la guía están cargados desde el inicio. Puedes editar cualquier celda antes de calcular.</p></div>
             <div className="grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)]">
               <Card className="h-fit"><CardHeader><CardTitle className="text-lg">Configuración</CardTitle><CardDescription>Origen, escenario y método principal.</CardDescription></CardHeader><CardContent className="space-y-5">
-                <div className="space-y-2"><Label>Origen de los datos</Label><Select value={source} onValueChange={(value) => chooseSource(value as Source)}><SelectTrigger className="w-full" aria-label="Origen de los datos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scenario">Escenario preparado</SelectItem><SelectItem value="custom">Matriz propia</SelectItem><SelectItem value="json">Importar JSON</SelectItem></SelectContent></Select></div>
+                <div className="space-y-2"><Label>Origen de los datos</Label><Select value={source} onValueChange={(value) => chooseSource(value as Source)}><SelectTrigger className="w-full" aria-label="Origen de los datos"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="scenario">Escenario preparado</SelectItem><SelectItem value="custom">Matriz propia</SelectItem><SelectItem value="json">Texto o JSON</SelectItem></SelectContent></Select></div>
                 {source === "scenario" && <div className="space-y-2"><Label>Escenario</Label><Select value={scenarioKey} onValueChange={chooseScenario}><SelectTrigger className="w-full" aria-label="Escenario preparado"><SelectValue /></SelectTrigger><SelectContent>{scenarioEntries.map(([key, item]) => <SelectItem key={key} value={key}>{item.shortTitle}</SelectItem>)}</SelectContent></Select><p className="text-xs leading-relaxed text-muted-foreground">{currentScenario.note}</p></div>}
-                {source === "custom" && <div className="space-y-2"><Label>Dimensión cuadrada</Label><Select value={String(dimension)} onValueChange={(value) => resizeCustom(Number(value))}><SelectTrigger className="w-full" aria-label="Dimensión de la matriz"><SelectValue /></SelectTrigger><SelectContent>{[2, 3, 4, 5, 6].map((size) => <SelectItem key={size} value={String(size)}>{size} × {size}</SelectItem>)}</SelectContent></Select><p className="text-xs text-muted-foreground">Elige directamente entre 2×2 y 6×6.</p></div>}
+                {source === "custom" && <div className="space-y-2"><Label>Dimensión cuadrada</Label><Select value={String(dimension)} onValueChange={(value) => resizeCustom(Number(value))}><SelectTrigger className="w-full" aria-label="Dimensión de la matriz"><SelectValue /></SelectTrigger><SelectContent>{[2, 3, 4, 5, 6, 7, 8, 9, 10].map((size) => <SelectItem key={size} value={String(size)}>{size} × {size}</SelectItem>)}</SelectContent></Select><p className="text-xs text-muted-foreground">Elige directamente entre 2×2 y 10×10.</p></div>}
                 <div className="space-y-2"><Label>Método principal</Label><Select value={preferredMethod} onValueChange={setPreferredMethod}><SelectTrigger className="w-full" aria-label="Método principal"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="gauss">Eliminación de Gauss</SelectItem><SelectItem value="gauss_jordan">Gauss-Jordan</SelectItem><SelectItem value="inverse">Matriz inversa</SelectItem></SelectContent></Select><p className="text-xs text-muted-foreground">Los otros métodos también se calculan para comprobar la coincidencia.</p></div>
                 <Separator />
                 <div className="flex items-center justify-between gap-4"><div><Label htmlFor="production">Interpretación productiva</Label><p className="mt-1 text-xs text-muted-foreground">Exige X ≥ 0. Si X está en miles, A se interpreta por cada mil módulos.</p></div><Switch id="production" checked={production} onCheckedChange={(checked) => { setProduction(checked); setReport(null) }} /></div>
               </CardContent></Card>
-              <Card className="min-w-0"><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle>Matriz aumentada A · X = B</CardTitle><CardDescription>Acepta enteros, decimales, notación científica y fracciones.</CardDescription></div><Badge variant="outline">{A.length} × {A.length}</Badge></div></CardHeader><CardContent className="min-w-0 space-y-5">
-                {source === "json" ? <div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="json-input">Datos JSON</Label><input ref={jsonFileRef} type="file" accept="application/json,.json" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadJsonFile(file) }} /><Button type="button" size="sm" variant="outline" onClick={() => jsonFileRef.current?.click()}><FileJson />Subir archivo JSON</Button></div><Textarea id="json-input" className="min-h-60 font-mono text-xs" value={jsonInput} onChange={(event) => { setJsonInput(event.target.value); setReport(null) }} spellCheck={false} /><p className="text-xs text-muted-foreground">B puede ser vector o columna; escribe las fracciones como &quot;2/3&quot;.</p></div> : <div id="matrix-editor"><MatrixEditor A={A} B={B} onChange={(nextA, nextB) => { setA(nextA); setB(nextB); setReport(null) }} /></div>}
+              <Card className="min-w-0 shadow-sm"><CardHeader><div className="flex flex-wrap items-center justify-between gap-3"><div><CardTitle>{source === "json" ? "Describe o pega tu sistema" : "Matriz aumentada A · X = B"}</CardTitle><CardDescription>{source === "json" ? "Detectamos automáticamente texto libre, ecuaciones y JSON." : "Acepta enteros, decimales, notación científica y fracciones."}</CardDescription></div><Badge variant="outline">{source === "json" ? "Hasta 10 × 10" : `${A.length} × ${A.length}`}</Badge></div></CardHeader><CardContent className="min-w-0 space-y-5">
+                {source === "json" ? <div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="json-input">Problema en palabras, ecuaciones o JSON</Label><input ref={jsonFileRef} type="file" accept="application/json,text/plain,.json,.txt,.md" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadJsonFile(file) }} /><Button type="button" size="sm" variant="outline" onClick={() => jsonFileRef.current?.click()}><FileJson />Subir JSON o texto</Button></div><Textarea id="json-input" className="min-h-72 resize-y text-sm leading-relaxed" value={jsonInput} onChange={(event) => { setJsonInput(event.target.value); setReport(null); setInputNotice("") }} placeholder={'Ejemplo en palabras:\nEl producto x usa 7 kg de A y 4 kg de B; el producto y usa 3 kg de A y 5 kg de B. Hay 579 kg de A y 643 kg de B. Resuelve por Gauss-Jordan.\n\nO pega JSON:\n{"A":[[7,3],[4,5]],"B":[579,643]}'} spellCheck /><div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-2"><p>En texto libre, incluye el consumo de cada producto y la disponibilidad de cada recurso.</p><p className="sm:text-right">En JSON, B puede ser vector o columna y las fracciones pueden escribirse como &quot;2/3&quot;.</p></div></div> : <div id="matrix-editor"><MatrixEditor A={A} B={B} onChange={(nextA, nextB) => { setA(nextA); setB(nextB); setReport(null) }} /></div>}
                 {source === "scenario" && scenarioKey !== "example" && <Alert className="border-amber-500/40 bg-amber-500/5"><ShieldAlert className="text-amber-600" /><AlertTitle>{scenarioKey === "original" ? "Resultado incorrecto documentado" : "Variante solo comparativa"}</AlertTitle><AlertDescription>{scenarioKey === "original" ? "El vector indicado en el enunciado no resuelve este B. Aquí se calcula la respuesta real de los datos originales." : "Este B alternativo produce el vector indicado, pero no pertenece a los datos originales de la guía."}</AlertDescription></Alert>}
                 {error && <Alert variant="destructive" role="alert"><ShieldAlert /><AlertTitle>No se pudo resolver</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5"><p className="text-xs text-muted-foreground">El servidor valida dimensiones y vuelve a calcular todo desde A y B.</p><Button id="solve" size="lg" onClick={() => void solve()} disabled={loading}>{loading ? <LoaderCircle className="animate-spin" /> : <Calculator />}{loading ? "Analizando…" : "Resolver sistema"}</Button></div>
+                {inputNotice && <Alert><CheckCircle2 /><AlertTitle>Entrada reconocida</AlertTitle><AlertDescription>{inputNotice}</AlertDescription></Alert>}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-5"><p className="text-xs text-muted-foreground">El intérprete solo extrae A y B; el servidor valida y calcula los tres métodos con aritmética exacta.</p><Button id="solve" size="lg" onClick={() => void solve()} disabled={loading}>{loading ? <LoaderCircle className="animate-spin" /> : <Calculator />}{loading ? "Interpretando y resolviendo…" : "Resolver sistema"}</Button></div>
               </CardContent></Card>
             </div>
           </div>

@@ -22,7 +22,7 @@ Docente: Exides Gamaliel Claros Velasquez \quad Grupo: 01 EO8 \quad Entrega: 23 
 \begin{document}
 \maketitle
 \begin{abstract}
-Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X=\left(-\frac{105}{83},\frac{345}{83},\frac{2430}{83},\frac{1170}{83},\frac{1130}{83},\frac{2010}{83}\right)^T$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones, junto con entrada mediante ecuaciones, JSON y bloques A/B.
+Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X=\left(-\frac{105}{83},\frac{345}{83},\frac{2430}{83},\frac{1170}{83},\frac{1130}{83},\frac{2010}{83}\right)^T$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones. La entrada admite matrices de hasta $10\times10$, ecuaciones, JSON y enunciados en lenguaje natural convertidos a $A$ y $B$ mediante una salida estructurada.
 \end{abstract}
 \begin{IEEEkeywords}álgebra lineal, sistemas de ecuaciones, eliminación de Gauss, Gauss--Jordan, matriz inversa, agente explicable, balance de recursos\end{IEEEkeywords}
 
@@ -38,7 +38,7 @@ $x_4$ & AI-IoT LowPower & miles de módulos por turno \\
 $x_5$ & AI-Robotics Heavy & miles de módulos por turno \\
 $x_6$ & AI-Medical Vision & miles de módulos por turno \\\bottomrule\end{tabular}\end{table}
 La matriz de coeficientes es
-\resizebox{\linewidth}{!}{\(\left[\begin{array}{rrrrrr}2 & 1 & 3 & 1 & 2 & 1 \\ 1 & 3 & 2 & 2 & 1 & 2 \\ 3 & 2 & 4 & 1 & 3 & 2 \\ 1 & 1 & 1 & 4 & 2 & 1 \\ 2 & 1 & 2 & 1 & 5 & 3 \\ 1 & 2 & 1 & 2 & 1 & 4\end{array}\right]\)}
+\resizebox{0.72\linewidth}{!}{\(\left[\begin{array}{rrrrrr}2 & 1 & 3 & 1 & 2 & 1 \\ 1 & 3 & 2 & 2 & 1 & 2 \\ 3 & 2 & 4 & 1 & 3 & 2 \\ 1 & 1 & 1 & 4 & 2 & 1 \\ 2 & 1 & 2 & 1 & 5 & 3 \\ 1 & 2 & 1 & 2 & 1 & 4\end{array}\right]\)}
 y las restricciones del caso principal original son:
 \begin{table}[ht]\caption{Recursos y disponibilidades originales}\centering\scriptsize\begin{tabular}{llll}\toprule&Recurso&Unidad&$b_i$\\\midrule $R_1$ & Litografía EUV & horas-máquina & 155 \\
 $R_2$ & Pruebas ATE & horas-máquina & 160 \\
@@ -46,8 +46,7 @@ $R_3$ & Resina de encapsulado & kg & 225 \\
 $R_4$ & Sustrato de silicio & m\textsuperscript{2} & 140 \\
 $R_5$ & Energía láser & MWh & 215 \\
 $R_6$ & Inspección óptica & horas-hombre & 175 \\\bottomrule\end{tabular}\end{table}
-La matriz aumentada inicial es
-\resizebox{\linewidth}{!}{\(\left[\begin{array}{rrrrrr|r}2 & 1 & 3 & 1 & 2 & 1 & 155 \\ 1 & 3 & 2 & 2 & 1 & 2 & 160 \\ 3 & 2 & 4 & 1 & 3 & 2 & 225 \\ 1 & 1 & 1 & 4 & 2 & 1 & 140 \\ 2 & 1 & 2 & 1 & 5 & 3 & 215 \\ 1 & 2 & 1 & 2 & 1 & 4 & 175\end{array}\right]\)}
+La matriz aumentada inicial y todas sus transformaciones se reproducen íntegramente en el Apéndice A.
 Las operaciones elementales son reversibles y conservan el conjunto solución. Si la eliminación obtiene seis pivotes, $\det(A)$ es distinto de cero, $A$ es invertible y existe una única solución. En la ejecución, $\det(A)=-83\neq0$ y $\operatorname{rango}(A)=\operatorname{rango}([A\mid B])=6$.
 
 \section{Discrepancia de datos}
@@ -88,8 +87,8 @@ Los seis residuos son cero y $E_{\max}=0<10^{-6}$.
 
 \section{Arquitectura del agente}
 El flujo funcional es:
-\begin{center}\begin{tabular}{c}\fbox{Entrada JSON / consola / web}\\$\downarrow$\\\fbox{Validación dimensional y racional}\\$\downarrow$\\\fbox{Determinante, rangos y diagnóstico}\\$\downarrow$\\\fbox{Gauss / Gauss--Jordan / inversa}\\$\downarrow$\\\fbox{Verificación $AX=B$ e interpretación}\end{tabular}\end{center}
-\texttt{agent.py} contiene validación, pivoteo, rangos y análisis; \texttt{exercise_parser.py} convierte de forma segura ecuaciones lineales, JSON y bloques A/B; \texttt{api/solve.py} ofrece la función serverless y \texttt{web/} la interfaz React. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite 2x2 hasta 6x6 y no conserva el límite anterior de 500 caracteres; solo aplica un límite técnico de 100 kB \cite{openai}.
+\begin{center}\begin{tabular}{c}\fbox{Texto / ecuaciones / JSON / editor web}\\$\downarrow$\\\fbox{Extracción estructurada de $A$ y $B$}\\$\downarrow$\\\fbox{Validación dimensional y racional}\\$\downarrow$\\\fbox{Determinante, rangos y diagnóstico}\\$\downarrow$\\\fbox{Gauss / Gauss--Jordan / inversa}\\$\downarrow$\\\fbox{Verificación $AX=B$ e interpretación}\end{tabular}\end{center}
+\texttt{agent.py} contiene validación, pivoteo, rangos y análisis; \texttt{exercise\_parser.py} convierte de forma determinista ecuaciones lineales, JSON y bloques A/B; y \texttt{exercise\_interpreter.py} usa una salida JSON estructurada del modelo únicamente cuando la entrada libre no pertenece a esos formatos. La matriz extraída vuelve a validarse antes de llegar al motor exacto. Si faltan datos o existe ambigüedad, la interfaz solicita una aclaración y no calcula. \texttt{api/solve.py} ofrece la función serverless y \texttt{web/} la interfaz React. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite de $2\times2$ hasta $10\times10$ y aplica un límite técnico de 100 kB por entrada \cite{openai}.
 
 \section{Pruebas de validación}
 \begin{table*}[ht]\caption{Resultados generados por el agente}\centering\footnotesize\begin{tabular}{lllll}\toprule Escenario&$\det(A)$&Rangos&Resultado exacto&Diagnóstico\\\midrule
@@ -505,7 +504,7 @@ El multiplicador es -(-1/15)/(1) = 1/15; así, -1/15 + (1/15)\(\cdot\)(1) = 0 en
 
 \medskip
 \subsection*{Paso 39: [I | X]: lectura directa de la solución}
-El bloque izquierdo es la identidad: la fila i representa 1\(\cdot\)xᵢ = Xᵢ. Por eso la última columna se lee directamente, sin sustitución hacia atrás.
+El bloque izquierdo es la identidad: la fila $i$ representa $1\cdot x_i=X_i$. Por eso la última columna se lee directamente, sin sustitución hacia atrás.
 
 \resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|r}1 & 0 & 0 & 0 & 0 & 0 & -\frac{105}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & \frac{345}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{2430}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{1170}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{1130}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{2010}{83}\end{array}\right]\)}
 
