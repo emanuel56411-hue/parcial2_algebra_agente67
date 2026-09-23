@@ -37,7 +37,7 @@ INTERPRETER_FORMAT = {
                 "resource": {"type": "string"}, "value": {"type": "string"}, "fragment": {"type": "string"}
             }, "required": ["resource", "value", "fragment"], "additionalProperties": False}},
         },
-        "required": ["status", "a", "b", "variables", "preferred_method", "clarification"],
+        "required": ["status", "a", "b", "variables", "preferred_method", "clarification", "coefficient_evidence", "availability_evidence"],
         "additionalProperties": False,
     },
 }
