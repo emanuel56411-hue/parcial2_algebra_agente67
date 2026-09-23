@@ -152,7 +152,12 @@ export default function App() {
           setA(input.A.map((row) => row.map(String))); setB(input.B.map(String)); setDimension(input.A.length)
           if (interpreted.preferred_method) setPreferredMethod(interpreted.preferred_method)
           const labels = { llm: "lenguaje natural con IA", equations: "ecuaciones escritas", matrix_notation: "notación A/B", json: "JSON flexible" }
-          setInputNotice(`Entrada interpretada como ${labels[interpreted.source]}. Se extrajo y validó un sistema ${input.A.length}×${input.A.length}.`)
+          const evidenceCount = interpreted.evidence?.coefficients.length ?? 0
+          const expectedEvidence = input.A.length * input.A.length
+          const evidenceNotice = interpreted.evidence?.verified
+            ? ` Extracción verificada: ${evidenceCount}/${expectedEvidence} coeficientes y ${interpreted.evidence.availability.length}/${input.B.length} disponibilidades con evidencia textual.`
+            : " La tabla de evidencia no quedó completa; revisa el texto antes de usar el resultado."
+          setInputNotice(`Entrada interpretada como ${labels[interpreted.source]}. Se extrajo y validó un sistema ${input.A.length}×${input.A.length}.${evidenceNotice}`)
         }
       } else {
         input = { A, B, production }
