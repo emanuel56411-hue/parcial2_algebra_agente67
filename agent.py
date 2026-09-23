@@ -429,15 +429,19 @@ class TechChipAgent:
         if report.status == "inconsistent":
             report.interpretation = [
                 "El sistema no tiene solución: ninguna combinación de valores puede satisfacer todas las ecuaciones al mismo tiempo.",
-                f"La evidencia es rango(A) = {report.rank_A} y rango([A|B]) = {report.rank_augmented}; al ser distintos, aparece al menos una contradicción del tipo 0 = c, con c ≠ 0.",
-                "Revisa especialmente las ecuaciones dependientes y sus términos independientes o disponibilidades; alguno de esos datos es incompatible con los demás.",
+                f"Paso 1 — Diagnóstico: se compararon las {len(A)} ecuaciones del modelo A·X = B y se obtuvo rango(A) = {report.rank_A}, pero rango([A|B]) = {report.rank_augmented}.",
+                "Paso 2 — Evidencia: la matriz aumentada reduce una fila a 0 = c, con c ≠ 0; por eso las restricciones son incompatibles.",
+                "Paso 3 — Resolución: no se puede reportar un vector X ni declarar coincidencia de métodos porque el sistema es inconsistente.",
+                "Conclusión práctica: revisa los coeficientes, las ecuaciones dependientes y las disponibilidades; al menos un dato impide cumplir todas las restricciones simultáneamente.",
             ]
         elif report.status == "infinite":
             free_names = ", ".join(f"x{column + 1}" for column in report.free_columns)
             report.interpretation = [
                 f"El sistema es compatible, pero no determina una respuesta única: tiene infinitas soluciones y {len(report.free_columns)} variable(s) libre(s) ({free_names}).",
-                f"La evidencia es rango(A) = rango([A|B]) = {report.rank_A}, menor que las {len(A)} incógnitas.",
-                "La expresión X = Xₚ + t₁v₁ + … reúne todas las soluciones; hace falta agregar restricciones independientes para obtener un solo resultado.",
+                f"Paso 1 — Diagnóstico: rango(A) = rango([A|B]) = {report.rank_A}, menor que las {len(A)} incógnitas; por eso el sistema es compatible indeterminado.",
+                "Paso 2 — Resolución: las variables libres generan la familia X = Xₚ + t₁v₁ + …; cada parámetro representa una elección posible.",
+                "Paso 3 — Verificación: cada miembro de esa familia satisface A·X = B, pero no existe un único plan que seleccionar solo con estas ecuaciones.",
+                "Conclusión práctica: agrega restricciones independientes (por ejemplo, demanda, límites o una función objetivo) para elegir una solución concreta.",
             ]
             if production:
                 report.interpretation.append("La viabilidad de esta familia bajo X ≥ 0 requiere un análisis adicional; no se declara un plan de producción viable.")
@@ -445,10 +449,10 @@ class TechChipAgent:
             negatives = [f"x{i + 1} = {value} (≈ {decimal_text(value)})" for i, value in enumerate(report.solution) if value < 0]
             exact_solution = ", ".join(f"x{i + 1} = {value}" for i, value in enumerate(report.solution))
             if production and negatives:
-                report.interpretation = ["Plan de producción inalcanzable por restricción de materias primas: el único resultado algebraico viola X ≥ 0.", "La solución de AX = B exige cantidades negativas: " + "; ".join(negatives) + ".", f"Gauss, Gauss-Jordan y matriz inversa coinciden en X = ({exact_solution}); la sustitución produce AX = B con error exacto 0.", "No se puede consumir exactamente el 100 % de todos los recursos con X ≥ 0. Esto no demuestra que sea imposible producir con capacidad ociosa."]
+                report.interpretation = ["Plan de producción inalcanzable por restricción de materias primas: el único resultado algebraico viola X ≥ 0.", f"Paso 1 — Solución: Gauss, Gauss-Jordan y matriz inversa coinciden en X = ({exact_solution}).", "Paso 2 — Verificación: la sustitución produce A·X = B con error exacto 0; matemáticamente, el sistema sí queda satisfecho.", "Paso 3 — Viabilidad: la solución exige cantidades negativas: " + "; ".join(negatives) + ".", "Conclusión práctica: no se puede consumir exactamente el 100 % de todos los recursos con X ≥ 0. Esto no demuestra que sea imposible producir con capacidad ociosa."]
             elif production:
-                report.interpretation = ["Plan factible para el modelo continuo: la solución es única, todas las cantidades son no negativas y AX = B consume exactamente las disponibilidades indicadas.", f"Los tres métodos coinciden en X = ({exact_solution}) y la verificación tiene error exacto 0.", "X se expresa en miles de unidades; X·1000 se informa como cantidad continua, sin redondear a unidades enteras."]
+                report.interpretation = ["Plan factible para el modelo continuo: la solución es única, todas las cantidades son no negativas y A·X = B consume exactamente las disponibilidades indicadas.", f"Paso 1 — Solución: Gauss, Gauss-Jordan y matriz inversa coinciden en X = ({exact_solution}).", "Paso 2 — Verificación: al sustituir cada componente en las ecuaciones, todos los residuos son exactamente 0.", "Paso 3 — Viabilidad: ninguna cantidad es negativa, por lo que el plan satisface la condición X ≥ 0.", "Conclusión práctica: X se expresa en miles de unidades; X·1000 se informa como cantidad continua, sin redondear a unidades enteras."]
             else:
-                report.interpretation = [f"El sistema tiene una única solución: {exact_solution}.", f"Como det(A) = {report.determinant} ≠ 0, A es invertible; Gauss, Gauss-Jordan y matriz inversa coinciden y AX = B se verifica con error exacto 0.", "Si algún valor es negativo, sigue siendo una solución matemática válida; su aceptación práctica depende del contexto del problema."]
+                report.interpretation = [f"El sistema tiene una única solución: {exact_solution}.", f"Paso 1 — Diagnóstico: det(A) = {report.determinant} ≠ 0, por lo que A es invertible y la solución es única.", "Paso 2 — Resolución: Gauss, Gauss-Jordan y matriz inversa producen el mismo vector X.", "Paso 3 — Verificación: la sustitución en cada ecuación devuelve exactamente B; el error residual es 0.", "Conclusión práctica: si algún valor es negativo, sigue siendo una solución matemática válida; su aceptación práctica depende del contexto del problema."]
             report.interpretation.append("La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.")
         return report
