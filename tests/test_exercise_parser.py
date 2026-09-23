@@ -88,6 +88,8 @@ class ExerciseParserTests(unittest.TestCase):
         request_body = json.loads(urlopen.call_args.args[0].data.decode())
         self.assertEqual(request_body["text"]["format"]["type"], "json_schema")
         self.assertFalse(request_body["store"])
+        self.assertIn("NOMBRE del recurso", request_body["instructions"])
+        self.assertIn("número por número", request_body["instructions"])
 
     @patch("exercise_interpreter.urlopen")
     def test_natural_language_accepts_public_lowercase_a_b_contract(self, urlopen):

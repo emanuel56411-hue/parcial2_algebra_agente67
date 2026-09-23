@@ -45,10 +45,17 @@ REGLAS DE EXTRACCIÓN (son obligatorias):
 2) Identifica después los N PRODUCTOS y conserva exactamente su orden de aparición.
    Cada producto es una COLUMNA de a.
 3) Para cada producto, asigna sus consumos a las filas según el orden de recursos
-   indicado (aunque el texto use sinónimos). No transpongas ni reordenes.
-4) Extrae las disponibilidades finales en ese mismo orden para b.
-5) Comprueba antes de responder que len(a)=len(a[0])=len(b)=N, que todas las
-   filas tienen N valores y que ningún dato fue inventado, omitido o redondeado.
+   indicado, pero relee el párrafo COMPLETO y confirma cada número contra el
+   NOMBRE del recurso que lo acompaña; no confíes únicamente en la posición de
+   la oración y no transpongas ni reordenes.
+4) Para b, relee el párrafo de disponibilidad total y empareja cada número con
+   el NOMBRE explícito de su recurso antes de colocarlo en el orden original.
+5) Haz una auditoría final número por número: compara cada entrada de a y b con
+   el texto original, incluyendo signo, decimal, fracción y ceros. Si un solo
+   valor no coincide exactamente, corrígelo y vuelve a revisar todo antes de
+   responder. No entregues el JSON hasta que no haya ninguna discrepancia.
+6) Comprueba además que len(a)=len(a[0])=len(b)=N, que todas las filas tienen N
+   valores y que ningún dato fue inventado, omitido o redondeado.
 
 Conserva enteros, decimales, notación científica y fracciones como cadenas
 exactas. Admite sistemas de 2 a 10 productos/recursos. Si falta un coeficiente,
