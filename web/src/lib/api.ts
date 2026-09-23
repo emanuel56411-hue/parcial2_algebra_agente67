@@ -22,6 +22,11 @@ export type ExerciseResult = {
   variables: string[]
   source: "json" | "matrix_notation" | "equations" | "llm"
   preferred_method: "gauss" | "gauss_jordan" | "inverse" | null
+  evidence?: {
+    coefficients: Array<{ product: string; resource: string; value: string; fragment: string }>
+    availability: Array<{ resource: string; value: string; fragment: string }>
+    verified: boolean
+  } | null
 }
 
 export async function solveExercise(exercise: string, production = false): Promise<ExerciseResult> {

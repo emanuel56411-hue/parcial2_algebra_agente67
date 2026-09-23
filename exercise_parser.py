@@ -38,6 +38,7 @@ class ParsedExercise:
     variables: list[str]
     source: str
     preferred_method: str | None = None
+    evidence: dict | None = None
 
     def to_input(self, production: bool = False) -> dict:
         return {"A": json_ready(self.A), "B": json_ready(self.B), "production": production}

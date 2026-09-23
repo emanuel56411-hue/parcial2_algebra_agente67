@@ -52,6 +52,7 @@ def solve_exercise_payload(payload: object) -> dict:
         "variables": parsed.variables,
         "source": parsed.source,
         "preferred_method": parsed.preferred_method,
+        "evidence": parsed.evidence,
     }
 
 

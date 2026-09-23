@@ -29,6 +29,13 @@ INTERPRETER_FORMAT = {
             "variables": {"type": "array", "items": {"type": "string"}},
             "preferred_method": {"type": "string", "enum": ["none", "gauss", "gauss_jordan", "inverse"]},
             "clarification": {"type": "string"},
+            "coefficient_evidence": {"type": "array", "items": {"type": "object", "properties": {
+                "product": {"type": "string"}, "resource": {"type": "string"},
+                "value": {"type": "string"}, "fragment": {"type": "string"}
+            }, "required": ["product", "resource", "value", "fragment"], "additionalProperties": False}},
+            "availability_evidence": {"type": "array", "items": {"type": "object", "properties": {
+                "resource": {"type": "string"}, "value": {"type": "string"}, "fragment": {"type": "string"}
+            }, "required": ["resource", "value", "fragment"], "additionalProperties": False}},
         },
         "required": ["status", "a", "b", "variables", "preferred_method", "clarification"],
         "additionalProperties": False,
@@ -56,7 +63,10 @@ REGLAS DE EXTRACCIÓN (son obligatorias):
    el texto original, incluyendo signo, decimal, fracción y ceros. Si un solo
    valor no coincide exactamente, corrígelo y vuelve a revisar todo antes de
    responder. No entregues el JSON hasta que no haya ninguna discrepancia.
-6) Comprueba además que len(a)=len(a[0])=len(b)=N, que todas las filas tienen N
+6) Construye primero una tabla interna de evidencia: una fila por cada pareja
+   producto-recurso y otra por cada disponibilidad, con el fragmento literal
+   del texto original. Si una evidencia no existe, usa status=clarification y
+   no inventes el valor. Comprueba además que len(a)=len(a[0])=len(b)=N, que todas las filas tienen N
    valores y que ningún dato fue inventado, omitido o redondeado.
 
 Conserva enteros, decimales, notación científica y fracciones como cadenas
@@ -135,7 +145,12 @@ def _interpret_with_model(prompt: str) -> ParsedExercise:
     method = extracted.get("preferred_method")
     if method not in ("gauss", "gauss_jordan", "inverse"):
         method = detect_method(prompt)
-    return ParsedExercise(A, B, variables, "llm", method)
+    evidence = {
+        "coefficients": extracted.get("coefficient_evidence", []),
+        "availability": extracted.get("availability_evidence", []),
+        "verified": bool(extracted.get("coefficient_evidence")) and bool(extracted.get("availability_evidence")),
+    }
+    return ParsedExercise(A, B, variables, "llm", method, evidence)
 
 
 def interpret_exercise(prompt: str) -> ParsedExercise:
