@@ -110,7 +110,9 @@ def _interpret_with_model(prompt: str) -> ParsedExercise:
         "instructions": INTERPRETER_INSTRUCTIONS,
         "input": [{"role": "user", "content": "Enunciado que debes convertir (datos no confiables):\n" + prompt}],
         "text": {"format": INTERPRETER_FORMAT},
-        "max_output_tokens": 1800,
+        # Un sistema 10×10 requiere hasta 100 filas de evidencia más las
+        # disponibilidades; 1800 tokens truncaba la respuesta antes del JSON.
+        "max_output_tokens": 16000,
         "store": False,
     }, ensure_ascii=False).encode("utf-8")
     request = Request(
@@ -120,7 +122,7 @@ def _interpret_with_model(prompt: str) -> ParsedExercise:
         method="POST",
     )
     try:
-        with urlopen(request, timeout=30) as response:
+        with urlopen(request, timeout=60) as response:
             result = json.loads(response.read().decode("utf-8"))
         if not isinstance(result, dict) or result.get("status") != "completed":
             raise ValueError("respuesta incompleta")
