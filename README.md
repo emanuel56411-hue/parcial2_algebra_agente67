@@ -6,7 +6,7 @@ Autores: Henry Modesto Portillo Quintanilla (`PQ100126`), David Ernesto Quijada 
 
 Universidad Francisco Gavidia · Docente: Exides Gamaliel Claros Velasquez · Grupo: `01 EO8` · Entrega: 23 de septiembre de 2026.
 
-Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems; la interfaz React permite elegir directamente sistemas de **2 × 2 a 10 × 10** y también acepta enunciados, ecuaciones, JSON o archivos de texto. El núcleo conserva soporte validado de 1 × 1 a 12 × 12 para JSON y consola.
+Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, con cálculo racional exacto, diagnóstico de singularidad y procedimientos exportables. Incluye el caso empresarial TechChip Systems; la interfaz React permite elegir directamente sistemas de **1 × 1 a 12 × 12** y también acepta enunciados, ecuaciones, JSON o archivos de texto.
 
 > **Error confirmado en la guía:** el vector indicado `(15,20,25,10,15,20)` no es la respuesta del sistema impreso; requiere otro `B=(185,200,280,150,245,195)`. Las disponibilidades originales `(155,160,225,140,215,175)` producen una solución distinta con `x1<0`. La aplicación carga por defecto los datos originales y no los sustituye para forzar el resultado incorrecto. El otro B se conserva solo como comparación didáctica.
 
@@ -24,6 +24,7 @@ Aplicación web y agente de consola para Gauss, Gauss-Jordan y matriz inversa, c
 - Descargar el procedimiento en Markdown, los datos/resultados en JSON y un informe HTML imprimible como PDF.
 - Consultar un tutor opcional de OpenAI sobre el resultado, elegir entre los tres métodos y pedir el procedimiento completo o la explicación del paso seleccionado.
 - Escribir directamente sistemas como `2x + y = 5; x - y = 1` o describir consumos y disponibilidades con palabras. Los formatos exactos se convierten de forma determinista; los enunciados libres pasan por una extracción estructurada y siempre se vuelven a validar antes de resolver.
+- Conservar nombres de productos o decisiones y mostrar la solución exacta con esas etiquetas en una lectura de negocio, no solo como `x1`, `x2`, etc.
 - Expandir el Tutor IA para inspeccionar matrices anchas y explicaciones extensas.
 - Visualizar rectas en 2×2, planos en 3×3 y el vector solución o diagnóstico por rangos desde 4×4 en adelante.
 - Alternar entre tema claro y oscuro; la preferencia queda guardada en el navegador.
@@ -75,9 +76,9 @@ Streamlit no se ejecuta dentro de Vercel: su sesión necesita una conexión WebS
 
 ## Tutor IA opcional con OpenAI
 
-Puedes saludar al Tutor IA, escribirle un sistema o adjuntar un JSON antes de usar la calculadora principal. El modelo generativo solo redacta explicaciones con marcadores: el motor matemático aporta todos los números y valida el texto antes de mostrarlo. Los cuatro botones de ayuda rápida y la conversión de ecuaciones responden desde el motor sin llamar a OpenAI.
+Puedes escribir al Tutor IA un enunciado empresarial, un sistema o adjuntar `.json`, `.txt` o `.md` antes de usar la calculadora principal. El modelo generativo solo redacta explicaciones con marcadores: el motor matemático aporta todos los números y valida el texto antes de mostrarlo. Los cuatro botones de ayuda rápida y la conversión de ecuaciones responden desde el motor sin llamar a OpenAI.
 
-La entrada acepta ejercicios escritos. Separa las ecuaciones con punto y coma o una por línea y usa variables `x, y, z, w, u, v` o `x1…x10`. Admite enteros, decimales, notación científica y fracciones, constantes en ambos lados, JSON y la notación `A=[[...]], B=[...]`. Si no coincide con esos formatos, el intérprete de lenguaje natural solicita a OpenAI únicamente un objeto estructurado con A, B, nombres de variables y método preferido. Si faltan datos o hay ambigüedad, pide aclaración. Una vez convertido, el mismo motor exacto ejecuta Gauss, Gauss-Jordan e inversa.
+La entrada acepta ejercicios escritos. Separa las ecuaciones con punto y coma o una por línea y usa variables `x, y, z, w, u, v` o `x1…x12`. Admite enteros, decimales, notación científica y fracciones, constantes en ambos lados, JSON y la notación `A=[[...]], B=[...]`. El JSON puede incluir `"variables":["Producto A","Producto B"]`. Si no coincide con esos formatos, el intérprete de lenguaje natural solicita a OpenAI únicamente un objeto estructurado con A, B, nombres de variables y método preferido. Si faltan datos o hay ambigüedad, pide aclaración. Una vez convertido, el mismo motor exacto ejecuta Gauss, Gauss-Jordan e inversa.
 
 1. Instala las dependencias de `requirements.txt`.
 2. Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y completa `OPENAI_API_KEY` en tu editor local. Si ya existe el archivo, edítalo sin sobrescribir sus valores.
@@ -87,7 +88,7 @@ También se aceptan las variables de entorno `OPENAI_API_KEY`, `OPENAI_MODEL` y 
 
 El modelo inicial es `gpt-4.1-mini`, configurable por el administrador. Usa la [API Responses y el SDK oficial de Python](https://developers.openai.com/es-419/api/docs/quickstart) con salida JSON estructurada. Cada pregunta escrita envía las matrices A/B, diagnóstico, solución, interpretación y la traza exacta del método elegido; para un paso seleccionado también marca sus matrices anterior y actual. No se reenvían mensajes anteriores, notas libres, archivos del equipo ni el PDF completo. Se solicita `store=False`; esto no equivale a una garantía de retención cero por el proveedor. Una respuesta inválida o fallida se sustituye por la explicación completa del motor identificada como tal.
 
-El cuadro de prompt no impone un límite artificial de palabras o caracteres; permanece el límite técnico de 100 kB por solicitud para proteger la función web. El contexto matemático admite hasta 200000 caracteres, la respuesta hasta 6000 tokens y hay un solo reintento ante una salida estructurada inválida. La API web limita a cinco preguntas por minuto y cliente en cada instancia, además del límite diario configurado. Adjuntar/resolver un JSON y usar las ayudas rápidas no llama a OpenAI; una pregunta escrita sí puede hacerlo.
+El cuadro de prompt no impone un límite artificial de palabras o caracteres. Permanece un límite técnico de 2 MB por solicitud para proteger la función web; el proveedor y el modelo también tienen ventanas de contexto finitas. El contexto matemático del tutor admite hasta 200000 caracteres, la respuesta hasta 6000 tokens y hay un solo reintento ante una salida estructurada inválida. La API web limita a cinco preguntas por minuto y cliente en cada instancia, además del límite diario configurado. Adjuntar/resolver un JSON y usar las ayudas rápidas no llama a OpenAI; una pregunta escrita sí puede hacerlo.
 
 En Streamlit, el límite predeterminado es de **50 consultas por día UTC para todo el servidor**, compartido entre chat y explicación de pasos. La reserva es atómica y se guarda en `.tutor/usage.sqlite3`, excluido de Git. En Vercel existe además un límite preventivo por cliente e instancia, configurable con `OPENAI_DAILY_REQUEST_LIMIT`; por la naturaleza serverless no es una cuota global compartida entre instancias ni sustituye los límites y presupuesto del proyecto OpenAI.
 
@@ -125,7 +126,7 @@ python main.py --validate                         # Batería, salida JSON y cód
 
 El resultado es `X=(2,1)`. Se acepta B como `[5,1]` o `[[5],[1]]`. Para exactitud, los decimales JSON se leen con `Decimal` y después con `Fraction`. Las fracciones deben ir entre comillas. A debe ser cuadrada y B tener la misma cantidad de filas.
 
-Límites: hasta 12 incógnitas, 100 kB por JSON, 64 caracteres por literal, exponentes de −50 a 50 y numeradores/denominadores de hasta 256 bits en la entrada. No se admiten NaN, infinito, booleanos, celdas vacías ni divisiones entre cero. No se evalúa código introducido por el usuario.
+Límites técnicos: hasta 12 incógnitas, 2 MB por solicitud web o JSON, 64 caracteres por literal, exponentes de −50 a 50 y numeradores/denominadores de hasta 256 bits en la entrada. No se admiten NaN, infinito, booleanos, celdas vacías ni divisiones entre cero. No se evalúa código introducido por el usuario.
 
 El JSON de salida codifica números exactos como cadenas (`"-105/83"`), además de operaciones estructuradas (`kind`, `target`, `source`, `factor`). Los índices internos de fila empiezan en 0; la presentación empieza en F1. Las aproximaciones de pantalla nunca intervienen en el cálculo.
 

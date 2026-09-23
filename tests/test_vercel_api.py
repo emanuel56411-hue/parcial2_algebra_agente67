@@ -12,11 +12,13 @@ from api import tutor as tutor_module
 
 class VercelApiTests(unittest.TestCase):
     def test_exact_solution_and_production_flag(self):
-        result = solve_payload({"A": [[2, 1], [1, 1]], "B": [5, 3], "production": True})
+        result = solve_payload({"A": [[2, 1], [1, 1]], "B": [5, 3], "production": True, "variables": ["Línea A", "Línea B"]})
         self.assertEqual(result["status"], "unique")
         self.assertEqual(result["solution"], ["2", "1"])
         self.assertEqual(result["max_error"], "0")
         self.assertTrue(result["production"])
+        self.assertEqual(result["variables"], ["Línea A", "Línea B"])
+        self.assertIn("Línea A", " ".join(result["interpretation"]))
 
     def test_singular_system(self):
         result = solve_payload({"A": [[1, 1], [2, 2]], "B": [1, 3]})

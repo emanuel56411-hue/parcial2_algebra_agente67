@@ -23,7 +23,7 @@ def solve_payload(payload: object) -> dict:
     if not isinstance(production, bool):
         raise InputError("production debe ser verdadero o falso.")
     A, B = validate_input(payload["A"], payload["B"])
-    return TechChipAgent().analyze(A, B, production=production).to_dict()
+    return TechChipAgent().analyze(A, B, production=production, variable_names=payload.get("variables")).to_dict()
 
 
 def analyze_payload(payload: object):
@@ -34,7 +34,7 @@ def analyze_payload(payload: object):
     if not isinstance(production, bool):
         raise InputError("production debe ser verdadero o falso.")
     A, B = validate_input(payload["A"], payload["B"])
-    return TechChipAgent().analyze(A, B, production=production)
+    return TechChipAgent().analyze(A, B, production=production, variable_names=payload.get("variables"))
 
 
 def solve_exercise_payload(payload: object) -> dict:
@@ -45,7 +45,7 @@ def solve_exercise_payload(payload: object) -> dict:
     if not isinstance(production, bool):
         raise InputError("production debe ser verdadero o falso.")
     parsed = interpret_exercise(payload["exercise"])
-    report = TechChipAgent().analyze(parsed.A, parsed.B, production=production)
+    report = TechChipAgent().analyze(parsed.A, parsed.B, production=production, variable_names=parsed.variables)
     return {
         "input": parsed.to_input(production),
         "analysis": report.to_dict(),

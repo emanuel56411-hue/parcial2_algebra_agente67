@@ -11,7 +11,7 @@ import re
 from typing import Any
 
 MAX_SIZE = 12
-MAX_JSON_BYTES = 100_000
+MAX_JSON_BYTES = 2_000_000
 Matrix = list[list[Fraction]]
 STATUS_LABELS = {"unique": "Solución única", "infinite": "Infinitas soluciones", "inconsistent": "Sin solución"}
 METHOD_LABELS = {"gauss": "Eliminación de Gauss", "gauss_jordan": "Gauss-Jordan", "inverse": "Matriz inversa"}
@@ -61,9 +61,28 @@ def validate_input(A: Any, B: Any) -> tuple[Matrix, list[Fraction]]:
         raise InputError(f"Revisa las celdas de A y B. {exc}") from exc
 
 
+def validate_variable_names(value: Any, n: int) -> list[str]:
+    """Conserva nombres de negocio sin permitir etiquetas vacías o ambiguas."""
+    if value is None:
+        return [f"x{i + 1}" for i in range(n)]
+    if not isinstance(value, (list, tuple)) or len(value) != n:
+        raise InputError(f"variables debe contener exactamente {n} nombres.")
+    names = []
+    for item in value:
+        if not isinstance(item, str) or not item.strip():
+            raise InputError("Cada variable debe tener un nombre de texto no vacío.")
+        name = " ".join(item.split())
+        if len(name) > 120:
+            raise InputError("Cada nombre de variable puede ocupar como máximo 120 caracteres.")
+        names.append(name)
+    if len({name.casefold() for name in names}) != n:
+        raise InputError("Los nombres de las variables deben ser distintos.")
+    return names
+
+
 def parse_json(text: str) -> tuple[Matrix, list[Fraction]]:
     if len(text.encode("utf-8")) > MAX_JSON_BYTES:
-        raise InputError("El JSON no puede superar 100 kB.")
+        raise InputError("El JSON supera el límite técnico de 2 MB por solicitud.")
     try:
         data = json.loads(text, parse_float=Decimal)
     except (ValueError, RecursionError) as exc:
@@ -147,6 +166,7 @@ class Analysis:
     free_columns: list[int] = field(default_factory=list)
     interpretation: list[str] = field(default_factory=list)
     production: bool = False
+    variables: list[str] = field(default_factory=list)
 
     @property
     def methods_agree(self) -> bool:
@@ -420,12 +440,14 @@ class TechChipAgent:
     def __init__(self):
         self.solver = LinearAlgebraSolver()
 
-    def analyze(self, A: Any, B: Any, *, production: bool = False) -> Analysis:
+    def analyze(self, A: Any, B: Any, *, production: bool = False, variable_names: Any = None) -> Analysis:
         A, B = validate_input(A, B)
+        variables = validate_variable_names(variable_names, len(A))
         if production and (any(value < 0 for row in A for value in row) or any(value < 0 for value in B)):
             raise InputError("En modo producción, los consumos A y las disponibilidades B deben ser no negativos. Usa el modo matemático para coeficientes negativos.")
         report = self.solver.analyze(A, B)
         report.production = production
+        report.variables = variables
         if report.status == "inconsistent":
             report.interpretation = [
                 "El sistema no tiene solución: ninguna combinación de valores puede satisfacer todas las ecuaciones al mismo tiempo.",
@@ -435,7 +457,7 @@ class TechChipAgent:
                 "Conclusión práctica: revisa los coeficientes, las ecuaciones dependientes y las disponibilidades; al menos un dato impide cumplir todas las restricciones simultáneamente.",
             ]
         elif report.status == "infinite":
-            free_names = ", ".join(f"x{column + 1}" for column in report.free_columns)
+            free_names = ", ".join(variables[column] for column in report.free_columns)
             report.interpretation = [
                 f"El sistema es compatible, pero no determina una respuesta única: tiene infinitas soluciones y {len(report.free_columns)} variable(s) libre(s) ({free_names}).",
                 f"Paso 1 — Diagnóstico: rango(A) = rango([A|B]) = {report.rank_A}, menor que las {len(A)} incógnitas; por eso el sistema es compatible indeterminado.",
@@ -446,13 +468,17 @@ class TechChipAgent:
             if production:
                 report.interpretation.append("La viabilidad de esta familia bajo X ≥ 0 requiere un análisis adicional; no se declara un plan de producción viable.")
         else:
-            negatives = [f"x{i + 1} = {value} (≈ {decimal_text(value)})" for i, value in enumerate(report.solution) if value < 0]
-            exact_solution = ", ".join(f"x{i + 1} = {value}" for i, value in enumerate(report.solution))
+            negatives = [f"{variables[i]} = {value} (≈ {decimal_text(value)})" for i, value in enumerate(report.solution) if value < 0]
+            exact_solution = ", ".join(f"{variables[i]} = {value}" for i, value in enumerate(report.solution))
             if production and negatives:
                 report.interpretation = ["Plan de producción inalcanzable por restricción de materias primas: el único resultado algebraico viola X ≥ 0.", f"Paso 1 — Solución: Gauss, Gauss-Jordan y matriz inversa coinciden en X = ({exact_solution}).", "Paso 2 — Verificación: la sustitución produce A·X = B con error exacto 0; matemáticamente, el sistema sí queda satisfecho.", "Paso 3 — Viabilidad: la solución exige cantidades negativas: " + "; ".join(negatives) + ".", "Conclusión práctica: no se puede consumir exactamente el 100 % de todos los recursos con X ≥ 0. Esto no demuestra que sea imposible producir con capacidad ociosa."]
             elif production:
                 report.interpretation = ["Plan factible para el modelo continuo: la solución es única, todas las cantidades son no negativas y A·X = B consume exactamente las disponibilidades indicadas.", f"Paso 1 — Solución: Gauss, Gauss-Jordan y matriz inversa coinciden en X = ({exact_solution}).", "Paso 2 — Verificación: al sustituir cada componente en las ecuaciones, todos los residuos son exactamente 0.", "Paso 3 — Viabilidad: ninguna cantidad es negativa, por lo que el plan satisface la condición X ≥ 0.", "Conclusión práctica: X se expresa en miles de unidades; X·1000 se informa como cantidad continua, sin redondear a unidades enteras."]
             else:
                 report.interpretation = [f"El sistema tiene una única solución: {exact_solution}.", f"Paso 1 — Diagnóstico: det(A) = {report.determinant} ≠ 0, por lo que A es invertible y la solución es única.", "Paso 2 — Resolución: Gauss, Gauss-Jordan y matriz inversa producen el mismo vector X.", "Paso 3 — Verificación: la sustitución en cada ecuación devuelve exactamente B; el error residual es 0.", "Conclusión práctica: si algún valor es negativo, sigue siendo una solución matemática válida; su aceptación práctica depende del contexto del problema."]
+            if variables != [f"x{i + 1}" for i in range(len(variables))]:
+                action = "Nivel de decisión" if not production else "Nivel de producción"
+                mapping = "; ".join(f"{name}: {value}" for name, value in zip(variables, report.solution))
+                report.interpretation.append(f"Lectura de negocio por variable — {action}: {mapping}.")
             report.interpretation.append("La resolución de igualdades no maximiza beneficios ni minimiza costos. Para optimizar se necesita una función objetivo y restricciones adicionales.")
         return report

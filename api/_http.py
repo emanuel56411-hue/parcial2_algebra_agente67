@@ -5,7 +5,9 @@ import json
 
 from agent import InputError
 
-MAX_REQUEST_BYTES = 100_000
+# No se impone un límite de palabras. Este techo técnico evita leer cuerpos
+# HTTP ilimitados y queda por debajo del límite de la plataforma serverless.
+MAX_REQUEST_BYTES = 2_000_000
 
 
 class JsonHandler(BaseHTTPRequestHandler):
@@ -26,7 +28,7 @@ class JsonHandler(BaseHTTPRequestHandler):
         raw_length = self.headers.get("Content-Length", "")
         length = int(raw_length)
         if length <= 0 or length > MAX_REQUEST_BYTES:
-            raise InputError("La solicitud debe contener JSON y no superar 100 kB.")
+            raise InputError("La solicitud debe contener JSON y no superar el límite técnico de 2 MB.")
         return json.loads(self.rfile.read(length).decode("utf-8"), parse_float=Decimal)
 
     def log_message(self, _format: str, *_args) -> None:

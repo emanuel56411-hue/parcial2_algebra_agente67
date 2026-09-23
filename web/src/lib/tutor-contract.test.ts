@@ -15,7 +15,7 @@ const report = {
   methods: { gauss: { name: "Gauss", steps: [first], solution: ["2", "1"], inverse: null } },
   solution: ["2", "1"], residual: ["0", "0"], substitution: ["1·2 + 1·1 = 3"],
   particular: null, nullspace: [], free_columns: [], interpretation: ["Solución única."],
-  production: false, methods_agree: true, max_error: "0", format: "fraction",
+  production: false, variables: ["Producto A", "Producto B"], methods_agree: true, max_error: "0", format: "fraction",
 } as Analysis
 const good = { resumen: "La solución es {{x1}} y el determinante {{det}}.", pasos: [{ titulo: "Paso actual", que: "La matriz es {{matriz:paso1}}.", por_que: "El pivote es {{pivote:paso1}}.", ref_paso: 1 }], conclusion: "El rango es {{rango_A}}.", fuera_de_tema: false }
 

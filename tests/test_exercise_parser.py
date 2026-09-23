@@ -54,6 +54,12 @@ class ExerciseParserTests(unittest.TestCase):
         self.assertEqual(parsed.B, list(range(1, 11)))
         self.assertEqual(parsed.preferred_method, "gauss_jordan")
 
+    def test_twelve_by_twelve_prompt(self):
+        prompt = "; ".join(f"x{i} = {i}" for i in range(1, 13))
+        parsed = parse_exercise(prompt)
+        self.assertEqual(len(parsed.A), 12)
+        self.assertEqual(parsed.variables[-1], "x12")
+
     def test_flexible_json_keys_and_nested_payload(self):
         parsed = parse_exercise('{"sistema":{"coeficientes":[[2,1],[1,-1]],"disponibilidades":[5,1]}}')
         self.assertEqual(parsed.A, [[2, 1], [1, -1]])
@@ -61,6 +67,18 @@ class ExerciseParserTests(unittest.TestCase):
         augmented = parse_exercise('{"matriz_aumentada":[[2,1,5],[1,-1,1]]}')
         self.assertEqual(augmented.A, [[2, 1], [1, -1]])
         self.assertEqual(augmented.B, [5, 1])
+
+    def test_json_preserves_business_variable_names(self):
+        parsed = parse_exercise('{"A":[[2,1],[1,-1]],"B":[5,1],"variables":["Producto Edge","Producto Cloud"]}')
+        self.assertEqual(parsed.variables, ["Producto Edge", "Producto Cloud"])
+        result = solve_exercise_payload({"exercise": '{"A":[[2,1],[1,-1]],"B":[5,1],"variables":["Producto Edge","Producto Cloud"]}'})
+        self.assertEqual(result["analysis"]["variables"], ["Producto Edge", "Producto Cloud"])
+        self.assertIn("Producto Edge", " ".join(result["analysis"]["interpretation"]))
+
+    def test_prompt_has_no_old_100kb_parser_limit(self):
+        prompt = ("Contexto empresarial. " * 6000) + '{"A":[[2,1],[1,-1]],"B":[5,1]}'
+        parsed = parse_exercise(prompt)
+        self.assertEqual(parsed.B, [5, 1])
 
     @patch("exercise_interpreter.urlopen")
     def test_recognized_but_invalid_json_is_not_sent_to_model(self, urlopen):
@@ -93,6 +111,8 @@ class ExerciseParserTests(unittest.TestCase):
         self.assertIn("NUNCA copies ese orden", request_body["instructions"])
         self.assertIn("Acepta redacción libre", request_body["instructions"])
         self.assertIn("no por diferencias de redacción", request_body["instructions"])
+        self.assertIn("académicos o empresariales", request_body["instructions"])
+        self.assertIn("VARIABLES DE DECISIÓN", request_body["instructions"])
 
     @patch("exercise_interpreter.urlopen")
     def test_natural_language_accepts_public_lowercase_a_b_contract(self, urlopen):

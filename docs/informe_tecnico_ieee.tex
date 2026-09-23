@@ -22,7 +22,7 @@ Docente: Exides Gamaliel Claros Velasquez \quad Grupo: 01 EO8 \quad Entrega: 23 
 \begin{document}
 \maketitle
 \begin{abstract}
-Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X=\left(-\frac{105}{83},\frac{345}{83},\frac{2430}{83},\frac{1170}{83},\frac{1130}{83},\frac{2010}{83}\right)^T$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones. La entrada admite matrices de hasta $10\times10$, ecuaciones, JSON y enunciados en lenguaje natural convertidos a $A$ y $B$ mediante una salida estructurada.
+Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X=\left(-\frac{105}{83},\frac{345}{83},\frac{2430}{83},\frac{1170}{83},\frac{1130}{83},\frac{2010}{83}\right)^T$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones. La entrada admite matrices de hasta $12\times12$, ecuaciones, JSON, archivos de texto y enunciados en lenguaje natural convertidos a $A$ y $B$ mediante una salida estructurada.
 \end{abstract}
 \begin{IEEEkeywords}álgebra lineal, sistemas de ecuaciones, eliminación de Gauss, Gauss--Jordan, matriz inversa, agente explicable, balance de recursos\end{IEEEkeywords}
 
@@ -88,7 +88,7 @@ Los seis residuos son cero y $E_{\max}=0<10^{-6}$.
 \section{Arquitectura del agente}
 El flujo funcional es:
 \begin{center}\begin{tabular}{c}\fbox{Texto / ecuaciones / JSON / editor web}\\$\downarrow$\\\fbox{Extracción estructurada de $A$ y $B$}\\$\downarrow$\\\fbox{Validación dimensional y racional}\\$\downarrow$\\\fbox{Determinante, rangos y diagnóstico}\\$\downarrow$\\\fbox{Gauss / Gauss--Jordan / inversa}\\$\downarrow$\\\fbox{Verificación $AX=B$ e interpretación}\end{tabular}\end{center}
-\texttt{agent.py} contiene validación, pivoteo, rangos y análisis; \texttt{exercise\_parser.py} convierte de forma determinista ecuaciones lineales, JSON y bloques A/B; y \texttt{exercise\_interpreter.py} usa una salida JSON estructurada del modelo únicamente cuando la entrada libre no pertenece a esos formatos. La matriz extraída vuelve a validarse antes de llegar al motor exacto. Si faltan datos o existe ambigüedad, la interfaz solicita una aclaración y no calcula. \texttt{api/solve.py} ofrece la función serverless y \texttt{web/} la interfaz React. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite de $2\times2$ hasta $10\times10$ y aplica un límite técnico de 100 kB por entrada \cite{openai}.
+\texttt{agent.py} contiene validación, pivoteo, rangos y análisis; \texttt{exercise\_parser.py} convierte de forma determinista ecuaciones lineales, JSON y bloques A/B; y \texttt{exercise\_interpreter.py} usa una salida JSON estructurada del modelo únicamente cuando la entrada libre no pertenece a esos formatos. La matriz extraída vuelve a validarse antes de llegar al motor exacto. Si faltan datos o existe ambigüedad, la interfaz solicita una aclaración y no calcula. \texttt{api/solve.py} ofrece la función serverless y \texttt{web/} la interfaz React. Los nombres de productos o decisiones acompañan el resultado numérico para producir una lectura empresarial inmediata. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite de $1\times1$ hasta $12\times12$, no impone un límite de palabras y conserva un límite técnico de 2 MB por solicitud.
 
 \section{Pruebas de validación}
 \begin{table*}[ht]\caption{Resultados generados por el agente}\centering\footnotesize\begin{tabular}{lllll}\toprule Escenario&$\det(A)$&Rangos&Resultado exacto&Diagnóstico\\\midrule
@@ -504,9 +504,281 @@ El multiplicador es -(-1/15)/(1) = 1/15; así, -1/15 + (1/15)\(\cdot\)(1) = 0 en
 
 \medskip
 \subsection*{Paso 39: [I | X]: lectura directa de la solución}
-El bloque izquierdo es la identidad: la fila $i$ representa $1\cdot x_i=X_i$. Por eso la última columna se lee directamente, sin sustitución hacia atrás.
+El bloque izquierdo es la identidad: la fila i representa 1\(\cdot\)x\textsubscript{i} = X\textsubscript{i}. Por eso la última columna se lee directamente, sin sustitución hacia atrás.
 
 \resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|r}1 & 0 & 0 & 0 & 0 & 0 & -\frac{105}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & \frac{345}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{2430}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{1170}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{1130}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{2010}{83}\end{array}\right]\)}
+
+\medskip
+\section{Matriz inversa: procedimiento completo y producto con B}
+La secuencia contiene 45 estados registrados. Cada matriz es el estado posterior a la operación indicada.
+\subsection*{Paso 1: Matriz aumentada inicial}
+Punto de partida: [A | I]. La barra separa los coeficientes del bloque derecho, pero cada operación elemental se aplica a la fila completa para conservar un sistema equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}2 & 1 & 3 & 1 & 2 & 1 & 1 & 0 & 0 & 0 & 0 & 0 \\ 1 & 3 & 2 & 2 & 1 & 2 & 0 & 1 & 0 & 0 & 0 & 0 \\ 3 & 2 & 4 & 1 & 3 & 2 & 0 & 0 & 1 & 0 & 0 & 0 \\ 1 & 1 & 1 & 4 & 2 & 1 & 0 & 0 & 0 & 1 & 0 & 0 \\ 2 & 1 & 2 & 1 & 5 & 3 & 0 & 0 & 0 & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 2: F1 \(\leftrightarrow\) F3}
+Pivoteo parcial en la columna 1: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}3 & 2 & 4 & 1 & 3 & 2 & 0 & 0 & 1 & 0 & 0 & 0 \\ 1 & 3 & 2 & 2 & 1 & 2 & 0 & 1 & 0 & 0 & 0 & 0 \\ 2 & 1 & 3 & 1 & 2 & 1 & 1 & 0 & 0 & 0 & 0 & 0 \\ 1 & 1 & 1 & 4 & 2 & 1 & 0 & 0 & 0 & 1 & 0 & 0 \\ 2 & 1 & 2 & 1 & 5 & 3 & 0 & 0 & 0 & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 3: F1 \(\leftarrow\) (1/3) \(\cdot\) F1}
+Se divide toda la fila entre el pivote 3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 1 & 3 & 2 & 2 & 1 & 2 & 0 & 1 & 0 & 0 & 0 & 0 \\ 2 & 1 & 3 & 1 & 2 & 1 & 1 & 0 & 0 & 0 & 0 & 0 \\ 1 & 1 & 1 & 4 & 2 & 1 & 0 & 0 & 0 & 1 & 0 & 0 \\ 2 & 1 & 2 & 1 & 5 & 3 & 0 & 0 & 0 & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 4: F2 \(\leftarrow\) F2 + (-1) \(\cdot\) F1}
+El multiplicador es -(1)/(1) = -1; así, 1 + (-1)\(\cdot\)(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 0 & \frac{7}{3} & \frac{2}{3} & \frac{5}{3} & 0 & \frac{4}{3} & 0 & 1 & -\frac{1}{3} & 0 & 0 & 0 \\ 2 & 1 & 3 & 1 & 2 & 1 & 1 & 0 & 0 & 0 & 0 & 0 \\ 1 & 1 & 1 & 4 & 2 & 1 & 0 & 0 & 0 & 1 & 0 & 0 \\ 2 & 1 & 2 & 1 & 5 & 3 & 0 & 0 & 0 & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 5: F3 \(\leftarrow\) F3 + (-2) \(\cdot\) F1}
+El multiplicador es -(2)/(1) = -2; así, 2 + (-2)\(\cdot\)(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 0 & \frac{7}{3} & \frac{2}{3} & \frac{5}{3} & 0 & \frac{4}{3} & 0 & 1 & -\frac{1}{3} & 0 & 0 & 0 \\ 0 & -\frac{1}{3} & \frac{1}{3} & \frac{1}{3} & 0 & -\frac{1}{3} & 1 & 0 & -\frac{2}{3} & 0 & 0 & 0 \\ 1 & 1 & 1 & 4 & 2 & 1 & 0 & 0 & 0 & 1 & 0 & 0 \\ 2 & 1 & 2 & 1 & 5 & 3 & 0 & 0 & 0 & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 6: F4 \(\leftarrow\) F4 + (-1) \(\cdot\) F1}
+El multiplicador es -(1)/(1) = -1; así, 1 + (-1)\(\cdot\)(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 0 & \frac{7}{3} & \frac{2}{3} & \frac{5}{3} & 0 & \frac{4}{3} & 0 & 1 & -\frac{1}{3} & 0 & 0 & 0 \\ 0 & -\frac{1}{3} & \frac{1}{3} & \frac{1}{3} & 0 & -\frac{1}{3} & 1 & 0 & -\frac{2}{3} & 0 & 0 & 0 \\ 0 & \frac{1}{3} & -\frac{1}{3} & \frac{11}{3} & 1 & \frac{1}{3} & 0 & 0 & -\frac{1}{3} & 1 & 0 & 0 \\ 2 & 1 & 2 & 1 & 5 & 3 & 0 & 0 & 0 & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 7: F5 \(\leftarrow\) F5 + (-2) \(\cdot\) F1}
+El multiplicador es -(2)/(1) = -2; así, 2 + (-2)\(\cdot\)(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 0 & \frac{7}{3} & \frac{2}{3} & \frac{5}{3} & 0 & \frac{4}{3} & 0 & 1 & -\frac{1}{3} & 0 & 0 & 0 \\ 0 & -\frac{1}{3} & \frac{1}{3} & \frac{1}{3} & 0 & -\frac{1}{3} & 1 & 0 & -\frac{2}{3} & 0 & 0 & 0 \\ 0 & \frac{1}{3} & -\frac{1}{3} & \frac{11}{3} & 1 & \frac{1}{3} & 0 & 0 & -\frac{1}{3} & 1 & 0 & 0 \\ 0 & -\frac{1}{3} & -\frac{2}{3} & \frac{1}{3} & 3 & \frac{5}{3} & 0 & 0 & -\frac{2}{3} & 0 & 1 & 0 \\ 1 & 2 & 1 & 2 & 1 & 4 & 0 & 0 & 0 & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 8: F6 \(\leftarrow\) F6 + (-1) \(\cdot\) F1}
+El multiplicador es -(1)/(1) = -1; así, 1 + (-1)\(\cdot\)(1) = 0 en la columna 1. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 0 & \frac{7}{3} & \frac{2}{3} & \frac{5}{3} & 0 & \frac{4}{3} & 0 & 1 & -\frac{1}{3} & 0 & 0 & 0 \\ 0 & -\frac{1}{3} & \frac{1}{3} & \frac{1}{3} & 0 & -\frac{1}{3} & 1 & 0 & -\frac{2}{3} & 0 & 0 & 0 \\ 0 & \frac{1}{3} & -\frac{1}{3} & \frac{11}{3} & 1 & \frac{1}{3} & 0 & 0 & -\frac{1}{3} & 1 & 0 & 0 \\ 0 & -\frac{1}{3} & -\frac{2}{3} & \frac{1}{3} & 3 & \frac{5}{3} & 0 & 0 & -\frac{2}{3} & 0 & 1 & 0 \\ 0 & \frac{4}{3} & -\frac{1}{3} & \frac{5}{3} & 0 & \frac{10}{3} & 0 & 0 & -\frac{1}{3} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 9: F2 \(\leftarrow\) (3/7) \(\cdot\) F2}
+Se divide toda la fila entre el pivote 7/3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & \frac{2}{3} & \frac{4}{3} & \frac{1}{3} & 1 & \frac{2}{3} & 0 & 0 & \frac{1}{3} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & -\frac{1}{3} & \frac{1}{3} & \frac{1}{3} & 0 & -\frac{1}{3} & 1 & 0 & -\frac{2}{3} & 0 & 0 & 0 \\ 0 & \frac{1}{3} & -\frac{1}{3} & \frac{11}{3} & 1 & \frac{1}{3} & 0 & 0 & -\frac{1}{3} & 1 & 0 & 0 \\ 0 & -\frac{1}{3} & -\frac{2}{3} & \frac{1}{3} & 3 & \frac{5}{3} & 0 & 0 & -\frac{2}{3} & 0 & 1 & 0 \\ 0 & \frac{4}{3} & -\frac{1}{3} & \frac{5}{3} & 0 & \frac{10}{3} & 0 & 0 & -\frac{1}{3} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 10: F1 \(\leftarrow\) F1 + (-2/3) \(\cdot\) F2}
+El multiplicador es -(2/3)/(1) = -2/3; así, 2/3 + (-2/3)\(\cdot\)(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & -\frac{1}{3} & \frac{1}{3} & \frac{1}{3} & 0 & -\frac{1}{3} & 1 & 0 & -\frac{2}{3} & 0 & 0 & 0 \\ 0 & \frac{1}{3} & -\frac{1}{3} & \frac{11}{3} & 1 & \frac{1}{3} & 0 & 0 & -\frac{1}{3} & 1 & 0 & 0 \\ 0 & -\frac{1}{3} & -\frac{2}{3} & \frac{1}{3} & 3 & \frac{5}{3} & 0 & 0 & -\frac{2}{3} & 0 & 1 & 0 \\ 0 & \frac{4}{3} & -\frac{1}{3} & \frac{5}{3} & 0 & \frac{10}{3} & 0 & 0 & -\frac{1}{3} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 11: F3 \(\leftarrow\) F3 + (1/3) \(\cdot\) F2}
+El multiplicador es -(-1/3)/(1) = 1/3; así, -1/3 + (1/3)\(\cdot\)(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0 \\ 0 & \frac{1}{3} & -\frac{1}{3} & \frac{11}{3} & 1 & \frac{1}{3} & 0 & 0 & -\frac{1}{3} & 1 & 0 & 0 \\ 0 & -\frac{1}{3} & -\frac{2}{3} & \frac{1}{3} & 3 & \frac{5}{3} & 0 & 0 & -\frac{2}{3} & 0 & 1 & 0 \\ 0 & \frac{4}{3} & -\frac{1}{3} & \frac{5}{3} & 0 & \frac{10}{3} & 0 & 0 & -\frac{1}{3} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 12: F4 \(\leftarrow\) F4 + (-1/3) \(\cdot\) F2}
+El multiplicador es -(1/3)/(1) = -1/3; así, 1/3 + (-1/3)\(\cdot\)(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0 \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & -\frac{1}{3} & -\frac{2}{3} & \frac{1}{3} & 3 & \frac{5}{3} & 0 & 0 & -\frac{2}{3} & 0 & 1 & 0 \\ 0 & \frac{4}{3} & -\frac{1}{3} & \frac{5}{3} & 0 & \frac{10}{3} & 0 & 0 & -\frac{1}{3} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 13: F5 \(\leftarrow\) F5 + (1/3) \(\cdot\) F2}
+El multiplicador es -(-1/3)/(1) = 1/3; así, -1/3 + (1/3)\(\cdot\)(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0 \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & \frac{4}{3} & -\frac{1}{3} & \frac{5}{3} & 0 & \frac{10}{3} & 0 & 0 & -\frac{1}{3} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 14: F6 \(\leftarrow\) F6 + (-4/3) \(\cdot\) F2}
+El multiplicador es -(4/3)/(1) = -4/3; así, 4/3 + (-4/3)\(\cdot\)(1) = 0 en la columna 2. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0 \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & 0 & -\frac{5}{7} & \frac{5}{7} & 0 & \frac{18}{7} & 0 & -\frac{4}{7} & -\frac{1}{7} & 0 & 0 & 1\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 15: F3 \(\leftrightarrow\) F6}
+Pivoteo parcial en la columna 3: se coloca arriba el mayor valor absoluto disponible. Intercambiar ecuaciones solo cambia su orden, no el conjunto de soluciones; además evita dividir entre cero.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & -\frac{5}{7} & \frac{5}{7} & 0 & \frac{18}{7} & 0 & -\frac{4}{7} & -\frac{1}{7} & 0 & 0 & 1 \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 16: F3 \(\leftarrow\) (-7/5) \(\cdot\) F3}
+Se divide toda la fila entre el pivote -5/7, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & \frac{8}{7} & -\frac{1}{7} & 1 & \frac{2}{7} & 0 & -\frac{2}{7} & \frac{3}{7} & 0 & 0 & 0 \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 17: F1 \(\leftarrow\) F1 + (-8/7) \(\cdot\) F3}
+El multiplicador es -(8/7)/(1) = -8/7; así, 8/7 + (-8/7)\(\cdot\)(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 1 & 1 & \frac{22}{5} & 0 & -\frac{6}{5} & \frac{1}{5} & 0 & 0 & \frac{8}{5} \\ 0 & 1 & \frac{2}{7} & \frac{5}{7} & 0 & \frac{4}{7} & 0 & \frac{3}{7} & -\frac{1}{7} & 0 & 0 & 0 \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 18: F2 \(\leftarrow\) F2 + (-2/7) \(\cdot\) F3}
+El multiplicador es -(2/7)/(1) = -2/7; así, 2/7 + (-2/7)\(\cdot\)(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 1 & 1 & \frac{22}{5} & 0 & -\frac{6}{5} & \frac{1}{5} & 0 & 0 & \frac{8}{5} \\ 0 & 1 & 0 & 1 & 0 & \frac{8}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & 0 & \frac{2}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & -\frac{3}{7} & \frac{24}{7} & 1 & \frac{1}{7} & 0 & -\frac{1}{7} & -\frac{2}{7} & 1 & 0 & 0 \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 19: F4 \(\leftarrow\) F4 + (3/7) \(\cdot\) F3}
+El multiplicador es -(-3/7)/(1) = 3/7; así, -3/7 + (3/7)\(\cdot\)(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 1 & 1 & \frac{22}{5} & 0 & -\frac{6}{5} & \frac{1}{5} & 0 & 0 & \frac{8}{5} \\ 0 & 1 & 0 & 1 & 0 & \frac{8}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & 0 & \frac{2}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & 0 & 3 & 1 & -\frac{7}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 1 & 0 & -\frac{3}{5} \\ 0 & 0 & -\frac{4}{7} & \frac{4}{7} & 3 & \frac{13}{7} & 0 & \frac{1}{7} & -\frac{5}{7} & 0 & 1 & 0 \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 20: F5 \(\leftarrow\) F5 + (4/7) \(\cdot\) F3}
+El multiplicador es -(-4/7)/(1) = 4/7; así, -4/7 + (4/7)\(\cdot\)(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 1 & 1 & \frac{22}{5} & 0 & -\frac{6}{5} & \frac{1}{5} & 0 & 0 & \frac{8}{5} \\ 0 & 1 & 0 & 1 & 0 & \frac{8}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & 0 & \frac{2}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & 0 & 3 & 1 & -\frac{7}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 1 & 0 & -\frac{3}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & \frac{3}{7} & \frac{4}{7} & 0 & -\frac{1}{7} & 1 & \frac{1}{7} & -\frac{5}{7} & 0 & 0 & 0\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 21: F6 \(\leftarrow\) F6 + (-3/7) \(\cdot\) F3}
+El multiplicador es -(3/7)/(1) = -3/7; así, 3/7 + (-3/7)\(\cdot\)(1) = 0 en la columna 3. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 1 & 1 & \frac{22}{5} & 0 & -\frac{6}{5} & \frac{1}{5} & 0 & 0 & \frac{8}{5} \\ 0 & 1 & 0 & 1 & 0 & \frac{8}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & 0 & \frac{2}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & 0 & 3 & 1 & -\frac{7}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 1 & 0 & -\frac{3}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & 0 & 1 & 0 & \frac{7}{5} & 1 & -\frac{1}{5} & -\frac{4}{5} & 0 & 0 & \frac{3}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 22: F4 \(\leftarrow\) (1/3) \(\cdot\) F4}
+Se divide toda la fila entre el pivote 3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 1 & 1 & \frac{22}{5} & 0 & -\frac{6}{5} & \frac{1}{5} & 0 & 0 & \frac{8}{5} \\ 0 & 1 & 0 & 1 & 0 & \frac{8}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & 0 & \frac{2}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & 0 & 1 & 0 & \frac{7}{5} & 1 & -\frac{1}{5} & -\frac{4}{5} & 0 & 0 & \frac{3}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 23: F1 \(\leftarrow\) F1 + (-1) \(\cdot\) F4}
+El multiplicador es -(1)/(1) = -1; así, 1 + (-1)\(\cdot\)(1) = 0 en la columna 4. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & \frac{2}{3} & \frac{73}{15} & 0 & -\frac{19}{15} & \frac{4}{15} & -\frac{1}{3} & 0 & \frac{9}{5} \\ 0 & 1 & 0 & 1 & 0 & \frac{8}{5} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & 0 & \frac{2}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & 0 & 1 & 0 & \frac{7}{5} & 1 & -\frac{1}{5} & -\frac{4}{5} & 0 & 0 & \frac{3}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 24: F2 \(\leftarrow\) F2 + (-1) \(\cdot\) F4}
+El multiplicador es -(1)/(1) = -1; así, 1 + (-1)\(\cdot\)(1) = 0 en la columna 4. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & \frac{2}{3} & \frac{73}{15} & 0 & -\frac{19}{15} & \frac{4}{15} & -\frac{1}{3} & 0 & \frac{9}{5} \\ 0 & 1 & 0 & 0 & -\frac{1}{3} & \frac{31}{15} & 0 & \frac{2}{15} & -\frac{2}{15} & -\frac{1}{3} & 0 & \frac{3}{5} \\ 0 & 0 & 1 & -1 & 0 & -\frac{18}{5} & 0 & \frac{4}{5} & \frac{1}{5} & 0 & 0 & -\frac{7}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & 0 & 1 & 0 & \frac{7}{5} & 1 & -\frac{1}{5} & -\frac{4}{5} & 0 & 0 & \frac{3}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 25: F3 \(\leftarrow\) F3 + (1) \(\cdot\) F4}
+El multiplicador es -(-1)/(1) = 1; así, -1 + (1)\(\cdot\)(1) = 0 en la columna 4. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & \frac{2}{3} & \frac{73}{15} & 0 & -\frac{19}{15} & \frac{4}{15} & -\frac{1}{3} & 0 & \frac{9}{5} \\ 0 & 1 & 0 & 0 & -\frac{1}{3} & \frac{31}{15} & 0 & \frac{2}{15} & -\frac{2}{15} & -\frac{1}{3} & 0 & \frac{3}{5} \\ 0 & 0 & 1 & 0 & \frac{1}{3} & -\frac{61}{15} & 0 & \frac{13}{15} & \frac{2}{15} & \frac{1}{3} & 0 & -\frac{8}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & 0 & 1 & 0 & \frac{7}{5} & 1 & -\frac{1}{5} & -\frac{4}{5} & 0 & 0 & \frac{3}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 26: F6 \(\leftarrow\) F6 + (-1) \(\cdot\) F4}
+El multiplicador es -(1)/(1) = -1; así, 1 + (-1)\(\cdot\)(1) = 0 en la columna 4. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & \frac{2}{3} & \frac{73}{15} & 0 & -\frac{19}{15} & \frac{4}{15} & -\frac{1}{3} & 0 & \frac{9}{5} \\ 0 & 1 & 0 & 0 & -\frac{1}{3} & \frac{31}{15} & 0 & \frac{2}{15} & -\frac{2}{15} & -\frac{1}{3} & 0 & \frac{3}{5} \\ 0 & 0 & 1 & 0 & \frac{1}{3} & -\frac{61}{15} & 0 & \frac{13}{15} & \frac{2}{15} & \frac{1}{3} & 0 & -\frac{8}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 3 & -\frac{1}{5} & 0 & \frac{3}{5} & -\frac{3}{5} & 0 & 1 & -\frac{4}{5} \\ 0 & 0 & 0 & 0 & -\frac{1}{3} & \frac{28}{15} & 1 & -\frac{4}{15} & -\frac{11}{15} & -\frac{1}{3} & 0 & \frac{4}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 27: F5 \(\leftarrow\) (1/3) \(\cdot\) F5}
+Se divide toda la fila entre el pivote 3, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & \frac{2}{3} & \frac{73}{15} & 0 & -\frac{19}{15} & \frac{4}{15} & -\frac{1}{3} & 0 & \frac{9}{5} \\ 0 & 1 & 0 & 0 & -\frac{1}{3} & \frac{31}{15} & 0 & \frac{2}{15} & -\frac{2}{15} & -\frac{1}{3} & 0 & \frac{3}{5} \\ 0 & 0 & 1 & 0 & \frac{1}{3} & -\frac{61}{15} & 0 & \frac{13}{15} & \frac{2}{15} & \frac{1}{3} & 0 & -\frac{8}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & -\frac{1}{3} & \frac{28}{15} & 1 & -\frac{4}{15} & -\frac{11}{15} & -\frac{1}{3} & 0 & \frac{4}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 28: F1 \(\leftarrow\) F1 + (-2/3) \(\cdot\) F5}
+El multiplicador es -(2/3)/(1) = -2/3; así, 2/3 + (-2/3)\(\cdot\)(1) = 0 en la columna 5. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & \frac{221}{45} & 0 & -\frac{7}{5} & \frac{2}{5} & -\frac{1}{3} & -\frac{2}{9} & \frac{89}{45} \\ 0 & 1 & 0 & 0 & -\frac{1}{3} & \frac{31}{15} & 0 & \frac{2}{15} & -\frac{2}{15} & -\frac{1}{3} & 0 & \frac{3}{5} \\ 0 & 0 & 1 & 0 & \frac{1}{3} & -\frac{61}{15} & 0 & \frac{13}{15} & \frac{2}{15} & \frac{1}{3} & 0 & -\frac{8}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & -\frac{1}{3} & \frac{28}{15} & 1 & -\frac{4}{15} & -\frac{11}{15} & -\frac{1}{3} & 0 & \frac{4}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 29: F2 \(\leftarrow\) F2 + (1/3) \(\cdot\) F5}
+El multiplicador es -(-1/3)/(1) = 1/3; así, -1/3 + (1/3)\(\cdot\)(1) = 0 en la columna 5. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & \frac{221}{45} & 0 & -\frac{7}{5} & \frac{2}{5} & -\frac{1}{3} & -\frac{2}{9} & \frac{89}{45} \\ 0 & 1 & 0 & 0 & 0 & \frac{92}{45} & 0 & \frac{1}{5} & -\frac{1}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{23}{45} \\ 0 & 0 & 1 & 0 & \frac{1}{3} & -\frac{61}{15} & 0 & \frac{13}{15} & \frac{2}{15} & \frac{1}{3} & 0 & -\frac{8}{5} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & -\frac{1}{3} & \frac{28}{15} & 1 & -\frac{4}{15} & -\frac{11}{15} & -\frac{1}{3} & 0 & \frac{4}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 30: F3 \(\leftarrow\) F3 + (-1/3) \(\cdot\) F5}
+El multiplicador es -(1/3)/(1) = -1/3; así, 1/3 + (-1/3)\(\cdot\)(1) = 0 en la columna 5. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & \frac{221}{45} & 0 & -\frac{7}{5} & \frac{2}{5} & -\frac{1}{3} & -\frac{2}{9} & \frac{89}{45} \\ 0 & 1 & 0 & 0 & 0 & \frac{92}{45} & 0 & \frac{1}{5} & -\frac{1}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{23}{45} \\ 0 & 0 & 1 & 0 & 0 & -\frac{182}{45} & 0 & \frac{4}{5} & \frac{1}{5} & \frac{1}{3} & -\frac{1}{9} & -\frac{68}{45} \\ 0 & 0 & 0 & 1 & \frac{1}{3} & -\frac{7}{15} & 0 & \frac{1}{15} & -\frac{1}{15} & \frac{1}{3} & 0 & -\frac{1}{5} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & -\frac{1}{3} & \frac{28}{15} & 1 & -\frac{4}{15} & -\frac{11}{15} & -\frac{1}{3} & 0 & \frac{4}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 31: F4 \(\leftarrow\) F4 + (-1/3) \(\cdot\) F5}
+El multiplicador es -(1/3)/(1) = -1/3; así, 1/3 + (-1/3)\(\cdot\)(1) = 0 en la columna 5. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & \frac{221}{45} & 0 & -\frac{7}{5} & \frac{2}{5} & -\frac{1}{3} & -\frac{2}{9} & \frac{89}{45} \\ 0 & 1 & 0 & 0 & 0 & \frac{92}{45} & 0 & \frac{1}{5} & -\frac{1}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{23}{45} \\ 0 & 0 & 1 & 0 & 0 & -\frac{182}{45} & 0 & \frac{4}{5} & \frac{1}{5} & \frac{1}{3} & -\frac{1}{9} & -\frac{68}{45} \\ 0 & 0 & 0 & 1 & 0 & -\frac{4}{9} & 0 & 0 & 0 & \frac{1}{3} & -\frac{1}{9} & -\frac{1}{9} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & -\frac{1}{3} & \frac{28}{15} & 1 & -\frac{4}{15} & -\frac{11}{15} & -\frac{1}{3} & 0 & \frac{4}{5}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 32: F6 \(\leftarrow\) F6 + (1/3) \(\cdot\) F5}
+El multiplicador es -(-1/3)/(1) = 1/3; así, -1/3 + (1/3)\(\cdot\)(1) = 0 en la columna 5. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & \frac{221}{45} & 0 & -\frac{7}{5} & \frac{2}{5} & -\frac{1}{3} & -\frac{2}{9} & \frac{89}{45} \\ 0 & 1 & 0 & 0 & 0 & \frac{92}{45} & 0 & \frac{1}{5} & -\frac{1}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{23}{45} \\ 0 & 0 & 1 & 0 & 0 & -\frac{182}{45} & 0 & \frac{4}{5} & \frac{1}{5} & \frac{1}{3} & -\frac{1}{9} & -\frac{68}{45} \\ 0 & 0 & 0 & 1 & 0 & -\frac{4}{9} & 0 & 0 & 0 & \frac{1}{3} & -\frac{1}{9} & -\frac{1}{9} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & 0 & \frac{83}{45} & 1 & -\frac{1}{5} & -\frac{4}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{32}{45}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 33: F6 \(\leftarrow\) (45/83) \(\cdot\) F6}
+Se divide toda la fila entre el pivote 83/45, por eso el pivote se convierte en 1. Multiplicar una ecuación por un número distinto de cero produce una ecuación equivalente.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & \frac{221}{45} & 0 & -\frac{7}{5} & \frac{2}{5} & -\frac{1}{3} & -\frac{2}{9} & \frac{89}{45} \\ 0 & 1 & 0 & 0 & 0 & \frac{92}{45} & 0 & \frac{1}{5} & -\frac{1}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{23}{45} \\ 0 & 0 & 1 & 0 & 0 & -\frac{182}{45} & 0 & \frac{4}{5} & \frac{1}{5} & \frac{1}{3} & -\frac{1}{9} & -\frac{68}{45} \\ 0 & 0 & 0 & 1 & 0 & -\frac{4}{9} & 0 & 0 & 0 & \frac{1}{3} & -\frac{1}{9} & -\frac{1}{9} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 34: F1 \(\leftarrow\) F1 + (-221/45) \(\cdot\) F6}
+El multiplicador es -(221/45)/(1) = -221/45; así, 221/45 + (-221/45)\(\cdot\)(1) = 0 en la columna 6. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & \frac{92}{45} & 0 & \frac{1}{5} & -\frac{1}{5} & -\frac{1}{3} & \frac{1}{9} & \frac{23}{45} \\ 0 & 0 & 1 & 0 & 0 & -\frac{182}{45} & 0 & \frac{4}{5} & \frac{1}{5} & \frac{1}{3} & -\frac{1}{9} & -\frac{68}{45} \\ 0 & 0 & 0 & 1 & 0 & -\frac{4}{9} & 0 & 0 & 0 & \frac{1}{3} & -\frac{1}{9} & -\frac{1}{9} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 35: F2 \(\leftarrow\) F2 + (-92/45) \(\cdot\) F6}
+El multiplicador es -(92/45)/(1) = -92/45; así, 92/45 + (-92/45)\(\cdot\)(1) = 0 en la columna 6. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & -\frac{182}{45} & 0 & \frac{4}{5} & \frac{1}{5} & \frac{1}{3} & -\frac{1}{9} & -\frac{68}{45} \\ 0 & 0 & 0 & 1 & 0 & -\frac{4}{9} & 0 & 0 & 0 & \frac{1}{3} & -\frac{1}{9} & -\frac{1}{9} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 36: F3 \(\leftarrow\) F3 + (182/45) \(\cdot\) F6}
+El multiplicador es -(-182/45)/(1) = 182/45; así, -182/45 + (182/45)\(\cdot\)(1) = 0 en la columna 6. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & -\frac{4}{9} & 0 & 0 & 0 & \frac{1}{3} & -\frac{1}{9} & -\frac{1}{9} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 37: F4 \(\leftarrow\) F4 + (4/9) \(\cdot\) F6}
+El multiplicador es -(-4/9)/(1) = 4/9; así, -4/9 + (4/9)\(\cdot\)(1) = 0 en la columna 6. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & -\frac{1}{15} & 0 & \frac{1}{5} & -\frac{1}{5} & 0 & \frac{1}{3} & -\frac{4}{15} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 38: F5 \(\leftarrow\) F5 + (1/15) \(\cdot\) F6}
+El multiplicador es -(-1/15)/(1) = 1/15; así, -1/15 + (1/15)\(\cdot\)(1) = 0 en la columna 6. Sumar a una ecuación un múltiplo de otra es reversible y conserva exactamente las soluciones.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 39: [I | A-¹]: inversa obtenida}
+Aplicar las mismas operaciones elementales a [A | I] equivale a multiplicar ambos bloques por A-¹: A-¹A = I y A-¹I = A-¹.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 40: x1 = (-221/83)\(\cdot\)(155) + (-72/83)\(\cdot\)(160) + (210/83)\(\cdot\)(225) + (46/83)\(\cdot\)(140) + (-43/83)\(\cdot\)(215) + (7/83)\(\cdot\)(175) = -105/83}
+Producto fila 1 de A-¹ por la columna B. La suma de productos da la componente x1 de X = A-¹B.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 41: x2 = (-92/83)\(\cdot\)(155) + (35/83)\(\cdot\)(160) + (57/83)\(\cdot\)(225) + (3/83)\(\cdot\)(140) + (-1/83)\(\cdot\)(215) + (-23/83)\(\cdot\)(175) = 345/83}
+Producto fila 2 de A-¹ por la columna B. La suma de productos da la componente x2 de X = A-¹B.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 42: x3 = (182/83)\(\cdot\)(155) + (30/83)\(\cdot\)(160) + (-129/83)\(\cdot\)(225) + (-33/83)\(\cdot\)(140) + (11/83)\(\cdot\)(215) + (4/83)\(\cdot\)(175) = 2430/83}
+Producto fila 3 de A-¹ por la columna B. La suma de productos da la componente x3 de X = A-¹B.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 43: x4 = (20/83)\(\cdot\)(155) + (-4/83)\(\cdot\)(160) + (-16/83)\(\cdot\)(225) + (21/83)\(\cdot\)(140) + (-7/83)\(\cdot\)(215) + (5/83)\(\cdot\)(175) = 1170/83}
+Producto fila 4 de A-¹ por la columna B. La suma de productos da la componente x4 de X = A-¹B.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 44: x5 = (3/83)\(\cdot\)(155) + (16/83)\(\cdot\)(160) + (-19/83)\(\cdot\)(225) + (-1/83)\(\cdot\)(140) + (28/83)\(\cdot\)(215) + (-20/83)\(\cdot\)(175) = 1130/83}
+Producto fila 5 de A-¹ por la columna B. La suma de productos da la componente x5 de X = A-¹B.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
+
+\medskip
+\subsection*{Paso 45: x6 = (45/83)\(\cdot\)(155) + (-9/83)\(\cdot\)(160) + (-36/83)\(\cdot\)(225) + (-15/83)\(\cdot\)(140) + (5/83)\(\cdot\)(215) + (32/83)\(\cdot\)(175) = 2010/83}
+Producto fila 6 de A-¹ por la columna B. La suma de productos da la componente x6 de X = A-¹B.
+
+\resizebox{0.97\textwidth}{!}{\(\left[\begin{array}{rrrrrr|rrrrrr}1 & 0 & 0 & 0 & 0 & 0 & -\frac{221}{83} & -\frac{72}{83} & \frac{210}{83} & \frac{46}{83} & -\frac{43}{83} & \frac{7}{83} \\ 0 & 1 & 0 & 0 & 0 & 0 & -\frac{92}{83} & \frac{35}{83} & \frac{57}{83} & \frac{3}{83} & -\frac{1}{83} & -\frac{23}{83} \\ 0 & 0 & 1 & 0 & 0 & 0 & \frac{182}{83} & \frac{30}{83} & -\frac{129}{83} & -\frac{33}{83} & \frac{11}{83} & \frac{4}{83} \\ 0 & 0 & 0 & 1 & 0 & 0 & \frac{20}{83} & -\frac{4}{83} & -\frac{16}{83} & \frac{21}{83} & -\frac{7}{83} & \frac{5}{83} \\ 0 & 0 & 0 & 0 & 1 & 0 & \frac{3}{83} & \frac{16}{83} & -\frac{19}{83} & -\frac{1}{83} & \frac{28}{83} & -\frac{20}{83} \\ 0 & 0 & 0 & 0 & 0 & 1 & \frac{45}{83} & -\frac{9}{83} & -\frac{36}{83} & -\frac{15}{83} & \frac{5}{83} & \frac{32}{83}\end{array}\right]\)}
 
 \medskip
 \end{document}

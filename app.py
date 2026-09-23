@@ -7,7 +7,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from agent import MAX_SIZE, InputError, TechChipAgent, STATUS_LABELS, METHOD_LABELS, decimal_text, json_ready, matvec, parse_json, validate_input
+from agent import MAX_SIZE, InputError, TechChipAgent, STATUS_LABELS, METHOD_LABELS, decimal_text, json_ready, matvec, validate_input
+from exercise_interpreter import interpret_exercise
 from main import validation_battery
 from reporting import METHOD_GUIDES, REFERENCES, html_report, markdown_report, matrix_latex
 from scenarios import A_BASE, B_GUIDE, B_TARGET, GUIDE_NOTE, PRODUCTS, RESOURCES, SCENARIOS, UNITS, X_TARGET, get_scenario
@@ -18,8 +19,8 @@ st.set_page_config(page_title="TechChip · Matrix Studio", page_icon=":material/
 
 
 @st.cache_data(max_entries=32, show_spinner=False)
-def analyze_cached(A, B, production):
-    return TechChipAgent().analyze(A, B, production=production)
+def analyze_cached(A, B, production, variable_names=None):
+    return TechChipAgent().analyze(A, B, production=production, variable_names=variable_names)
 
 
 def clear_result():
@@ -86,7 +87,7 @@ def render_results(report, title, note, techchip):
             left, right = st.columns([1.25, 1])
             with left:
                 st.subheader("Solución por variable")
-                names = PRODUCTS if techchip else [f"Variable {i+1}" for i in range(n)]
+                names = PRODUCTS if techchip else report.variables
                 data = []
                 for i, (name, v) in enumerate(zip(names, report.solution)):
                     item = {"Variable": f"x{i+1}", "Descripción": name, "Exacto": str(v), "Decimal ≈": decimal_text(v)}
@@ -210,9 +211,10 @@ if page == "Calculadora":
                                help="Activa X ≥ 0 como condición de viabilidad. En modo matemático las soluciones negativas son válidas.")
     with st.form("system_form", border=True):
         if source == "Importar JSON":
-            st.caption('Formato: {"A": [[2, 1], [1, -1]], "B": [5, 1]}. Usa "1/3" para fracciones exactas.')
-            uploaded = st.file_uploader("Cargar archivo JSON (máximo 100 kB de contenido)", type=["json"], key="json_file")
-            raw = st.text_area("O pega tu JSON", value='{"A": [[2, 1], [1, -1]], "B": [5, 1]}', height=150, key="json_text")
+            st.caption('Acepta lenguaje natural, ecuaciones, A=[[...]], B=[...] o JSON. Usa "1/3" para fracciones exactas.')
+            uploaded = st.file_uploader("Cargar JSON, TXT o Markdown", type=["json", "txt", "md"], key="json_file")
+            raw = st.text_area("O pega tu problema", value='{"A": [[2, 1], [1, -1]], "B": [5, 1], "variables": ["Producto A", "Producto B"]}', height=220, key="json_text")
+            st.caption("Sin límite artificial de palabras. El despliegue web conserva un máximo técnico de 2 MB por solicitud.")
             st.caption("Si cargas un archivo se utilizará su contenido en lugar del texto.")
         else:
             columns = [f"x{i+1}" for i in range(len(A))] + ["B"]
@@ -226,18 +228,18 @@ if page == "Calculadora":
     if submitted:
         clear_result()
         try:
+            variable_names = None
             if source == "Importar JSON":
-                if uploaded is not None and uploaded.size > 100_000:
-                    raise InputError("El JSON no puede superar 100 kB.")
                 text = uploaded.getvalue().decode("utf-8-sig") if uploaded is not None else raw
-                inputs_A, inputs_B = parse_json(text)
+                parsed = interpret_exercise(text)
+                inputs_A, inputs_B, variable_names = parsed.A, parsed.B, parsed.variables
             else:
                 inputs_A, inputs_B = validate_input(edited.iloc[:, :-1].values.tolist(), edited.iloc[:, -1].tolist())
                 if source == "Escenarios" and (inputs_A != A or inputs_B != B):
                     title += " · modificado"
                     note = "Datos editados por el usuario a partir de: " + note
             with st.spinner("Validando, resolviendo y verificando los tres métodos…"):
-                report = analyze_cached(inputs_A, inputs_B, production)
+                report = analyze_cached(inputs_A, inputs_B, production, variable_names)
             st.session_state.report = report
             st.session_state.report_title = title
             st.session_state.report_note = note

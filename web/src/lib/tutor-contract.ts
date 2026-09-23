@@ -23,7 +23,7 @@ export function resolveTutorMarker(marker: string, report: Analysis, method: str
   const variable = /^x([1-9]\d*)$/.exec(marker)
   if (variable) {
     const value = report.solution?.[Number(variable[1]) - 1]
-    return value === undefined ? null : { kind: "value", label: `x${variable[1]}`, value, approximate: true }
+    return value === undefined ? null : { kind: "value", label: report.variables?.[Number(variable[1]) - 1] || `x${variable[1]}`, value, approximate: true }
   }
   const stepMatch = /^(pivote|factor|matriz):paso([1-9]\d*)$/.exec(marker)
   const rowMatch = /^fila:paso([1-9]\d*):([1-9]\d*)$/.exec(marker)

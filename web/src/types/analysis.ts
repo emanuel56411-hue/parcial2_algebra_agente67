@@ -42,6 +42,7 @@ export type Analysis = {
   free_columns: number[]
   interpretation: string[]
   production: boolean
+  variables: string[]
   methods_agree: boolean
   max_error: string | null
   format: string
@@ -51,6 +52,7 @@ export type SolveInput = {
   A: (string | number)[][]
   B: (string | number)[]
   production: boolean
+  variables?: string[]
 }
 
 export type TutorMessage = {

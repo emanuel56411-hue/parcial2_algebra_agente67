@@ -5,7 +5,10 @@ export type Scenario = {
   A: number[][]
   B: number[]
   production: boolean
+  variables: string[]
 }
+
+const PRODUCTS = ["AI-Edge 1", "AI-Server Pro", "AI-Autonomous Car", "AI-IoT LowPower", "AI-Robotics Heavy", "AI-Medical Vision"]
 
 export const A_BASE = [
   [2, 1, 3, 1, 2, 1],
@@ -26,6 +29,7 @@ export const scenarios: Record<string, Scenario> = {
     A: A_BASE,
     B: B_GUIDE,
     production: true,
+    variables: PRODUCTS,
   },
   compatible: {
     title: "Variante didáctica · B alternativo",
@@ -34,6 +38,7 @@ export const scenarios: Record<string, Scenario> = {
     A: A_BASE,
     B: [185, 200, 280, 150, 245, 195],
     production: true,
+    variables: PRODUCTS,
   },
   scarcity: {
     title: "Escasez · resina a 100 kg",
@@ -42,6 +47,7 @@ export const scenarios: Record<string, Scenario> = {
     A: A_BASE,
     B: [155, 160, 100, 140, 215, 175],
     production: true,
+    variables: PRODUCTS,
   },
   singular: {
     title: "Singular · sin solución",
@@ -50,6 +56,7 @@ export const scenarios: Record<string, Scenario> = {
     A: [...A_BASE.slice(0, 5), A_BASE[0].map((value) => 2 * value)],
     B: B_GUIDE,
     production: true,
+    variables: PRODUCTS,
   },
   infinite: {
     title: "Singular · infinitas soluciones",
@@ -58,6 +65,7 @@ export const scenarios: Record<string, Scenario> = {
     A: [...A_BASE.slice(0, 5), A_BASE[0].map((value) => 2 * value)],
     B: [155, 160, 225, 140, 215, 310],
     production: true,
+    variables: PRODUCTS,
   },
   example: {
     title: "Ejemplo guiado · 3 × 3",
@@ -66,6 +74,7 @@ export const scenarios: Record<string, Scenario> = {
     A: [[2, 1, -1], [-3, -1, 2], [-2, 1, 2]],
     B: [8, -11, -3],
     production: false,
+    variables: ["x1", "x2", "x3"],
   },
 }
 
@@ -75,5 +84,6 @@ export function cloneScenario(key: string) {
     A: item.A.map((row) => row.map(String)),
     B: item.B.map(String),
     production: item.production,
+    variables: [...item.variables],
   }
 }

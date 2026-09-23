@@ -9,11 +9,11 @@ from fractions import Fraction
 import json
 import re
 
-from agent import InputError, json_ready, number, validate_input
+from agent import MAX_SIZE, InputError, json_ready, number, validate_input, validate_variable_names
 
 _SUBSCRIPTS = str.maketrans("₀₁₂₃₄₅₆₇₈₉−", "0123456789-")
 _NUMBER = r"(?:(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?|\d+/\d+)"
-_VARIABLE = r"(?:x(?:10|[1-9])|[xyzwuv])"
+_VARIABLE = r"(?:x[1-9]\d*|[xyzwuv])"
 _TERM = re.compile(rf"(?:(?P<coefficient>{_NUMBER})\*?)?(?P<variable>{_VARIABLE})$", re.I)
 _CONSTANT = re.compile(rf"{_NUMBER}$")
 _ALLOWED = re.compile(r"^[0-9A-Za-z_./*+\-]+$")
@@ -101,7 +101,7 @@ class ParsedExercise:
     evidence: dict | None = None
 
     def to_input(self, production: bool = False) -> dict:
-        return {"A": json_ready(self.A), "B": json_ready(self.B), "production": production}
+        return {"A": json_ready(self.A), "B": json_ready(self.B), "production": production, "variables": self.variables}
 
 
 def _normalize(text: str) -> str:
@@ -133,7 +133,9 @@ def _json_candidate(prompt: str):
                 vector = next((folded[key] for key in ("b", "vector_b", "vectorb", "terminos_independientes", "resultados", "disponibilidades") if key in folded), None)
                 if matrix is not None and vector is not None:
                     A, B = _validated(matrix, vector)
-                    return ParsedExercise(A, B, [f"x{i + 1}" for i in range(len(A))], "json", detect_method(prompt))
+                    raw_variables = next((folded[key] for key in ("variables", "nombres_variables", "productos", "decisiones") if key in folded), None)
+                    variables = validate_variable_names(raw_variables, len(A))
+                    return ParsedExercise(A, B, variables, "json", detect_method(prompt))
                 augmented = next((folded[key] for key in ("matriz_aumentada", "matrizaumentada", "augmented_matrix", "augmented") if key in folded), None)
                 if (isinstance(augmented, list) and augmented and
                         all(isinstance(row, list) and len(row) == len(augmented) + 1 for row in augmented)):
@@ -196,7 +198,7 @@ def _expression(text: str) -> tuple[dict[str, Fraction], Fraction]:
         elif _CONSTANT.fullmatch(body):
             constant += number(body) * sign
         else:
-            raise InputError(f"Término no lineal o no reconocido: {piece!r}. Usa x, y, z o x1…x10.")
+            raise InputError(f"Término no lineal o no reconocido: {piece!r}. Usa x, y, z o x1…x{MAX_SIZE}.")
     return coefficients, constant
 
 
@@ -228,8 +230,6 @@ def _equation_segments(prompt: str) -> list[str]:
 def parse_exercise(prompt: str) -> ParsedExercise:
     if not isinstance(prompt, str) or not prompt.strip():
         raise InputError("Escribe o adjunta un ejercicio antes de resolverlo.")
-    if len(prompt.encode("utf-8")) > 100_000:
-        raise InputError("El ejercicio no puede superar 100 kB.")
     normalized = _normalize(prompt)
     structured = _json_candidate(normalized) or _matrix_notation(normalized)
     if structured:
@@ -250,10 +250,10 @@ def parse_exercise(prompt: str) -> ParsedExercise:
         names.update(variable for variable, value in coefficients.items() if value)
         parsed_rows.append((coefficients, right_constant - left_constant))
 
-    indexed = all(re.fullmatch(r"x(?:10|[1-9])", name) for name in names)
+    indexed = all(re.fullmatch(r"x[1-9]\d*", name) for name in names)
     symbolic = all(name in _SYMBOL_ORDER for name in names)
     if not names or not (indexed or symbolic):
-        raise InputError("Usa variables x, y, z, w, u, v o bien x1…x10, sin mezclarlas.")
+        raise InputError(f"Usa variables x, y, z, w, u, v o bien x1…x{MAX_SIZE}, sin mezclarlas.")
     if indexed:
         variables = sorted(names, key=lambda value: int(value[1:]))
         expected = [f"x{i + 1}" for i in range(len(variables))]
@@ -261,8 +261,8 @@ def parse_exercise(prompt: str) -> ParsedExercise:
             raise InputError("Las variables numeradas deben ser consecutivas desde x1.")
     else:
         variables = sorted(names, key=_SYMBOL_ORDER.get)
-    if not 2 <= len(variables) <= 10:
-        raise InputError("El ejercicio debe describir un sistema de 2 a 10 variables.")
+    if not 1 <= len(variables) <= MAX_SIZE:
+        raise InputError(f"El ejercicio debe describir un sistema de 1 a {MAX_SIZE} variables.")
     if len(equations) != len(variables):
         raise InputError(f"Encontré {len(equations)} ecuaciones y {len(variables)} variables; el sistema debe ser cuadrado.")
     A = [[coefficients.get(variable, Fraction(0)) for variable in variables] for coefficients, _ in parsed_rows]

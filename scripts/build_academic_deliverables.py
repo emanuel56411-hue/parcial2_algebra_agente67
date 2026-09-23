@@ -145,7 +145,7 @@ Docente: Exides Gamaliel Claros Velasquez \quad Grupo: 01 EO8 \quad Entrega: 23 
 \begin{{document}}
 \maketitle
 \begin{{abstract}}
-Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X={solution_tex}$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones. La entrada admite matrices de hasta $10\times10$, ecuaciones, JSON y enunciados en lenguaje natural convertidos a $A$ y $B$ mediante una salida estructurada.
+Se presenta un agente portable para modelar y resolver el balance de seis recursos y seis líneas de módulos mediante $AX=B$. El motor implementa eliminación de Gauss, Gauss--Jordan y matriz inversa con fracciones exactas, registra cada operación elemental y diagnostica sistemas singulares por rangos. Con el $B$ original se obtiene $X={solution_tex}$ y residuo cero. Se demuestra que el vector $(15,20,25,10,15,20)$ indicado por la guía es incorrecto para esos datos. Se validan además escenarios de escasez, incompatibilidad e infinitas soluciones. La entrada admite matrices de hasta $12\times12$, ecuaciones, JSON, archivos de texto y enunciados en lenguaje natural convertidos a $A$ y $B$ mediante una salida estructurada.
 \end{{abstract}}
 \begin{{IEEEkeywords}}álgebra lineal, sistemas de ecuaciones, eliminación de Gauss, Gauss--Jordan, matriz inversa, agente explicable, balance de recursos\end{{IEEEkeywords}}
 
@@ -196,7 +196,7 @@ Los seis residuos son cero y $E_{{\max}}=0<10^{{-6}}$.
 \section{{Arquitectura del agente}}
 El flujo funcional es:
 \begin{{center}}\begin{{tabular}}{{c}}\fbox{{Texto / ecuaciones / JSON / editor web}}\\$\downarrow$\\\fbox{{Extracción estructurada de $A$ y $B$}}\\$\downarrow$\\\fbox{{Validación dimensional y racional}}\\$\downarrow$\\\fbox{{Determinante, rangos y diagnóstico}}\\$\downarrow$\\\fbox{{Gauss / Gauss--Jordan / inversa}}\\$\downarrow$\\\fbox{{Verificación $AX=B$ e interpretación}}\end{{tabular}}\end{{center}}
-\texttt{{agent.py}} contiene validación, pivoteo, rangos y análisis; \texttt{{exercise\_parser.py}} convierte de forma determinista ecuaciones lineales, JSON y bloques A/B; y \texttt{{exercise\_interpreter.py}} usa una salida JSON estructurada del modelo únicamente cuando la entrada libre no pertenece a esos formatos. La matriz extraída vuelve a validarse antes de llegar al motor exacto. Si faltan datos o existe ambigüedad, la interfaz solicita una aclaración y no calcula. \texttt{{api/solve.py}} ofrece la función serverless y \texttt{{web/}} la interfaz React. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite de $2\times2$ hasta $10\times10$ y aplica un límite técnico de 100 kB por entrada \cite{{openai}}.
+\texttt{{agent.py}} contiene validación, pivoteo, rangos y análisis; \texttt{{exercise\_parser.py}} convierte de forma determinista ecuaciones lineales, JSON y bloques A/B; y \texttt{{exercise\_interpreter.py}} usa una salida JSON estructurada del modelo únicamente cuando la entrada libre no pertenece a esos formatos. La matriz extraída vuelve a validarse antes de llegar al motor exacto. Si faltan datos o existe ambigüedad, la interfaz solicita una aclaración y no calcula. \texttt{{api/solve.py}} ofrece la función serverless y \texttt{{web/}} la interfaz React. Los nombres de productos o decisiones acompañan el resultado numérico para producir una lectura empresarial inmediata. El Tutor IA recibe contexto matemático recalculado por el servidor y nunca sustituye al motor exacto. La interfaz admite de $1\times1$ hasta $12\times12$, no impone un límite de palabras y conserva un límite técnico de 2 MB por solicitud.
 
 \section{{Pruebas de validación}}
 \begin{{table*}}[ht]\caption{{Resultados generados por el agente}}\centering\footnotesize\begin{{tabular}}{{lllll}}\toprule Escenario&$\det(A)$&Rangos&Resultado exacto&Diagnóstico\\\midrule
@@ -231,6 +231,7 @@ La coincidencia exacta de tres algoritmos y el residuo nulo validan la solución
 \clearpage\onecolumn\appendices
 {appendix_steps(base, 'gauss', 'Eliminación de Gauss: procedimiento completo')}
 {appendix_steps(base, 'gauss_jordan', 'Gauss--Jordan: procedimiento completo')}
+{appendix_steps(base, 'inverse', 'Matriz inversa: procedimiento completo y producto con B')}
 \end{{document}}
 """
     (DOCS / "informe_tecnico_ieee.tex").write_text(tex, encoding="utf-8")

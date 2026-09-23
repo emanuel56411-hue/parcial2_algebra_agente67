@@ -38,12 +38,12 @@ Esta revisión contrasta los entregables ejecutables con la rúbrica recibida. E
 ### 3. Implementación del agente
 
 - Resuelve por Gauss, Gauss-Jordan y matriz inversa.
-- Admite dimensiones seleccionables de 2×2 a 6×6.
+- Admite dimensiones seleccionables de 1×1 a 12×12.
 - Acepta JSON adjunto o pegado, `A=[[...]], B=[...]` y ecuaciones escritas como prompt.
 - Acepta enteros, decimales, fracciones y notación científica.
 - Rechaza código, expresiones no lineales y dimensiones inválidas.
 - El tutor puede expandirse, ofrece procedimientos completos y usa el motor exacto como fuente de cifras.
-- Se eliminó el límite artificial anterior de 500 caracteres; permanece únicamente el límite técnico de 100 kB.
+- No impone un límite de palabras; permanece únicamente el límite técnico de 2 MB por solicitud.
 
 **Conclusión:** cumple completamente.
 

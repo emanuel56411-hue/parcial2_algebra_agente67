@@ -42,7 +42,7 @@ class TutorAnswer:
 def build_context(report: Analysis, title: str, note: str, method=None, step_index=None):
     """Envía el resultado exacto y la traza del método elegido para explicarla completa."""
     context = {
-        "A": report.A, "B": report.B,
+        "A": report.A, "B": report.B, "variables": report.variables,
         "status": report.status, "determinant": report.determinant,
         "rank_A": report.rank_A, "rank_augmented": report.rank_augmented,
         "solution": report.solution, "residual": report.residual,
