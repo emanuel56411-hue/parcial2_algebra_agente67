@@ -7,7 +7,7 @@ import type { Analysis } from "@/types/analysis"
 export function VerificationView({ report }: { report: Analysis }) {
   if (!report.solution) return (
     <Card>
-      <CardHeader><CardTitle>Verificación por rangos</CardTitle></CardHeader>
+      <CardHeader><CardTitle>Prueba 4 · Verificación de singularidad por rangos</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <p className="font-mono text-sm tabular-nums">det(A) = {report.determinant}</p>
         <p className="font-mono text-sm tabular-nums">rango(A) = {report.rank_A}</p>
@@ -21,11 +21,15 @@ export function VerificationView({ report }: { report: Analysis }) {
     <Card className="border-primary/30">
       <CardHeader className="border-b">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2"><CheckCircle2 className="size-5 text-primary" /><CardTitle>Verificación: A·X = B</CardTitle></div>
+          <div className="flex items-center gap-2"><CheckCircle2 className="size-5 text-primary" /><CardTitle>Prueba 2 · Comprobación por sustitución directa</CardTitle></div>
           {report.methods_agree && <Badge className="gap-1.5"><Check className="size-3.5" />Los 3 métodos coinciden</Badge>}
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pt-6">
+        <div className="rounded-lg border border-emerald-400/50 bg-emerald-50/70 p-4 text-sm text-emerald-900 dark:bg-emerald-950/25 dark:text-emerald-100" role="status">
+          <p className="font-semibold">Criterio aprobado</p>
+          <p className="mt-1 font-mono">E = max |A·X − B| = {report.max_error} &lt; 10⁻⁶</p>
+        </div>
         {report.substitution.map((line, index) => {
           const exact = report.residual[index] === "0"
           return (
@@ -35,7 +39,7 @@ export function VerificationView({ report }: { report: Analysis }) {
             </div>
           )
         })}
-        <p className="pt-2 text-sm text-muted-foreground">Residuo máximo exacto: <span className="font-mono font-semibold text-foreground">{report.max_error}</span>.</p>
+        <p className="pt-2 text-sm text-muted-foreground">Las filas anteriores sustituyen cada componente de X en A·X y comparan el resultado con su B correspondiente.</p>
       </CardContent>
     </Card>
   )

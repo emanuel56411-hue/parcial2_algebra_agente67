@@ -46,6 +46,8 @@ def main() -> None:
         page.locator("#solve").click()
         expect(page.get_by_text("Solución única", exact=True)).to_be_visible(timeout=30_000)
         expect(page.get_by_text("-83", exact=True)).to_be_visible()
+        expect(page.get_by_text("Prueba 2 · Comprobación por sustitución directa", exact=True)).to_be_visible()
+        expect(page.get_by_text("E = max |A·X − B| = 0 < 10⁻⁶", exact=True)).to_be_visible()
         page.get_by_role("tab", name="Procedimiento").click()
         page.get_by_role("button", name="Siguiente").click()
         expect(page.get_by_text("Paso 2 de", exact=False)).to_be_visible()
