@@ -7,7 +7,7 @@ import type { Analysis } from "@/types/analysis"
 export function VerificationView({ report }: { report: Analysis }) {
   if (!report.solution) return (
     <Card>
-      <CardHeader><CardTitle>Prueba 4 · Verificación de singularidad por rangos</CardTitle></CardHeader>
+      <CardHeader><CardTitle>4 · Escenario Degenerado (Singularidad)</CardTitle></CardHeader>
       <CardContent className="space-y-3">
         <p className="font-mono text-sm tabular-nums">det(A) = {report.determinant}</p>
         <p className="font-mono text-sm tabular-nums">rango(A) = {report.rank_A}</p>
@@ -21,7 +21,7 @@ export function VerificationView({ report }: { report: Analysis }) {
     <Card className="border-primary/30">
       <CardHeader className="border-b">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2"><CheckCircle2 className="size-5 text-primary" /><CardTitle>Prueba 2 · Comprobación por sustitución directa</CardTitle></div>
+          <div className="flex items-center gap-2"><CheckCircle2 className="size-5 text-primary" /><CardTitle>2 · Comprobación por Sustitución Directa</CardTitle></div>
           {report.methods_agree && <Badge className="gap-1.5"><Check className="size-3.5" />Los 3 métodos coinciden</Badge>}
         </div>
       </CardHeader>

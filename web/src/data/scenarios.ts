@@ -33,7 +33,7 @@ export const scenarios: Record<string, Scenario> = {
   },
   compatible: {
     title: "Variante didáctica · B alternativo",
-    shortTitle: "Prueba 1 · Vector esperado",
+    shortTitle: "1 · Prueba Base",
     note: "Verifica exactamente X = (15, 20, 25, 10, 15, 20). Requiere B = A·X; este B alternativo no es el impreso en la guía.",
     A: A_BASE,
     B: [185, 200, 280, 150, 245, 195],
@@ -42,7 +42,7 @@ export const scenarios: Record<string, Scenario> = {
   },
   scarcity: {
     title: "Escasez · resina a 100 kg",
-    shortTitle: "Prueba 3 · Escasez B₃ = 100",
+    shortTitle: "3 · Escenario de Escasez (Datos Modificados)",
     note: "Reduce únicamente la resina a B₃ = 100 kg y comprueba si aparecen producciones negativas.",
     A: A_BASE,
     B: [155, 160, 100, 140, 215, 175],
@@ -51,7 +51,7 @@ export const scenarios: Record<string, Scenario> = {
   },
   singular: {
     title: "Singular · sin solución",
-    shortTitle: "Prueba 4A · Singular sin solución",
+    shortTitle: "4A · Escenario Degenerado (Singularidad) · cero soluciones",
     note: "Hace F₆ = 2F₁ y conserva B₆ = 175: det(A) = 0 y aparece una contradicción.",
     A: [...A_BASE.slice(0, 5), A_BASE[0].map((value) => 2 * value)],
     B: B_GUIDE,
@@ -60,7 +60,7 @@ export const scenarios: Record<string, Scenario> = {
   },
   infinite: {
     title: "Singular · infinitas soluciones",
-    shortTitle: "Prueba 4B · Singular con infinitas",
+    shortTitle: "4B · Escenario Degenerado (Singularidad) · infinitas soluciones",
     note: "Hace F₆ = 2F₁ y también B₆ = 2B₁: det(A) = 0 y una variable queda libre.",
     A: [...A_BASE.slice(0, 5), A_BASE[0].map((value) => 2 * value)],
     B: [155, 160, 225, 140, 215, 310],

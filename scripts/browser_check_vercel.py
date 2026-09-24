@@ -45,7 +45,7 @@ def main() -> None:
             return
         page.locator("#solve").click()
         expect(page.get_by_text("Solución única", exact=True).first).to_be_visible(timeout=30_000)
-        expect(page.get_by_text("Prueba 2 · Comprobación por sustitución directa", exact=True)).to_be_visible()
+        expect(page.get_by_text("2 · Comprobación por Sustitución Directa", exact=True)).to_be_visible()
         expect(page.get_by_text("E = max |A·X − B| = 0 < 10⁻⁶", exact=True)).to_be_visible()
         page.get_by_role("button", name="Siguiente").first.click()
         expect(page.get_by_text("Paso 2 de", exact=False)).to_be_visible()
@@ -64,14 +64,14 @@ def main() -> None:
             expect(selector).to_contain_text(label)
             page.locator("#solve").click()
 
-        choose_scenario("Prueba 1 · Vector esperado")
+        choose_scenario("1 · Prueba Base")
         expect(page.get_by_text("E = max |A·X − B| = 0 < 10⁻⁶", exact=True)).to_be_visible(timeout=30_000)
-        choose_scenario("Prueba 3 · Escasez B₃ = 100")
+        choose_scenario("3 · Escenario de Escasez (Datos Modificados)")
         expect(page.get_by_text("Plan de producción inalcanzable por restricción de materias primas", exact=False).first).to_be_visible(timeout=30_000)
-        choose_scenario("Prueba 4A · Singular sin solución")
-        expect(page.get_by_text("Prueba 4 · Verificación de singularidad por rangos", exact=True)).to_be_visible(timeout=30_000)
+        choose_scenario("4A · Escenario Degenerado (Singularidad) · cero soluciones")
+        expect(page.get_by_text("4 · Escenario Degenerado (Singularidad)", exact=True)).to_be_visible(timeout=30_000)
         expect(page.get_by_text("Los rangos distintos prueban que no existe solución.", exact=True)).to_be_visible()
-        choose_scenario("Prueba 4B · Singular con infinitas")
+        choose_scenario("4B · Escenario Degenerado (Singularidad) · infinitas soluciones")
         expect(page.get_by_text("Infinitas soluciones", exact=True).first).to_be_visible(timeout=30_000)
         expect(page.get_by_text("Los rangos iguales menores que n prueban que hay variables libres.", exact=True)).to_be_visible()
 

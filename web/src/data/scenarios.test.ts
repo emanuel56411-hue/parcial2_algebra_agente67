@@ -8,6 +8,13 @@ function matvec(A: number[][], x: number[]) {
 }
 
 describe("las cuatro pruebas de la guía", () => {
+  it("usa los nombres de la fotografía en el selector", () => {
+    expect(scenarios.compatible.shortTitle).toBe("1 · Prueba Base")
+    expect(scenarios.scarcity.shortTitle).toBe("3 · Escenario de Escasez (Datos Modificados)")
+    expect(scenarios.singular.shortTitle).toContain("Escenario Degenerado (Singularidad)")
+    expect(scenarios.infinite.shortTitle).toContain("Escenario Degenerado (Singularidad)")
+  })
+
   it("prueba 1 carga el B que produce exactamente el vector esperado", () => {
     expect(matvec(scenarios.compatible.A, EXPECTED_X)).toEqual(scenarios.compatible.B)
   })
